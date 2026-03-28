@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mark Price</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="/" class="site-name">Mark Price</a>
+    <nav class="site-nav">
+      <a href="writing.html">Writing</a>
+      <a href="projects.html">Projects</a>
+      <a href="zines.html">Zines</a>
+      <a href="news.html">News</a>
+      <a href="about.html">About</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="page-hero">
+    <h1>Artificer trying to become an Artist,<br>in oh so many ways.</h1>
+    <p>Maker, publisher, and media tinkerer based in Tulsa. Projects, zines, writing, and a curated view of the world.</p>
+  </div>
+
+  <div class="section-label">Latest</div>
+  <div class="feed-grid">
+
+    <div class="feed-panel">
+      <div class="feed-panel-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.54C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
+        YouTube
+      </div>
+      <div id="yt-feed"><div class="feed-loading">Loading...</div></div>
+    </div>
+
+    <div class="feed-panel">
+      <div class="feed-panel-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#60a5fa" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+        Tumblr
+      </div>
+      <div id="tumblr-feed"><div class="feed-loading">Loading...</div></div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div class="footer-social">
+      <a href="https://www.youtube.com/@markpricecentral" target="_blank" rel="noopener">YouTube</a>
+      <a href="https://www.tumblr.com/markpricecentral" target="_blank" rel="noopener">Tumblr</a>
+      <a href="https://www.tiktok.com/@flifnflufn" target="_blank" rel="noopener">TikTok</a>
+    </div>
+    <a href="tv.html" class="footer-quiet">tv</a>
+  </div>
+</footer>
+
+<script>
+const YOUTUBE_CHANNEL_ID = 'UCU7-zHXXOqXLso35M6WQmug';
+const TUMBLR_BLOG = 'markpricecentral';
+
+async function corsProxy(url, timeout = 8000) {
+  const race = fn => Promise.race([fn(), new Promise((_,rej) => setTimeout(rej, timeout))]);
+  try {
+    const text = await race(() => fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`).then(r => r.text()));
+    return { contents: text };
+  } catch(e) {}
+  try {
+    return await race(() => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`).then(r => r.json()));
+  } catch(e) {}
+  throw new Error('CORS proxy failed');
+}
+
+function timeAgo(dateStr) {
+  const diff = (Date.now() - new Date(dateStr)) / 1000;
+  if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+async function loadYouTube() {
+  const el = document.getElementById('yt-feed');
+  if (YOUTUBE_CHANNEL_ID === 'REPLACE_WITH_CHANNEL_ID') {
+    el.innerHTML = '<div class="feed-loading">Channel ID not configured yet.</div>';
+    return;
+  }
+  try {
+    const url = `https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`;
+    const res = await corsProxy(url);
+    const doc = new DOMParser().parseFromString(res.contents, 'text/xml');
+    const entries = Array.from(doc.querySelectorAll('entry')).slice(0, 4);
+    if (!entries.length) { el.innerHTML = '<div class="feed-loading">No videos found.</div>'; return; }
+    el.innerHTML = entries.map(e => {
+      const title = e.querySelector('title')?.textContent || '';
+      const link  = e.querySelector('link')?.getAttribute('href') || '#';
+      const date  = e.querySelector('published')?.textContent || '';
+      return `<div class="feed-item">
+        <a href="${link}" target="_blank" rel="noopener">${title}</a>
+        <div class="feed-item-date">${date ? timeAgo(date) : ''}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="feed-loading">Unavailable</div>';
+  }
+}
+
+async function loadTumblr() {
+  const el = document.getElementById('tumblr-feed');
+  try {
+    const url = `https://${TUMBLR_BLOG}.tumblr.com/rss`;
+    const res = await corsProxy(url);
+    const doc = new DOMParser().parseFromString(res.contents, 'text/xml');
+    const items = Array.from(doc.querySelectorAll('item')).slice(0, 4);
+    if (!items.length) { el.innerHTML = '<div class="feed-loading">No posts found.</div>'; return; }
+    el.innerHTML = items.map(it => {
+      const title = it.querySelector('title')?.textContent?.trim() || '(untitled)';
+      const link  = it.querySelector('link')?.textContent?.trim() || '#';
+      const date  = it.querySelector('pubDate')?.textContent || '';
+      return `<div class="feed-item">
+        <a href="${link}" target="_blank" rel="noopener">${title}</a>
+        <div class="feed-item-date">${date ? timeAgo(date) : ''}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="feed-loading">Unavailable</div>';
+  }
+}
+
+loadYouTube();
+loadTumblr();
+</script>
+
+</body>
+</html>

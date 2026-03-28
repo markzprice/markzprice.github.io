@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TV — Mark Price</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.tv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.tv-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color 0.15s, color 0.15s;
+  text-decoration: none;
+}
+.tv-link:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.tv-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  margin: 28px 0 10px;
+}
+.tv-section-label:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="/" class="site-name">Mark Price</a>
+    <nav class="site-nav">
+      <a href="writing.html">Writing</a>
+      <a href="projects.html">Projects</a>
+      <a href="zines.html">Zines</a>
+      <a href="news.html">News</a>
+      <a href="about.html">About</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="tv-section-label">Streaming</div>
+  <div class="tv-grid">
+    <a href="https://www.netflix.com" target="_blank" rel="noopener" class="tv-link">Netflix</a>
+    <a href="https://www.hulu.com" target="_blank" rel="noopener" class="tv-link">Hulu</a>
+    <a href="https://www.disneyplus.com" target="_blank" rel="noopener" class="tv-link">Disney+</a>
+    <a href="https://www.hbomax.com" target="_blank" rel="noopener" class="tv-link">Max</a>
+    <a href="https://www.paramountplus.com" target="_blank" rel="noopener" class="tv-link">Paramount+</a>
+    <a href="https://www.peacocktv.com" target="_blank" rel="noopener" class="tv-link">Peacock</a>
+    <a href="https://www.amazon.com/gp/video/storefront" target="_blank" rel="noopener" class="tv-link">Prime Video</a>
+    <a href="https://tv.apple.com" target="_blank" rel="noopener" class="tv-link">Apple TV+</a>
+    <a href="https://www.crunchyroll.com" target="_blank" rel="noopener" class="tv-link">Crunchyroll</a>
+    <a href="https://www.shudder.com" target="_blank" rel="noopener" class="tv-link">Shudder</a>
+  </div>
+
+  <div class="tv-section-label">Video</div>
+  <div class="tv-grid">
+    <a href="https://www.youtube.com" target="_blank" rel="noopener" class="tv-link">YouTube</a>
+    <a href="https://www.twitch.tv" target="_blank" rel="noopener" class="tv-link">Twitch</a>
+    <a href="https://www.tiktok.com" target="_blank" rel="noopener" class="tv-link">TikTok</a>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div class="footer-social">
+      <a href="https://www.youtube.com/@markpricecentral" target="_blank" rel="noopener">YouTube</a>
+      <a href="https://www.tumblr.com/markpricecentral" target="_blank" rel="noopener">Tumblr</a>
+      <a href="https://www.tiktok.com/@flifnflufn" target="_blank" rel="noopener">TikTok</a>
+    </div>
+    <a href="tv.html" class="footer-quiet">tv</a>
+  </div>
+</footer>
+
+</body>
+</html>
