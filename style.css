@@ -156,6 +156,16 @@ img { max-width: 100%; display: block; }
   line-height: 1.5;
 }
 
+.projects-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  margin: 36px 0 16px;
+  scroll-margin-top: 80px;
+}
+
 .card-tag {
   display: inline-block;
   font-size: 10px;
