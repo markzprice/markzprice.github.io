@@ -8,37 +8,37 @@
 <style>
 .tv-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
   margin-top: 8px;
 }
 
 .tv-link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px 16px;
-  color: var(--text-muted);
-  font-size: 14px;
-  font-weight: 500;
+  border: 1px solid var(--ink-rule);
+  padding: 12px 14px;
+  color: var(--ink-mid);
+  font-size: 13px;
+  font-weight: 600;
   transition: border-color 0.15s, color 0.15s;
   text-decoration: none;
+  background: transparent;
 }
 .tv-link:hover {
-  border-color: var(--accent);
-  color: var(--text);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .tv-section-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-faint);
-  margin: 28px 0 10px;
+  letter-spacing: 0.15em;
+  color: var(--ink-light);
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 7px;
+  margin: 32px 0 10px;
 }
 .tv-section-label:first-child { margin-top: 0; }
 </style>
