@@ -82,6 +82,9 @@ label { font-size: 11px; cursor: pointer; }
 .btn:hover { background: #0e0800; color: #f2ece0; }
 .btn--red { border-color: #c42a00; color: #c42a00; }
 .btn--red:hover { background: #c42a00; color: #f2ece0; }
+.btn--skip { font-size: 11px; padding: 5px 12px; opacity: 0.55; border-style: dashed; }
+.btn--skip:hover { opacity: 1; background: #0e0800; color: #f2ece0; }
+.btn--skip.confirming { border-style: solid; opacity: 1; border-color: #b87a00; color: #b87a00; }
 .btn--small { font-size: 10px; padding: 3px 8px; }
 .btn--go {
   font-size: 16px;
@@ -352,6 +355,7 @@ label { font-size: 11px; cursor: pointer; }
   <div class="run-controls">
     <button class="btn btn--go" onclick="pauseResume()" id="pauseBtn">Pause</button>
     <button class="btn" onclick="stepOut()" id="stepOutBtn">Step Out</button>
+    <button class="btn btn--skip" onclick="skipStep()" id="skipBtn">Skip</button>
     <button class="btn btn--red" onclick="stopSession()">Stop</button>
   </div>
   <div class="run-log" id="runLog"></div>
@@ -905,6 +909,7 @@ async function startQuick(a, b) {
   document.getElementById('stepOutClock').classList.remove('visible');
   document.getElementById('runClock').classList.remove('counting-up');
   requestWakeLock();
+  resetSkipBtn();
   logRun('Quick start: ' + a + ' x ' + b + ' x 3');
   await runQuickStep();
 }
@@ -977,6 +982,7 @@ async function startQuickStudy() {
   document.getElementById('stepOutClock').classList.remove('visible');
   document.getElementById('runClock').classList.remove('counting-up');
   requestWakeLock();
+  resetSkipBtn();
   logRun('Study / Break / Clean · 3 rounds');
   await runStudyStep();
 }
@@ -1076,6 +1082,7 @@ async function startSession() {
   document.getElementById('stepOutClock').classList.remove('visible');
   document.getElementById('runClock').classList.remove('counting-up');
   requestWakeLock();
+  resetSkipBtn();
   logRun('Session started');
   await runStep();
 }
@@ -1183,6 +1190,7 @@ async function endSession() {
   } else {
     playPool(endPool, null, 'pool');
   }
+  resetSkipBtn();
   document.getElementById('pauseBtn').textContent = 'Done';
   document.getElementById('stepOutClock').classList.remove('visible');
   document.getElementById('runClock').classList.remove('counting-up');
@@ -1201,6 +1209,42 @@ function pauseResume() {
     runState.timerEnd = Date.now() + (runState.pauseRemaining || 0);
     document.getElementById('pauseBtn').textContent = 'Pause';
     logRun('Resumed');
+  }
+}
+
+let skipConfirmTimeout = null;
+function resetSkipBtn() {
+  clearTimeout(skipConfirmTimeout);
+  const btn = document.getElementById('skipBtn');
+  if (btn) { btn.dataset.confirming = 'false'; btn.textContent = 'Skip'; btn.classList.remove('confirming'); }
+}
+function skipStep() {
+  if (!runState || runState.stopped) return;
+  const btn = document.getElementById('skipBtn');
+  if (btn.dataset.confirming === 'true') {
+    // Confirmed — advance the countdown to now so it resolves naturally
+    clearTimeout(skipConfirmTimeout);
+    btn.dataset.confirming = 'false';
+    btn.textContent = 'Skip';
+    btn.classList.remove('confirming');
+    logRun('Skipped');
+    if (runState.paused) {
+      // Un-pause first so the interval can tick and resolve
+      runState.paused = false;
+      runState.pauseRemaining = null;
+      document.getElementById('pauseBtn').textContent = 'Pause';
+    }
+    runState.timerEnd = Date.now();
+  } else {
+    // First click — ask for confirmation
+    btn.dataset.confirming = 'true';
+    btn.textContent = 'Sure?';
+    btn.classList.add('confirming');
+    skipConfirmTimeout = setTimeout(() => {
+      btn.dataset.confirming = 'false';
+      btn.textContent = 'Skip';
+      btn.classList.remove('confirming');
+    }, 3000);
   }
 }
 
@@ -1241,6 +1285,7 @@ function stepOut() {
 
 function stopSession() {
   releaseWakeLock();
+  resetSkipBtn();
   if (runState) {
     runState.stopped = true;
     clearInterval(runState.clockInterval);
