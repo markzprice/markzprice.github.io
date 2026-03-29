@@ -22,7 +22,7 @@ body::after {
   inset: 0;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.05;
+  opacity: 0.09;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px;
 }
@@ -42,7 +42,7 @@ img { max-width: 100%; display: block; }
 
 .layout {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 240px 1fr;
   min-height: 100vh;
   max-width: 1160px;
   margin: 0 auto;
@@ -54,7 +54,7 @@ img { max-width: 100%; display: block; }
 
 .sidebar {
   border-right: 2px solid var(--ink);
-  padding: 36px 20px 32px;
+  padding: 36px 24px 32px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -66,12 +66,13 @@ img { max-width: 100%; display: block; }
 
 .site-name {
   font-family: var(--serif);
-  font-size: 20px;
-  font-weight: normal;
-  font-style: italic;
+  font-size: 26px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: -0.02em;
   color: var(--ink);
-  line-height: 1.2;
-  margin-bottom: 36px;
+  line-height: 1.1;
+  margin-bottom: 32px;
   display: block;
 }
 .site-name:hover { color: var(--red); }
@@ -79,24 +80,40 @@ img { max-width: 100%; display: block; }
 .site-nav {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 13px;
+  counter-reset: nav-count;
 }
 
 .site-nav a {
+  counter-increment: nav-count;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   color: var(--ink-light);
   transition: color 0.1s;
-  display: inline-block;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.site-nav a::before {
+  content: "0" counter(nav-count);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 9px;
+  font-weight: normal;
+  color: var(--ink-rule);
+  letter-spacing: 0;
+  flex-shrink: 0;
 }
 .site-nav a:hover { color: var(--ink); }
 .site-nav a.active {
   background: var(--yellow);
   color: var(--ink);
-  padding: 2px 6px;
+  padding: 2px 8px 2px 6px;
   margin-left: -6px;
+}
+.site-nav a.active::before {
+  color: var(--ink-mid);
 }
 
 .sidebar-bottom {
@@ -179,6 +196,34 @@ img { max-width: 100%; display: block; }
   border-bottom: 2px solid var(--ink);
   padding-bottom: 6px;
   margin-bottom: 0;
+}
+
+/* ===== HOMEPAGE MASTHEAD =================================== */
+
+.home-masthead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 3px solid var(--ink);
+  padding-bottom: 14px;
+  margin-bottom: 32px;
+}
+
+.home-masthead-tagline {
+  font-family: var(--serif);
+  font-size: clamp(15px, 2.2vw, 20px);
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.home-masthead-year {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  color: var(--ink-light);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* ===== HOMEPAGE FEEDS ====================================== */
@@ -416,12 +461,21 @@ img { max-width: 100%; display: block; }
 /* ===== FOOTER ============================================= */
 
 .site-footer {
-  background: var(--ink);
-  padding: 20px 44px;
+  background: transparent;
+  border-top: 2px solid var(--ink);
+  padding: 16px 44px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
+
+.footer-quiet {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 9px;
+  color: var(--ink-rule);
+  transition: color 0.15s;
+}
+.footer-quiet:hover { color: var(--ink-light); }
 
 .footer-social { display: none; }
 
@@ -440,8 +494,9 @@ img { max-width: 100%; display: block; }
     flex-wrap: wrap;
     gap: 16px;
   }
-  .site-name { margin-bottom: 0; font-size: 18px; }
+  .site-name { margin-bottom: 0; font-size: 20px; }
   .site-nav { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+  .site-nav a::before { display: none; }
   .sidebar-bottom { display: none; }
   .page { padding: 24px 20px 60px; }
   .feed-grid { grid-template-columns: 1fr; gap: 32px; }
