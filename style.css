@@ -190,19 +190,21 @@ img { max-width: 100%; display: block; }
 
 .home-masthead-above {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--ink-mid);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.02em;
+  opacity: 0.7;
   display: block;
   margin-bottom: 6px;
 }
 
 .home-masthead-year {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--ink-mid);
   margin-top: 8px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
   display: block;
 }
 
