@@ -188,6 +188,15 @@ img { max-width: 100%; display: block; }
 
 .home-masthead-sub { display: none; }
 
+.home-masthead-above {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-mid);
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 6px;
+}
+
 .home-masthead-year {
   font-family: var(--mono);
   font-size: 10px;
