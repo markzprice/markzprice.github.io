@@ -170,43 +170,31 @@ img { max-width: 100%; display: block; }
 
 .home-masthead {
   background: var(--yellow);
-  margin: -56px -32px 48px;
-  padding: 56px 32px 44px;
+  margin: -56px -32px 40px;
+  padding: 56px 32px 16px;
   border-bottom: 3px solid var(--ink);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: 280px;
 }
 
 .home-masthead-tagline {
   font-family: var(--serif);
-  font-size: clamp(52px, 8.5vw, 96px);
+  font-size: clamp(22px, 3.5vw, 38px);
   font-style: normal;
   font-weight: 700;
-  line-height: 0.92;
-  letter-spacing: -0.04em;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
   color: var(--ink);
   display: block;
 }
 
-.home-masthead-sub {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--ink-mid);
-  margin-top: 18px;
-  line-height: 1.6;
-  max-width: 480px;
-  letter-spacing: 0.02em;
-}
+.home-masthead-sub { display: none; }
 
 .home-masthead-year {
   font-family: var(--mono);
   font-size: 10px;
   color: var(--ink-mid);
-  margin-top: 6px;
-  letter-spacing: 0.08em;
-  opacity: 0.7;
+  margin-top: 8px;
+  letter-spacing: 0.06em;
+  display: block;
 }
 
 /* ===== HOMEPAGE FEEDS ====================================== */
@@ -536,6 +524,78 @@ img { max-width: 100%; display: block; }
 }
 .footer-quiet:hover { color: var(--ink-rule); }
 
+/* ===== PAGE PERSONALITIES =================================
+   Each page has its own register. The nav is consistent;
+   what you find inside is not.
+   ========================================================= */
+
+/* NOTES — private notebook, not a blog.
+   Left border like a margin annotation. Smaller, closer.
+   Beuys kept blackboard notes. These are those notes. */
+.page--notes .page-hero {
+  border-bottom: none;
+  border-left: 3px solid var(--red);
+  padding-left: 24px;
+  padding-bottom: 0;
+  margin-bottom: 44px;
+}
+.page--notes .page-hero h1 {
+  font-size: clamp(28px, 4vw, 46px);
+}
+.page--notes .page-hero p {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-mid);
+}
+.page--notes .post-item {
+  padding: 32px 0;
+}
+.page--notes .empty-state {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  border: none;
+  padding: 8px 0 8px 24px;
+  border-left: 3px solid var(--ink-rule);
+}
+
+/* PROJECTS — workshop manifest. Direct. Things being built.
+   Tinguely kept lists of parts. Card titles are names, not poems. */
+.page--projects .card-title {
+  font-style: normal;
+  letter-spacing: -0.01em;
+}
+.page--projects .page-hero h1 {
+  font-size: clamp(44px, 6.5vw, 80px);
+}
+
+/* ZINES — finished objects. Small press. Catalog.
+   The title stamped in yellow — these exist, they are real. */
+.page--zines .page-hero {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 36px;
+}
+.page--zines .page-hero h1 {
+  display: inline;
+  background: var(--yellow);
+  padding: 2px 8px 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  font-size: clamp(44px, 6.5vw, 80px);
+}
+
+/* NEWS — editorial. Structured. A reading list you trust.
+   Heavier rule, newspaper weight on the header. */
+.page--news .page-hero {
+  border-bottom: 3px solid var(--ink);
+}
+.page--news .page-hero h1 {
+  font-size: clamp(44px, 6.5vw, 80px);
+  letter-spacing: -0.02em;
+}
+
 /* ===== RESPONSIVE ========================================= */
 
 @media (max-width: 640px) {
@@ -547,9 +607,8 @@ img { max-width: 100%; display: block; }
   .about-layout { grid-template-columns: 1fr; }
   .site-footer { padding: 16px 20px; flex-wrap: wrap; gap: 10px; }
   .home-masthead {
-    margin: -36px -20px 48px;
-    padding: 36px 20px 36px;
-    min-height: 200px;
+    margin: -36px -20px 40px;
+    padding: 36px 20px 14px;
   }
-  .home-masthead-tagline { font-size: clamp(38px, 10vw, 56px); }
+  .home-masthead-tagline { font-size: clamp(20px, 6vw, 30px); }
 }
