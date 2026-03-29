@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timer Guide</title>
+<link rel="stylesheet" href="style.css">
+<style>
+
+.guide-header {
+  padding: 48px 0 32px;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 48px;
+}
+
+.guide-header h1 {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.guide-header .subtitle {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink-light);
+}
+
+.guide-back {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--red);
+  border: 1.5px solid var(--red);
+  padding: 4px 12px;
+  display: inline-block;
+  margin-bottom: 32px;
+  transition: background 0.15s, color 0.15s;
+}
+.guide-back:hover { background: var(--red); color: var(--paper); }
+
+.guide-body {
+  max-width: 680px;
+}
+
+.guide-body h2 {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--red);
+  border: 1.5px solid var(--red);
+  display: inline-block;
+  padding: 2px 8px;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  opacity: 0.85;
+}
+
+.guide-body h3 {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mid);
+  margin-top: 28px;
+  margin-bottom: 10px;
+}
+
+.guide-body p {
+  margin-bottom: 18px;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.guide-body ul {
+  margin: 0 0 18px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-body ul li {
+  padding-left: 20px;
+  position: relative;
+  margin-bottom: 10px;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.guide-body ul li::before {
+  content: '·';
+  position: absolute;
+  left: 4px;
+  color: var(--ink-light);
+}
+
+.guide-body strong {
+  font-weight: bold;
+  color: var(--ink);
+}
+
+.guide-rule {
+  border: none;
+  border-top: 1px solid var(--ink-rule);
+  margin: 48px 0 0;
+}
+
+.guide-toc {
+  border: 1.5px solid var(--ink-rule);
+  padding: 20px 24px;
+  margin-bottom: 40px;
+  background: #faf7f0;
+}
+
+.guide-toc-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  opacity: 0.5;
+  margin-bottom: 12px;
+}
+
+.guide-toc a {
+  display: block;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--ink-rule);
+  color: var(--ink-mid);
+  transition: color 0.15s;
+}
+.guide-toc a:last-child { border-bottom: none; }
+.guide-toc a:hover { color: var(--red); }
+
+.guide-end {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ink-light);
+  text-align: center;
+  margin-top: 60px;
+  padding: 32px 0 0;
+  border-top: 1px solid var(--ink-rule);
+}
+
+@media (max-width: 640px) {
+  .guide-header h1 { font-size: 22px; }
+  .guide-body p, .guide-body ul li { font-size: 14px; }
+}
+
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="/" class="site-name">Mark Price</a>
+    <nav class="site-nav">
+      <a href="/">home</a>
+      <a href="writing.html">notes</a>
+      <a href="projects.html">projects</a>
+      <a href="zines.html">zines</a>
+      <a href="about.html">about</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+<div class="guide-header">
+  <a href="timer.html" class="guide-back">&larr; back to timer</a>
+  <h1>Timer Guide</h1>
+  <div class="subtitle">A personal interval timer for real life</div>
+</div>
+
+<div class="guide-body">
+
+  <div class="guide-toc">
+    <div class="guide-toc-label">Sections</div>
+    <a href="#what">What is this?</a>
+    <a href="#quickstart">Quick Start</a>
+    <a href="#builder">The Session Builder</a>
+    <a href="#pools">Sound Pools</a>
+    <a href="#announce">Announce Options</a>
+    <a href="#voice">Voice Setup</a>
+    <a href="#running">While the Timer is Running</a>
+    <a href="#saving">Saving and Loading</a>
+    <a href="#tips">Practical Tips</a>
+  </div>
+
+  <!-- WHAT IS THIS -->
+  <h2 id="what">What Is This?</h2>
+
+  <p>Timer is a single page that lives at this website. There is nothing to install, no account to make, and it works completely offline once loaded. Open it, set up a sequence of timed blocks, and hit Go.</p>
+
+  <p>The short version: you describe a repeating pattern (study for 12 minutes, break for 10 minutes, repeat 3 times) and the timer runs it for you, announcing each block out loud and playing a sound when time is up.</p>
+
+  <p>A few things it can do that you might not expect:</p>
+  <ul>
+    <li>Speak announcements in a clear voice so you know what block is starting or ending without looking at the screen.</li>
+    <li>Play different sounds for different kinds of blocks (study, rest, exercise, and so on).</li>
+    <li>Let you step away briefly without stopping the timer.</li>
+    <li>Save your favorite setups so you can reload them anytime.</li>
+    <li>Start instantly with one-click quick timers for the most common patterns.</li>
+  </ul>
+
+  <hr class="guide-rule">
+
+  <!-- QUICK START -->
+  <h2 id="quickstart">Quick Start: Up and Running in 30 Seconds</h2>
+
+  <p>You do not need to read this whole guide before using Timer. Here is the fastest path to a running timer.</p>
+
+  <h3>Using the Quick Start buttons</h3>
+
+  <p>At the top of the page you will find a row of Quick Start buttons. Each one is a complete, ready-to-run timer. Just click it and the timer starts immediately.</p>
+
+  <ul>
+    <li>The buttons labeled things like "10 x 10" and "12 x 8" are simple alternating timers: the first number is how many minutes on, the second is how many minutes off. Each one runs 3 full rounds.</li>
+    <li><strong>12 study · 10 break · 8 clean</strong> is a special preset that cycles through three different activities (12 minutes studying, 10 minutes resting, 8 minutes cleaning) and repeats that whole pattern 3 times. When it is done, it plays a celebration sound and tells you how great you did.</li>
+  </ul>
+
+  <p>When a quick timer is running, you will see the countdown, the current block name, and controls at the bottom of the screen. You can pause, step out briefly, or stop it at any time.</p>
+
+  <h3>Building a simple timer from scratch</h3>
+
+  <p>If the quick start buttons do not match what you need, here is the fast version of building your own:</p>
+  <ul>
+    <li>Find the <strong>Session Builder</strong> section on the main page.</li>
+    <li>Click <strong>Add Timer</strong>. A row appears with a name field, a duration field, a sound pool picker, and announce options.</li>
+    <li>Type a name (optional), set the duration in minutes, and leave everything else at the defaults for now.</li>
+    <li>Add as many timer rows as you want. If you want a pattern that repeats, wrap your timers in a block and set the repeat count.</li>
+    <li>Click <strong>Start Session</strong>. The run screen takes over and the first timer starts.</li>
+  </ul>
+
+  <hr class="guide-rule">
+
+  <!-- SESSION BUILDER -->
+  <h2 id="builder">The Session Builder</h2>
+
+  <p>The session builder is where you design your timer sequence before you run it. Think of it as laying out your schedule in advance.</p>
+
+  <h3>Sessions, Blocks, and Timers</h3>
+
+  <p>There are three levels of organization:</p>
+  <ul>
+    <li><strong>Timers</strong> are the basic units. Each one has a name, a duration, a sound pool, and announce settings. A timer is one chunk of time, like "study for 12 minutes."</li>
+    <li><strong>Blocks</strong> are groups of timers that repeat together. You might have a block that contains "study for 12 minutes" and "rest for 8 minutes" and set it to repeat 4 times. The block runs through all its timers, then loops back and does it again.</li>
+  </ul>
+
+  <h3>Adding and editing timers</h3>
+
+  <p>Click <strong>Add Timer</strong> to add a new row. Each timer row has a label, a duration in minutes, a sound pool, and separate announce settings for when it starts and when it ends. To remove a timer, click the x button at the right end of its row.</p>
+
+  <h3>Blocks and repeats</h3>
+
+  <p>Click <strong>Add Block</strong> to create a group. You can then add timers inside that block. At the top of a block you will see a <strong>Repeat</strong> field where you set how many times the block loops.</p>
+
+  <h3>Between-block pause</h3>
+
+  <p>If you want a short automatic pause between blocks, there is a setting for that in the Sound Pools panel. Set it to any number of seconds. When one block ends and the next is about to begin, the timer will pause silently for that long before continuing on its own.</p>
+
+  <h3>Session end</h3>
+
+  <p>In the Sound Pools panel you can also choose what happens when everything is done. The Celebration pool is a good choice here.</p>
+
+  <hr class="guide-rule">
+
+  <!-- SOUND POOLS -->
+  <h2 id="pools">Sound Pools</h2>
+
+  <p>A sound pool is a labeled set of sounds that goes with a particular kind of activity. When a timer fires, it plays the sound (or speaks the phrase) from whichever pool that timer is assigned to.</p>
+
+  <p>The available pools are: Study, Clean, Play, Free Time, Bio, Exercise, Stretch, Rest, Alert, Block End, Celebration, and Alarm.</p>
+
+  <p>Each pool has a default spoken phrase. "Study" says "study time," "Bio" says "bio break," "Celebration" says "great work, you did it," and so on. You can leave these as-is or type something different into the phrase field for any pool.</p>
+
+  <p>If you do not want any sound for a particular timer, set the announce option to None.</p>
+
+  <hr class="guide-rule">
+
+  <!-- ANNOUNCE OPTIONS -->
+  <h2 id="announce">Announce Options</h2>
+
+  <p>Each timer has two announce settings: one for when it starts and one for when it ends. These control what the voice says at each moment.</p>
+
+  <ul>
+    <li><strong>None</strong> &mdash; No announcement, no sound.</li>
+    <li><strong>Duration only</strong> &mdash; "Twelve minutes."</li>
+    <li><strong>Pool phrase only</strong> &mdash; "Study time."</li>
+    <li><strong>Pool phrase + duration</strong> &mdash; "Study time, twelve minutes."</li>
+    <li><strong>"Start" + pool phrase</strong> &mdash; "Start, study time."</li>
+    <li><strong>"Start" + pool + duration</strong> &mdash; "Start, study time, twelve minutes."</li>
+    <li><strong>"End"</strong> &mdash; Just the word "End."</li>
+    <li><strong>Pool phrase + "end"</strong> &mdash; "Study time, end."</li>
+    <li><strong>Duration + pool + "end"</strong> &mdash; "Twelve minutes, study time, end."</li>
+    <li><strong>"End" + duration</strong> &mdash; "End, twelve minutes."</li>
+    <li><strong>"End" + pool + duration</strong> &mdash; "End, study time, twelve minutes."</li>
+    <li><strong>Custom text</strong> &mdash; Type whatever you want the voice to say.</li>
+  </ul>
+
+  <p>The quick start presets use "Start + pool + duration" at the beginning and "End + pool + duration" at the end, which gives you a clear heads-up every time something changes.</p>
+
+  <hr class="guide-rule">
+
+  <!-- VOICE SETUP -->
+  <h2 id="voice">Voice Setup</h2>
+
+  <p>Timer uses your device's built-in text-to-speech to read announcements aloud. On a Mac or iPhone, this works out of the box with no setup required.</p>
+
+  <h3>Choosing a voice</h3>
+
+  <p>In the Sound Pools panel, you will find a voice selector. The app only shows voices that tend to sound good for announcements. On macOS these are Ava, Zoe, Moira, and Tessa, with Premium and Enhanced versions shown first. Ava Premium is the recommended default and is selected automatically if it is installed.</p>
+
+  <h3>Downloading better voices</h3>
+
+  <p>If Ava Premium is not in the list, it may not be downloaded yet. On macOS Tahoe, open <strong>System Settings</strong>, go to <strong>Accessibility</strong>, then <strong>Read &amp; Speak</strong>. Find Ava in the list and click the download button next to the Premium version. Once downloaded, refresh the Timer page and the new voice will appear in the selector.</p>
+
+  <h3>Volume and rate</h3>
+
+  <p>There are sliders for speech volume and speech rate in the settings area. If announcements feel too fast or too slow, adjust the rate slider.</p>
+
+  <hr class="guide-rule">
+
+  <!-- RUNNING -->
+  <h2 id="running">While the Timer is Running</h2>
+
+  <p>Once you click Start Session (or a quick start button), the run screen takes over. You will see a large countdown clock, the name of the current block, and three buttons at the bottom.</p>
+
+  <h3>Pause</h3>
+  <p>Freeze the countdown. Press again to resume. The remaining time is saved exactly.</p>
+
+  <h3>Step Out</h3>
+  <p>For when you need to leave mid-block but want to come back and finish it. Press Step Out and the countdown freezes while a count-up clock starts, so you can see how long you have been away. Press it again when you are back and the countdown picks up exactly where it left off.</p>
+
+  <h3>Stop</h3>
+  <p>Ends the session entirely. If you try to leave the page while a timer is running, the browser will ask you to confirm first.</p>
+
+  <hr class="guide-rule">
+
+  <!-- SAVING -->
+  <h2 id="saving">Saving and Loading Sessions</h2>
+
+  <p>You can save up to five sessions. Click <strong>Save Session</strong> in the Sound Pools panel, give it a name, and it is stored locally in your browser. Click <strong>Load Session</strong> and pick a saved name to bring it back.</p>
+
+  <p>To back up a session or move it to another device, use <strong>Export</strong> to save it as a small JSON file. Use <strong>Import</strong> to load it back in on any device.</p>
+
+  <hr class="guide-rule">
+
+  <!-- TIPS -->
+  <h2 id="tips">Practical Tips</h2>
+
+  <ul>
+    <li><strong>Keep the page open.</strong> The timer lives in the browser tab. Closing it stops the timer. The leave-page warning will catch accidental taps but not a full browser crash.</li>
+    <li><strong>Display sleep is fine, system sleep is not.</strong> The screen can turn off and the timer keeps running. But if your Mac goes to full system sleep the timer may freeze. On iPhone the app holds a screen wake lock automatically while running, so the display stays on.</li>
+    <li><strong>You do not have to watch the screen.</strong> The announcements are designed to keep you informed without checking in. Set up your announce options and let the voice do the work.</li>
+    <li><strong>Quick Start is enough for most days.</strong> The session builder is there when you need it, but the quick start buttons cover the most common patterns. Start there.</li>
+    <li><strong>The celebration at the end is real.</strong> When you finish a session, the app tells you so. Let it be a small moment.</li>
+  </ul>
+
+  <p class="guide-end">That is everything. Go set a timer.</p>
+
+</div>
+</main>
+
+<footer class="site-footer">
+  <span class="footer-left">mark price · 2026</span>
+  <div class="footer-social">
+    <a href="https://www.youtube.com/@markpricecentral" target="_blank" rel="noopener">youtube</a>
+    <a href="https://www.tumblr.com/markpricecentral" target="_blank" rel="noopener">tumblr</a>
+    <a href="https://www.tiktok.com/@flifnflufn" target="_blank" rel="noopener">tiktok</a>
+  </div>
+  <a href="tv.html" class="footer-quiet">tv</a>
+</footer>
+
+</body>
+</html>
