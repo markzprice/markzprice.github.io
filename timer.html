@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Timer">
+<meta name="theme-color" content="#f2ece0">
+<title>Timer</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Courier New', Courier, monospace;
+  background: #f2ece0;
+  color: #0e0800;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ===== LAYOUT ===== */
+.app { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+.sidebar {
+  background: #e8e0d0;
+  border-right: 2px solid #0e0800;
+  padding: 20px 16px;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.main { padding: 24px 28px; overflow-y: auto; }
+
+/* ===== TYPOGRAPHY ===== */
+.section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #c42a00;
+  border: 1.5px solid #c42a00;
+  display: inline-block;
+  padding: 2px 8px;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+h2 { font-size: 13px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.05em; }
+h3 { font-size: 12px; font-weight: bold; margin-bottom: 6px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* ===== INPUTS ===== */
+input[type="text"], input[type="number"], select, textarea {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  background: #f2ece0;
+  border: 1.5px solid #a09080;
+  color: #0e0800;
+  padding: 4px 8px;
+  width: 100%;
+  outline: none;
+}
+input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+  border-color: #0e0800;
+}
+input[type="number"] { width: 64px; }
+input[type="checkbox"] { width: auto; accent-color: #c42a00; cursor: pointer; }
+label { font-size: 11px; cursor: pointer; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 14px;
+  border: 1.5px solid #0e0800;
+  background: transparent;
+  color: #0e0800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover { background: #0e0800; color: #f2ece0; }
+.btn--red { border-color: #c42a00; color: #c42a00; }
+.btn--red:hover { background: #c42a00; color: #f2ece0; }
+.btn--small { font-size: 10px; padding: 3px 8px; }
+.btn--go {
+  font-size: 16px;
+  padding: 14px 40px;
+  border-width: 2px;
+  letter-spacing: 0.15em;
+}
+.btn--quick {
+  font-size: 15px;
+  font-weight: bold;
+  padding: 12px 20px;
+  border-width: 2px;
+  letter-spacing: 0.05em;
+}
+.btn--quick-study {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 12px 18px;
+  border-width: 2px;
+  letter-spacing: 0.04em;
+  border-color: #1a7a3c;
+  color: #1a7a3c;
+}
+.btn--quick-study:hover { background: #1a7a3c; color: #f2ece0; }
+
+/* ===== CARDS ===== */
+.card {
+  border: 1.5px solid #c4baaa;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: #faf7f0;
+  position: relative;
+}
+.card--block { border-color: #0e0800; }
+.card--timer { border-color: #a09080; margin-bottom: 8px; }
+.card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+
+/* ===== ROWS ===== */
+.row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.row--tight { gap: 5px; }
+.col { display: flex; flex-direction: column; gap: 4px; }
+.spacer { flex: 1; }
+
+/* ===== SOUND POOLS ===== */
+.pool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pool-card {
+  border: 1.5px solid #c4baaa;
+  padding: 10px;
+  background: #faf7f0;
+}
+.pool-name {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #4a3c28;
+}
+.pool-tts { margin-bottom: 6px; }
+.pool-file-btn { margin-top: 4px; }
+.pool-file-name { font-size: 10px; opacity: 0.5; margin-top: 3px; word-break: break-all; }
+
+/* ===== QUICK START ===== */
+.quick-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 28px;
+  padding: 18px 20px;
+  border: 2px solid #0e0800;
+  background: #faf7f0;
+}
+.quick-bar-label {
+  width: 100%;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  opacity: 0.4;
+  margin-bottom: 4px;
+}
+
+/* ===== RUN PANEL ===== */
+.run-panel {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #f2ece0;
+  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.run-panel.active { display: flex; }
+.run-clock { font-size: 96px; font-weight: bold; letter-spacing: -0.03em; line-height: 1; }
+.run-clock.counting-up { color: #7a6a52; }
+.run-label { font-size: 18px; opacity: 0.5; letter-spacing: 0.1em; text-transform: uppercase; }
+.run-next { font-size: 12px; opacity: 0.4; letter-spacing: 0.05em; }
+.run-progress {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+  text-align: center;
+  line-height: 2;
+}
+.run-alert {
+  font-size: 14px;
+  color: #c42a00;
+  border: 1.5px solid #c42a00;
+  padding: 6px 20px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.3s;
+  min-height: 34px;
+}
+.run-alert.visible { opacity: 1; }
+.run-controls { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
+.run-log {
+  font-size: 10px;
+  opacity: 0.35;
+  text-align: center;
+  max-height: 80px;
+  overflow-y: auto;
+  width: 400px;
+  line-height: 1.8;
+}
+.step-out-clock {
+  display: none;
+  font-size: 28px;
+  color: #7a6a52;
+  letter-spacing: 0.05em;
+}
+.step-out-clock.visible { display: block; }
+
+/* ===== MISC ===== */
+.divider { border: none; border-top: 1px solid #c4baaa; margin: 16px 0; }
+.hint { font-size: 10px; opacity: 0.45; margin-top: 3px; }
+.badge {
+  font-size: 10px;
+  background: #0e0800;
+  color: #f2ece0;
+  padding: 1px 6px;
+  letter-spacing: 0.05em;
+}
+.badge--red { background: #c42a00; }
+.remove-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.3;
+  background: none;
+  border: none;
+  color: #0e0800;
+  line-height: 1;
+}
+.remove-btn:hover { opacity: 1; color: #c42a00; }
+
+/* ===== MOBILE SIDEBAR TOGGLE (hidden on desktop) ===== */
+.mobile-sidebar-toggle {
+  display: none;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+
+  /* single column layout */
+  .app { grid-template-columns: 1fr; }
+
+  /* sidebar: hidden by default, toggled open */
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 2px solid #0e0800;
+    display: none;
+    overflow-y: visible;
+  }
+  .sidebar.mobile-open { display: block; }
+
+  /* toggle button visible on mobile */
+  .mobile-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 16px;
+    background: #e8e0d0;
+    border: none;
+    border-bottom: 1.5px solid #0e0800;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #0e0800;
+    cursor: pointer;
+    min-height: 44px;
+  }
+
+  /* bigger tap targets */
+  .btn          { min-height: 44px; padding: 10px 16px; font-size: 13px; }
+  .btn--small   { min-height: 40px; padding: 8px 12px;  font-size: 12px; }
+  .btn--go      { min-height: 54px; font-size: 17px; padding: 14px 32px; }
+  .btn--quick   { min-height: 52px; font-size: 14px; padding: 12px 14px; }
+  .btn--quick-study { min-height: 52px; }
+
+  /* 16px minimum on inputs so iOS does not auto-zoom */
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px;
+    padding: 8px 10px;
+    min-height: 40px;
+  }
+  input[type="number"] { width: 72px; }
+  label { font-size: 13px; }
+  h2 { font-size: 15px; }
+  h3 { font-size: 13px; }
+
+  /* pool grid single column */
+  .pool-grid { grid-template-columns: 1fr; }
+
+  /* quick bar */
+  .quick-bar { padding: 14px 12px; }
+  .btn--quick { flex: 1 1 140px; }
+
+  /* timer start/end grid stacks to single column */
+  .timer-grid { grid-template-columns: 1fr !important; }
+
+  /* run panel */
+  .run-clock  { font-size: 22vw; }
+  .run-label  { font-size: 15px; }
+  .run-next   { font-size: 13px; }
+  .run-log    { width: 100%; max-width: 100%; padding: 0 16px; box-sizing: border-box; }
+  .run-controls .btn { min-height: 56px; padding: 14px 20px; font-size: 15px; }
+  .step-out-clock { font-size: 22px; }
+
+  /* main content padding */
+  .main { padding: 14px; }
+
+  /* session builder header row stacks */
+  .session-header { flex-direction: column; align-items: flex-start !important; }
+
+  /* remove button easier to tap */
+  .remove-btn { font-size: 22px; top: 6px; right: 6px; padding: 6px; opacity: 0.45; }
+
+  /* safe area inset for notch phones */
+  .run-panel { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== RUN PANEL ===== -->
+<div class="run-panel" id="runPanel">
+  <div class="run-label" id="runLabel">--</div>
+  <div class="run-clock" id="runClock">00:00</div>
+  <div class="step-out-clock" id="stepOutClock">out: 00:00</div>
+  <div class="run-next" id="runNext">--</div>
+  <div class="run-alert" id="runAlert">--</div>
+  <div class="run-progress" id="runProgress"></div>
+  <div class="run-controls">
+    <button class="btn btn--go" onclick="pauseResume()" id="pauseBtn">Pause</button>
+    <button class="btn" onclick="stepOut()" id="stepOutBtn">Step Out</button>
+    <button class="btn btn--red" onclick="stopSession()">Stop</button>
+  </div>
+  <div class="run-log" id="runLog"></div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div class="app">
+
+  <!-- SIDEBAR TOGGLE (mobile only) -->
+  <button class="mobile-sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggle">
+    <span>Sound Pools &amp; Settings</span>
+    <span id="sidebarArrow">&#9660;</span>
+  </button>
+
+  <!-- SIDEBAR: Sound Pools -->
+  <div class="sidebar" id="sidebar">
+    <div class="section-label">Sound Pools</div>
+
+    <div class="hint" style="margin-bottom:12px;">Each pool can speak via TTS, play an audio file, or both. Leave blank to silence.</div>
+
+    <!-- Voice selector -->
+    <div class="row" style="margin-bottom:6px;">
+      <label style="white-space:nowrap;">TTS Voice:</label>
+      <select id="voiceSelect" style="flex:1;"></select>
+    </div>
+    <div class="hint" style="margin-bottom:14px;">Ava / Zoe / Moira / Tessa only. Download Premium versions in System Settings → Accessibility → Read & Speak.</div>
+
+    <div class="pool-grid" id="poolGrid">
+      <!-- Pools rendered by JS -->
+    </div>
+
+    <hr class="divider">
+
+    <!-- Between-block pause -->
+    <div class="section-label">Between Blocks</div>
+    <div class="row">
+      <input type="checkbox" id="interBlockEnabled" onchange="renderBetweenBlock()">
+      <label for="interBlockEnabled">Enable pause between blocks</label>
+    </div>
+    <div id="interBlockConfig" style="display:none; margin-top:10px;">
+      <div class="row">
+        <label>Duration (min):</label>
+        <input type="number" id="interBlockDuration" value="2" min="0" step="0.5" style="width:60px;">
+      </div>
+      <div class="row">
+        <label>Sound pool:</label>
+        <select id="interBlockPool" style="flex:1;"></select>
+      </div>
+      <div class="row">
+        <label>Announce:</label>
+        <select id="interBlockAnnounce" style="flex:1;"></select>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Session completion -->
+    <div class="section-label">Session End</div>
+    <div class="col">
+      <label>Sound pool:</label>
+      <select id="sessionEndPool" style="width:100%;"></select>
+    </div>
+    <div class="hint">Plays once when all blocks are done.</div>
+
+    <hr class="divider">
+
+    <!-- Save/Load -->
+    <div class="section-label">Sessions</div>
+    <div class="col" style="gap:6px;">
+      <div class="row">
+        <input type="text" id="saveName" placeholder="session name..." style="flex:1;">
+        <button class="btn btn--small" onclick="saveSession()">Save</button>
+      </div>
+      <select id="savedList" style="width:100%;" onchange="previewSave()">
+        <option value="">-- saved sessions --</option>
+      </select>
+      <div class="row">
+        <button class="btn btn--small" onclick="loadSession()">Load</button>
+        <button class="btn btn--small btn--red" onclick="deleteSave()">Delete</button>
+        <button class="btn btn--small" onclick="exportSession()">Export</button>
+      </div>
+      <label class="btn btn--small" style="text-align:center; cursor:pointer;">
+        Import
+        <input type="file" accept=".json" style="display:none;" onchange="importSession(event)">
+      </label>
+    </div>
+  </div>
+
+  <!-- MAIN: Session Builder -->
+  <div class="main">
+
+    <!-- QUICK START BAR -->
+    <div class="quick-bar">
+      <div class="quick-bar-label">Quick Start · 3 rounds · uses alarm + celebration</div>
+      <button class="btn btn--quick-study" onclick="startQuickStudy()">12 study · 10 break · 8 clean</button>
+      <button class="btn btn--quick" onclick="startQuick(10,10)">10 × 10</button>
+      <button class="btn btn--quick" onclick="startQuick(12,10)">12 × 10</button>
+      <button class="btn btn--quick" onclick="startQuick(12,8)">12 × 8</button>
+      <button class="btn btn--quick" onclick="startQuick(10,8)">10 × 8</button>
+      <button class="btn btn--quick" onclick="startQuick(10,6)">10 × 6</button>
+      <button class="btn btn--quick" onclick="startQuick(12,6)">12 × 6</button>
+    </div>
+
+    <!-- SESSION BUILDER -->
+    <div class="session-header" style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+      <div>
+        <div class="section-label">Session Builder</div>
+        <div class="hint">Build blocks of rounds. Each block repeats its round X times.</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn btn--go" onclick="startSession()">Start Session</button>
+    </div>
+
+    <div id="blocksContainer">
+      <!-- Blocks rendered by JS -->
+    </div>
+
+    <button class="btn" onclick="addBlock()" style="margin-top:8px;">+ Add Block</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const POOL_DEFS = [
+  { id: 'study',       label: 'Study',        defaultTTS: 'study time' },
+  { id: 'clean',       label: 'Clean',        defaultTTS: 'time to clean' },
+  { id: 'play',        label: 'Play',         defaultTTS: 'play time' },
+  { id: 'freeTime',    label: 'Free Time',    defaultTTS: 'free time' },
+  { id: 'bio',         label: 'Bio',          defaultTTS: 'bio break' },
+  { id: 'exercise',    label: 'Exercise',     defaultTTS: 'exercise time' },
+  { id: 'stretch',     label: 'Stretch',      defaultTTS: 'stretch break' },
+  { id: 'rest',        label: 'Rest',         defaultTTS: 'rest time' },
+  { id: 'alert',       label: 'Alert',        defaultTTS: 'attention' },
+  { id: 'blockEnd',    label: 'Block End',    defaultTTS: 'block complete' },
+  { id: 'celebration', label: 'Celebration',  defaultTTS: 'great work, you did it' },
+  { id: 'alarm',       label: 'Alarm',        defaultTTS: 'timer' },
+];
+
+const ANNOUNCE_OPTIONS = [
+  { value: 'none',           label: 'None' },
+  { value: 'duration',       label: 'Duration only' },
+  { value: 'pool',           label: 'Pool phrase only' },
+  { value: 'pool+dur',       label: 'Pool phrase + duration' },
+  { value: 'start+pool',     label: '"Start" + pool phrase' },
+  { value: 'start+pool+dur', label: '"Start" + pool + duration' },
+  { value: 'end',            label: '"End"' },
+  { value: 'pool+end',       label: 'Pool phrase + "end"' },
+  { value: 'dur+pool+end',   label: 'Duration + pool + "end"' },
+  { value: 'end+dur',        label: '"End" + duration' },
+  { value: 'end+pool+dur',   label: '"End" + pool + duration' },
+  { value: 'custom',         label: 'Custom text' },
+];
+
+let pools = {};
+let blocks = [];
+let voices = [];
+let audioCtx = null;
+let blockIdCounter = 0;
+let timerIdCounter = 0;
+let runState = null;
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload = () => {
+  initPools();
+  renderPools();
+  addBlock();
+  loadVoices();
+  loadSavedList();
+};
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function loadVoices() {
+  const populate = () => {
+    const allVoices = speechSynthesis.getVoices();
+    const preferred = ['Ava', 'Zoe', 'Moira', 'Tessa'];
+
+    // Filter to only preferred voices, then sort: Premium first, then Enhanced, then others
+    voices = allVoices
+      .filter(v => preferred.some(name => v.name.includes(name)))
+      .sort((a, b) => {
+        const rank = v => v.name.includes('Premium') ? 0 : v.name.includes('Enhanced') ? 1 : 2;
+        return rank(a) - rank(b);
+      });
+
+    if (voices.length === 0) voices = allVoices;
+
+    const sel = document.getElementById('voiceSelect');
+    sel.innerHTML = '';
+    voices.forEach((v, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = v.name;
+      sel.appendChild(opt);
+    });
+    // Default to Ava Premium if available, otherwise first voice
+    const avaPremium = voices.findIndex(v => v.name.includes('Ava') && v.name.includes('Premium'));
+    const avaAny = voices.findIndex(v => v.name.includes('Ava'));
+    sel.value = avaPremium >= 0 ? avaPremium : avaAny >= 0 ? avaAny : 0;
+  };
+  speechSynthesis.onvoiceschanged = populate;
+  populate();
+}
+
+// ============================================================
+// POOLS
+// ============================================================
+function initPools() {
+  POOL_DEFS.forEach(p => {
+    pools[p.id] = { tts: p.defaultTTS, audioBuffer: null, audioName: '' };
+  });
+}
+
+function renderPools() {
+  const grid = document.getElementById('poolGrid');
+  grid.innerHTML = '';
+  POOL_DEFS.forEach(p => {
+    const pool = pools[p.id];
+    const div = document.createElement('div');
+    div.className = 'pool-card';
+    div.innerHTML = `
+      <div class="pool-name">${p.label}</div>
+      <div class="pool-tts">
+        <input type="text" value="${pool.tts}" placeholder="TTS phrase..."
+          onchange="pools['${p.id}'].tts = this.value" style="font-size:11px;">
+      </div>
+      <label class="btn btn--small pool-file-btn" style="display:inline-block; cursor:pointer;">
+        ${pool.audioName ? 'Change audio' : 'Upload audio'}
+        <input type="file" accept="audio/*" style="display:none;" onchange="loadPoolAudio(event,'${p.id}')">
+      </label>
+      <div class="pool-file-name" id="poolfile-${p.id}">${pool.audioName || 'no file'}</div>
+      ${pool.audioName ? `<button class="btn btn--small btn--red" style="margin-top:4px;" onclick="clearPoolAudio('${p.id}')">Clear</button>` : ''}
+    `;
+    grid.appendChild(div);
+  });
+  refreshAllPoolSelects();
+}
+
+function loadPoolAudio(event, poolId) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    pools[poolId].audioBuffer = e.target.result;
+    pools[poolId].audioName = file.name;
+    renderPools();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function clearPoolAudio(poolId) {
+  pools[poolId].audioBuffer = null;
+  pools[poolId].audioName = '';
+  renderPools();
+}
+
+function poolOptions(includeNone = true) {
+  let html = includeNone ? '<option value="none">None</option>' : '';
+  POOL_DEFS.forEach(p => {
+    html += `<option value="${p.id}">${p.label}</option>`;
+  });
+  return html;
+}
+
+function announceOptions() {
+  return ANNOUNCE_OPTIONS.map(a => `<option value="${a.value}">${a.label}</option>`).join('');
+}
+
+function refreshAllPoolSelects() {
+  ['interBlockPool', 'sessionEndPool'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { const v = el.value; el.innerHTML = poolOptions(); el.value = v || 'none'; }
+  });
+  const ibp = document.getElementById('interBlockAnnounce');
+  if (ibp) { const v = ibp.value; ibp.innerHTML = announceOptions(); ibp.value = v || 'none'; }
+
+  document.querySelectorAll('[data-pool-select]').forEach(sel => {
+    const v = sel.value;
+    sel.innerHTML = poolOptions();
+    sel.value = v || 'none';
+  });
+  document.querySelectorAll('[data-announce-select]').forEach(sel => {
+    const v = sel.value;
+    sel.innerHTML = announceOptions();
+    sel.value = v || 'none';
+  });
+}
+
+function renderBetweenBlock() {
+  const enabled = document.getElementById('interBlockEnabled').checked;
+  document.getElementById('interBlockConfig').style.display = enabled ? 'block' : 'none';
+}
+
+// ============================================================
+// BLOCKS
+// ============================================================
+function addBlock() {
+  const id = ++blockIdCounter;
+  const block = { id, label: 'Block ' + id, repeatCount: 3, timers: [], completionPool: 'blockEnd' };
+  blocks.push(block);
+  addTimer(block);
+  renderBlocks();
+}
+
+function removeBlock(blockId) {
+  blocks = blocks.filter(b => b.id !== blockId);
+  renderBlocks();
+}
+
+function addTimer(block) {
+  block.timers.push({
+    id: ++timerIdCounter,
+    label: '',
+    durationMin: 10,
+    startPool: 'alarm',
+    startAnnounce: 'start+pool+dur',
+    startCustom: '',
+    endPool: 'alarm',
+    endAnnounce: 'dur+pool+end',
+    endCustom: '',
+  });
+}
+
+function removeTimer(blockId, timerId) {
+  const block = blocks.find(b => b.id === blockId);
+  if (!block) return;
+  block.timers = block.timers.filter(t => t.id !== timerId);
+  if (block.timers.length === 0) addTimer(block);
+  renderBlocks();
+}
+
+function renderBlocks() {
+  const container = document.getElementById('blocksContainer');
+  container.innerHTML = '';
+  blocks.forEach((block, bi) => {
+    const div = document.createElement('div');
+    div.className = 'card card--block';
+    div.innerHTML = `
+      <button class="remove-btn" onclick="removeBlock(${block.id})" title="Remove block">×</button>
+      <div class="card-header">
+        <span class="badge">Block ${bi + 1}</span>
+        <input type="text" value="${block.label}" placeholder="block label..."
+          style="flex:1; font-size:12px;"
+          onchange="blocks.find(b=>b.id===${block.id}).label=this.value">
+        <label style="white-space:nowrap; display:flex; align-items:center; gap:6px;">
+          Repeat
+          <input type="number" min="1" value="${block.repeatCount}" style="width:52px;"
+            onchange="blocks.find(b=>b.id===${block.id}).repeatCount=parseInt(this.value)||1">
+          times
+        </label>
+      </div>
+      <div id="timers-${block.id}">
+        ${block.timers.map(t => timerHTML(block.id, t)).join('')}
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+        <button class="btn btn--small" onclick="addTimerToBlock(${block.id})">+ Add Timer</button>
+        <span class="spacer"></span>
+        <label style="display:flex; align-items:center; gap:6px; font-size:11px;">
+          Block done:
+          <select data-pool-select onchange="blocks.find(b=>b.id===${block.id}).completionPool=this.value" style="width:120px;">
+            ${poolOptions()}
+          </select>
+        </label>
+      </div>
+    `;
+    container.appendChild(div);
+    const sel = div.querySelector('[data-pool-select]');
+    if (sel) sel.value = block.completionPool || 'blockEnd';
+  });
+}
+
+function timerHTML(blockId, t) {
+  return `
+    <div class="card card--timer" id="timer-${t.id}">
+      <button class="remove-btn" onclick="removeTimer(${blockId},${t.id})" title="Remove timer">×</button>
+      <div class="row">
+        <input type="text" value="${t.label}" placeholder="timer label..."
+          style="flex:1; font-size:11px;"
+          onchange="updateTimer(${blockId},${t.id},'label',this.value)">
+        <input type="number" min="0.5" step="0.5" value="${t.durationMin}" style="width:60px;"
+          onchange="updateTimer(${blockId},${t.id},'durationMin',parseFloat(this.value)||1)">
+        <span style="font-size:11px; opacity:0.6;">min</span>
+      </div>
+      <div class="timer-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
+        <div class="col">
+          <h3>Start</h3>
+          <label>Sound pool</label>
+          <select data-pool-select onchange="updateTimer(${blockId},${t.id},'startPool',this.value)" style="width:100%;">
+            ${poolOptions()}
+          </select>
+          <label style="margin-top:4px;">Announce</label>
+          <select data-announce-select onchange="updateTimer(${blockId},${t.id},'startAnnounce',this.value)" style="width:100%;">
+            ${announceOptions()}
+          </select>
+          <input type="text" placeholder="custom text..." value="${t.startCustom||''}"
+            id="startCustom-${t.id}"
+            style="margin-top:4px; font-size:11px; display:${t.startAnnounce==='custom'?'block':'none'};"
+            onchange="updateTimer(${blockId},${t.id},'startCustom',this.value)">
+        </div>
+        <div class="col">
+          <h3>End</h3>
+          <label>Sound pool</label>
+          <select data-pool-select onchange="updateTimer(${blockId},${t.id},'endPool',this.value)" style="width:100%;">
+            ${poolOptions()}
+          </select>
+          <label style="margin-top:4px;">Announce</label>
+          <select data-announce-select onchange="updateTimer(${blockId},${t.id},'endAnnounce',this.value)" style="width:100%;">
+            ${announceOptions()}
+          </select>
+          <input type="text" placeholder="custom text..." value="${t.endCustom||''}"
+            id="endCustom-${t.id}"
+            style="margin-top:4px; font-size:11px; display:${t.endAnnounce==='custom'?'block':'none'};"
+            onchange="updateTimer(${blockId},${t.id},'endCustom',this.value)">
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function addTimerToBlock(blockId) {
+  const block = blocks.find(b => b.id === blockId);
+  if (!block) return;
+  addTimer(block);
+  renderBlocks();
+}
+
+function updateTimer(blockId, timerId, key, value) {
+  const block = blocks.find(b => b.id === blockId);
+  if (!block) return;
+  const timer = block.timers.find(t => t.id === timerId);
+  if (!timer) return;
+  timer[key] = value;
+  if (key === 'startAnnounce' || key === 'endAnnounce') {
+    const prefix = key === 'startAnnounce' ? 'startCustom' : 'endCustom';
+    const el = document.getElementById(prefix + '-' + timerId);
+    if (el) el.style.display = value === 'custom' ? 'block' : 'none';
+  }
+}
+
+// ============================================================
+// AUDIO PLAYBACK
+// ============================================================
+async function playPool(poolId, durationMin, announce, customText) {
+  if (!poolId || poolId === 'none') return;
+  const pool = pools[poolId];
+  if (!pool) return;
+
+  const ttsStr = buildAnnounceStr(pool, durationMin, announce, customText);
+  if (ttsStr) await speak(ttsStr);
+  if (pool.audioBuffer) await playAudioBuffer(pool.audioBuffer);
+}
+
+function buildAnnounceStr(pool, durationMin, announce, customText) {
+  const durStr = durationMin ? formatDuration(durationMin) : '';
+  const poolPhrase = pool.tts || '';
+  switch (announce) {
+    case 'none':           return '';
+    case 'duration':       return durStr;
+    case 'pool':           return poolPhrase;
+    case 'pool+dur':       return [poolPhrase, durStr].filter(Boolean).join(', ');
+    case 'start+pool':     return ['start', poolPhrase].filter(Boolean).join(', ');
+    case 'start+pool+dur': return ['start', poolPhrase, durStr].filter(Boolean).join(', ');
+    case 'end':            return 'end';
+    case 'pool+end':       return [poolPhrase, 'end'].filter(Boolean).join(' ');
+    case 'dur+pool+end':   return [durStr, poolPhrase, 'end'].filter(Boolean).join(' ');
+    case 'end+dur':        return ['end', durStr].filter(Boolean).join(', ');
+    case 'end+pool+dur':   return ['end', poolPhrase, durStr].filter(Boolean).join(', ');
+    case 'custom':         return customText || '';
+    default:               return '';
+  }
+}
+
+function formatDuration(min) {
+  if (!min) return '';
+  if (min < 1) return Math.round(min * 60) + ' seconds';
+  if (min === 1) return 'one minute';
+  if (Number.isInteger(min)) {
+    const names = ['','one','two','three','four','five','six','seven','eight','nine','ten',
+      'eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty',
+      'twenty one','twenty two','twenty three','twenty four','twenty five','twenty six','twenty seven',
+      'twenty eight','twenty nine','thirty'];
+    return (min <= 30 ? names[min] : min) + ' minutes';
+  }
+  return min + ' minutes';
+}
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!text) { resolve(); return; }
+    const utt = new SpeechSynthesisUtterance(text);
+    const voiceIdx = document.getElementById('voiceSelect').value;
+    if (voices[voiceIdx]) utt.voice = voices[voiceIdx];
+    utt.rate = 0.95;
+    utt.onend = resolve;
+    utt.onerror = resolve;
+    speechSynthesis.speak(utt);
+  });
+}
+
+async function playAudioBuffer(arrayBuffer) {
+  try {
+    const ac = getAudioCtx();
+    const buf = await ac.decodeAudioData(arrayBuffer.slice(0));
+    const source = ac.createBufferSource();
+    source.buffer = buf;
+    source.connect(ac.destination);
+    return new Promise(resolve => {
+      source.onended = resolve;
+      source.start(0);
+    });
+  } catch(e) {
+    console.warn('Audio play error:', e);
+  }
+}
+
+// ============================================================
+// QUICK START
+// ============================================================
+async function startQuick(a, b) {
+  getAudioCtx().resume();
+
+  const schedule = [];
+  for (let rep = 0; rep < 3; rep++) {
+    schedule.push({ type: 'quickTimer', durationMin: a, repIdx: rep, totalReps: 3 });
+    schedule.push({ type: 'quickTimer', durationMin: b, repIdx: rep, totalReps: 3 });
+  }
+  schedule.push({ type: 'sessionEnd', pool: 'celebration' });
+
+  runState = {
+    schedule, idx: 0,
+    paused: false, stopped: false,
+    stepOut: false, stepOutStart: null, stepOutInterval: null,
+    timerEnd: null, pauseRemaining: null,
+    clockInterval: null,
+    isQuick: true,
+    quickLabel: a + ' x ' + b,
+  };
+
+  document.getElementById('runPanel').classList.add('active');
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  document.getElementById('stepOutClock').classList.remove('visible');
+  document.getElementById('runClock').classList.remove('counting-up');
+  requestWakeLock();
+  logRun('Quick start: ' + a + ' x ' + b + ' x 3');
+  await runQuickStep();
+}
+
+async function runQuickStep() {
+  if (!runState || runState.stopped) return;
+  if (runState.idx >= runState.schedule.length) { endSession(); return; }
+  const event = runState.schedule[runState.idx];
+  if (event.type === 'quickTimer') {
+    await runQuickTimer(event);
+  } else if (event.type === 'sessionEnd') {
+    endSession();
+  }
+}
+
+async function runQuickTimer(event) {
+  if (runState.stopped) return;
+  const durationMs = event.durationMin * 60 * 1000;
+  const durStr = formatDuration(event.durationMin);
+  const announcement = 'start ' + durStr + ' timer';
+
+  setRunLabel(durStr + ' timer · rep ' + (event.repIdx + 1) + ' of ' + event.totalReps);
+  logRun(announcement);
+  showAlert(announcement);
+  await speak(announcement);
+  if (runState.stopped) return;
+
+  runState.timerEnd = Date.now() + durationMs;
+  await countdown(durationMs);
+  if (runState.stopped) return;
+
+  const total = runState.schedule.filter(e => e.type === 'quickTimer').length;
+  const done = runState.schedule.slice(0, runState.idx + 1).filter(e => e.type === 'quickTimer').length;
+  document.getElementById('runProgress').textContent = 'Timer ' + done + ' of ' + total + ' · Rep ' + (event.repIdx + 1) + ' of ' + event.totalReps;
+
+  runState.idx++;
+  await runQuickStep();
+}
+
+async function startQuickStudy() {
+  getAudioCtx().resume();
+
+  const timers = [
+    { durationMin: 12, poolId: 'study',  label: 'studying' },
+    { durationMin: 10, poolId: 'rest',   label: 'break' },
+    { durationMin: 8,  poolId: 'clean',  label: 'cleaning' },
+  ];
+  const totalReps = 3;
+  const schedule = [];
+
+  for (let rep = 0; rep < totalReps; rep++) {
+    timers.forEach(t => {
+      schedule.push({ type: 'studyTimer', ...t, repIdx: rep, totalReps });
+    });
+  }
+  schedule.push({ type: 'sessionEnd', pool: 'celebration' });
+
+  runState = {
+    schedule, idx: 0,
+    paused: false, stopped: false,
+    stepOut: false, stepOutStart: null, stepOutInterval: null,
+    timerEnd: null, pauseRemaining: null,
+    clockInterval: null,
+    isQuick: true,
+    quickEndMessage: 'Amazing. You studied, took a break, and cleaned. Three full rounds. You absolutely did it.',
+  };
+
+  document.getElementById('runPanel').classList.add('active');
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  document.getElementById('stepOutClock').classList.remove('visible');
+  document.getElementById('runClock').classList.remove('counting-up');
+  requestWakeLock();
+  logRun('Study / Break / Clean · 3 rounds');
+  await runStudyStep();
+}
+
+async function runStudyStep() {
+  if (!runState || runState.stopped) return;
+  if (runState.idx >= runState.schedule.length) { endSession(); return; }
+  const event = runState.schedule[runState.idx];
+  if (event.type === 'studyTimer') {
+    await runStudyTimer(event);
+  } else if (event.type === 'sessionEnd') {
+    endSession();
+  }
+}
+
+async function runStudyTimer(event) {
+  if (runState.stopped) return;
+  const durationMs = event.durationMin * 60 * 1000;
+  const durStr = formatDuration(event.durationMin);
+  const pool = pools[event.poolId];
+  const poolPhrase = pool ? pool.tts : event.label;
+
+  const startAnnounce = 'start, ' + poolPhrase + ', ' + durStr;
+  const endAnnounce   = 'end, ' + poolPhrase + ', ' + durStr;
+
+  setRunLabel(event.label + ' · ' + durStr + ' · rep ' + (event.repIdx + 1) + ' of ' + event.totalReps);
+  logRun(startAnnounce);
+  showAlert('start · ' + event.label);
+  await speak(startAnnounce);
+  if (runState.stopped) return;
+
+  runState.timerEnd = Date.now() + durationMs;
+  await countdown(durationMs);
+  if (runState.stopped) return;
+
+  logRun(endAnnounce);
+  showAlert('end · ' + event.label);
+  await speak(endAnnounce);
+  if (pool && pool.audioBuffer) await playAudioBuffer(pool.audioBuffer);
+  if (runState.stopped) return;
+
+  const total = runState.schedule.filter(e => e.type === 'studyTimer').length;
+  const done = runState.schedule.slice(0, runState.idx + 1).filter(e => e.type === 'studyTimer').length;
+  document.getElementById('runProgress').textContent =
+    'Timer ' + done + ' of ' + total + ' · Rep ' + (event.repIdx + 1) + ' of ' + event.totalReps;
+
+  runState.idx++;
+  await runStudyStep();
+}
+
+// ============================================================
+// SESSION RUNNER
+// ============================================================
+function buildSchedule() {
+  const interEnabled = document.getElementById('interBlockEnabled').checked;
+  const interDur = parseFloat(document.getElementById('interBlockDuration').value) || 2;
+  const interPool = document.getElementById('interBlockPool').value;
+  const interAnnounce = document.getElementById('interBlockAnnounce').value;
+  const sessionEndPool = document.getElementById('sessionEndPool').value;
+
+  const schedule = [];
+  blocks.forEach((block, bi) => {
+    for (let rep = 0; rep < block.repeatCount; rep++) {
+      block.timers.forEach((timer, ti) => {
+        schedule.push({
+          type: 'timer', blockLabel: block.label,
+          blockIdx: bi, repIdx: rep, timerIdx: ti,
+          timer, blockRepeatCount: block.repeatCount, timerCount: block.timers.length,
+        });
+      });
+    }
+    schedule.push({ type: 'blockEnd', block, blockIdx: bi, pool: block.completionPool });
+    if (interEnabled && bi < blocks.length - 1) {
+      schedule.push({ type: 'interBlock', durationMin: interDur, pool: interPool, announce: interAnnounce });
+    }
+  });
+  schedule.push({ type: 'sessionEnd', pool: sessionEndPool });
+  return schedule;
+}
+
+async function startSession() {
+  const schedule = buildSchedule();
+  if (!schedule.length) return;
+  getAudioCtx().resume();
+
+  runState = {
+    schedule, idx: 0,
+    paused: false, stopped: false,
+    stepOut: false, stepOutStart: null, stepOutInterval: null,
+    timerEnd: null, pauseRemaining: null,
+    clockInterval: null,
+    isQuick: false,
+  };
+
+  document.getElementById('runPanel').classList.add('active');
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  document.getElementById('stepOutClock').classList.remove('visible');
+  document.getElementById('runClock').classList.remove('counting-up');
+  requestWakeLock();
+  logRun('Session started');
+  await runStep();
+}
+
+async function runStep() {
+  if (!runState || runState.stopped) return;
+  if (runState.idx >= runState.schedule.length) { endSession(); return; }
+
+  const event = runState.schedule[runState.idx];
+  if (event.type === 'timer') {
+    await runTimer(event);
+  } else if (event.type === 'blockEnd') {
+    runState.idx++;
+    logRun('Block complete: ' + event.block.label);
+    showAlert('block complete');
+    await playPool(event.pool, null, 'pool');
+    await runStep();
+  } else if (event.type === 'interBlock') {
+    await runInterBlock(event);
+  } else if (event.type === 'sessionEnd') {
+    endSession();
+  }
+}
+
+async function runTimer(event) {
+  if (runState.stopped) return;
+  const { timer } = event;
+  const durationMs = timer.durationMin * 60 * 1000;
+  const label = timer.label || formatDuration(timer.durationMin);
+
+  setRunLabel(event.blockLabel + ' / ' + label);
+  logRun('Start: ' + label);
+  showAlert('start');
+
+  await playPool(timer.startPool, timer.durationMin, timer.startAnnounce, timer.startCustom);
+  if (runState.stopped) return;
+
+  runState.timerEnd = Date.now() + durationMs;
+  await countdown(durationMs);
+  if (runState.stopped) return;
+
+  logRun('End: ' + label);
+  showAlert('end');
+  await playPool(timer.endPool, timer.durationMin, timer.endAnnounce, timer.endCustom);
+  if (runState.stopped) return;
+
+  updateProgress(event);
+  runState.idx++;
+  await runStep();
+}
+
+async function runInterBlock(event) {
+  if (runState.stopped) return;
+  const durationMs = event.durationMin * 60 * 1000;
+  setRunLabel('Between blocks');
+  logRun('Between-block pause: ' + event.durationMin + ' min');
+  await playPool(event.pool, event.durationMin, event.announce);
+  if (runState.stopped) return;
+  runState.timerEnd = Date.now() + durationMs;
+  await countdown(durationMs);
+  if (runState.stopped) return;
+  runState.idx++;
+  await runStep();
+}
+
+function countdown(totalMs) {
+  return new Promise(resolve => {
+    runState.timerEnd = Date.now() + totalMs;
+    clearInterval(runState.clockInterval);
+    runState.clockInterval = setInterval(() => {
+      if (runState.stopped) { clearInterval(runState.clockInterval); resolve(); return; }
+      if (runState.paused) return;
+      const remaining = Math.max(0, runState.timerEnd - Date.now());
+      setRunClock(remaining);
+      if (remaining <= 0) { clearInterval(runState.clockInterval); resolve(); }
+    }, 250);
+  });
+}
+
+function updateProgress(event) {
+  const total = runState.schedule.filter(e => e.type === 'timer').length;
+  const done = runState.schedule.slice(0, runState.idx + 1).filter(e => e.type === 'timer').length;
+  document.getElementById('runProgress').innerHTML =
+    'Timer ' + done + ' of ' + total +
+    ' &nbsp;·&nbsp; Block ' + (event.blockIdx + 1) + ' of ' + blocks.length +
+    ' &nbsp;·&nbsp; Rep ' + (event.repIdx + 1) + ' of ' + event.blockRepeatCount;
+}
+
+async function endSession() {
+  releaseWakeLock();
+  const endPool = (runState && runState.isQuick) ? 'celebration' : document.getElementById('sessionEndPool').value;
+  const customMsg = runState && runState.quickEndMessage;
+  if (runState) {
+    runState.stopped = true;
+    clearInterval(runState.clockInterval);
+    clearInterval(runState.stepOutInterval);
+  }
+  setRunLabel('Session complete');
+  setRunClock(0);
+  showAlert('done');
+  logRun('Session complete');
+  if (customMsg) {
+    await playPool(endPool, null, 'pool');
+    await speak(customMsg);
+  } else {
+    playPool(endPool, null, 'pool');
+  }
+  document.getElementById('pauseBtn').textContent = 'Done';
+  document.getElementById('stepOutClock').classList.remove('visible');
+  document.getElementById('runClock').classList.remove('counting-up');
+}
+
+function pauseResume() {
+  if (!runState) return;
+  if (runState.stopped) { stopSession(); return; }
+  if (runState.stepOut) { stepOut(); return; }
+  runState.paused = !runState.paused;
+  if (runState.paused) {
+    runState.pauseRemaining = Math.max(0, runState.timerEnd - Date.now());
+    document.getElementById('pauseBtn').textContent = 'Resume';
+    logRun('Paused');
+  } else {
+    runState.timerEnd = Date.now() + (runState.pauseRemaining || 0);
+    document.getElementById('pauseBtn').textContent = 'Pause';
+    logRun('Resumed');
+  }
+}
+
+function stepOut() {
+  if (!runState || runState.stopped) return;
+  if (runState.stepOut) {
+    // Return
+    runState.stepOut = false;
+    runState.paused = false;
+    clearInterval(runState.stepOutInterval);
+    runState.timerEnd = Date.now() + (runState.pauseRemaining || 0);
+    document.getElementById('stepOutBtn').textContent = 'Step Out';
+    document.getElementById('stepOutClock').classList.remove('visible');
+    document.getElementById('runClock').classList.remove('counting-up');
+    logRun('Back');
+  } else {
+    // Step out
+    runState.stepOut = true;
+    runState.paused = true;
+    runState.pauseRemaining = Math.max(0, runState.timerEnd - Date.now());
+    runState.stepOutStart = Date.now();
+    document.getElementById('stepOutBtn').textContent = 'Back';
+    document.getElementById('stepOutClock').classList.add('visible');
+    document.getElementById('runClock').classList.add('counting-up');
+    logRun('Stepped out');
+
+    runState.stepOutInterval = setInterval(() => {
+      if (!runState || !runState.stepOut) return;
+      const elapsed = Date.now() - runState.stepOutStart;
+      const m = Math.floor(elapsed / 60000);
+      const s = Math.floor((elapsed % 60000) / 1000);
+      const clock = document.getElementById('runClock');
+      clock.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+      document.getElementById('stepOutClock').textContent = 'out: ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }, 500);
+  }
+}
+
+function stopSession() {
+  releaseWakeLock();
+  if (runState) {
+    runState.stopped = true;
+    clearInterval(runState.clockInterval);
+    clearInterval(runState.stepOutInterval);
+  }
+  document.getElementById('runPanel').classList.remove('active');
+  document.getElementById('stepOutClock').classList.remove('visible');
+  document.getElementById('runClock').classList.remove('counting-up');
+  runState = null;
+}
+
+// ============================================================
+// RUN PANEL UI
+// ============================================================
+function setRunLabel(text) { document.getElementById('runLabel').textContent = text; }
+
+function setRunClock(ms) {
+  if (runState && runState.stepOut) return;
+  const totalSec = Math.ceil(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  document.getElementById('runClock').textContent =
+    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function showAlert(text) {
+  const el = document.getElementById('runAlert');
+  el.textContent = text;
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 4000);
+}
+
+function logRun(msg) {
+  const el = document.getElementById('runLog');
+  const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  el.innerHTML = time + ' ' + msg + '<br>' + el.innerHTML;
+}
+
+// ============================================================
+// SAVE / LOAD
+// ============================================================
+function getSessionData() {
+  return {
+    version: 1,
+    blocks: blocks.map(b => ({ ...b, timers: b.timers.map(t => ({...t})) })),
+    pools: Object.fromEntries(
+      Object.entries(pools).map(([k,v]) => [k, { tts: v.tts, audioName: v.audioName }])
+    ),
+    interBlockEnabled: document.getElementById('interBlockEnabled').checked,
+    interBlockDuration: document.getElementById('interBlockDuration').value,
+    interBlockPool: document.getElementById('interBlockPool').value,
+    interBlockAnnounce: document.getElementById('interBlockAnnounce').value,
+    sessionEndPool: document.getElementById('sessionEndPool').value,
+  };
+}
+
+function applySessionData(data) {
+  if (!data || data.version !== 1) { alert('Invalid session file.'); return; }
+  blocks = data.blocks || [];
+  blockIdCounter = Math.max(0, ...blocks.map(b => b.id || 0));
+  timerIdCounter = Math.max(0, ...blocks.flatMap(b => b.timers.map(t => t.id || 0)));
+  if (data.pools) {
+    Object.entries(data.pools).forEach(([k,v]) => {
+      if (pools[k]) { pools[k].tts = v.tts; pools[k].audioName = v.audioName || ''; }
+    });
+  }
+  document.getElementById('interBlockEnabled').checked = data.interBlockEnabled || false;
+  document.getElementById('interBlockDuration').value = data.interBlockDuration || 2;
+  renderBetweenBlock();
+  renderPools();
+  renderBlocks();
+  setTimeout(() => {
+    document.getElementById('interBlockPool').value = data.interBlockPool || 'none';
+    document.getElementById('interBlockAnnounce').value = data.interBlockAnnounce || 'none';
+    document.getElementById('sessionEndPool').value = data.sessionEndPool || 'none';
+  }, 50);
+}
+
+function saveSession() {
+  const name = document.getElementById('saveName').value.trim();
+  if (!name) { alert('Enter a session name.'); return; }
+  const saves = getSaves();
+  saves[name] = getSessionData();
+  localStorage.setItem('timerSaves', JSON.stringify(saves));
+  loadSavedList();
+  document.getElementById('saveName').value = '';
+  alert('Saved: ' + name);
+}
+
+function loadSession() {
+  const name = document.getElementById('savedList').value;
+  if (!name) return;
+  const saves = getSaves();
+  if (saves[name]) applySessionData(saves[name]);
+}
+
+function deleteSave() {
+  const name = document.getElementById('savedList').value;
+  if (!name) return;
+  if (!confirm('Delete "' + name + '"?')) return;
+  const saves = getSaves();
+  delete saves[name];
+  localStorage.setItem('timerSaves', JSON.stringify(saves));
+  loadSavedList();
+}
+
+function previewSave() {}
+
+function getSaves() {
+  try { return JSON.parse(localStorage.getItem('timerSaves') || '{}'); } catch { return {}; }
+}
+
+function loadSavedList() {
+  const saves = getSaves();
+  const sel = document.getElementById('savedList');
+  sel.innerHTML = '<option value="">-- saved sessions --</option>';
+  Object.keys(saves).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    sel.appendChild(opt);
+  });
+}
+
+function exportSession() {
+  const data = getSessionData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const name = document.getElementById('saveName').value.trim() || 'session';
+  a.href = url; a.download = name + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importSession(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      applySessionData(data);
+    } catch { alert('Could not read session file.'); }
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// MOBILE SIDEBAR TOGGLE
+// ============================================================
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const arrow   = document.getElementById('sidebarArrow');
+  const open    = sidebar.classList.toggle('mobile-open');
+  arrow.innerHTML = open ? '&#9650;' : '&#9660;';
+}
+
+// ============================================================
+// WAKE LOCK (keeps screen on while timer is running on iOS)
+// ============================================================
+let wakeLock = null;
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch(e) {
+    console.log('Wake lock not granted:', e.message);
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
+}
+
+// Re-acquire wake lock if the tab becomes visible again mid-session
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && runState && !runState.stopped) {
+    requestWakeLock();
+  }
+});
+
+// ============================================================
+// LEAVE-PAGE WARNING
+// ============================================================
+window.addEventListener('beforeunload', function(e) {
+  if (runState && !runState.stopped) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+</script>
+</body>
+</html>
