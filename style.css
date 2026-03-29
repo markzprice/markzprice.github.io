@@ -431,6 +431,13 @@ img { max-width: 100%; display: block; }
 }
 .social-link:hover { border-color: var(--ink); color: var(--ink); }
 
+.social-link--quiet {
+  border-color: transparent;
+  color: var(--ink-rule);
+  font-size: 9px;
+}
+.social-link--quiet:hover { border-color: var(--ink-rule); color: var(--ink-light); }
+
 .inline-link { color: var(--red); text-decoration: underline; text-underline-offset: 3px; }
 .inline-link:hover { color: var(--ink); }
 
