@@ -147,45 +147,142 @@
 
     <a href="search.html" class="back-link">Back to Parallel Search</a>
 
-    <!-- INDEPENDENT INDEXES -->
-    <div class="cat-label">Independent Indexes</div>
-    <div class="cat-desc">These engines crawl the web themselves. Different crawler, different results, different worldview.</div>
+    <!-- SMALL WEB -->
+    <div class="cat-label">The Small Web</div>
+    <div class="cat-desc">Personal sites, classic pages, non-commercial content. What the internet used to feel like. What Google buries.</div>
 
     <div class="eng-card">
       <div class="eng-header">
-        <span class="eng-title">Google</span>
-        <span class="eng-badge badge-own">own index</span>
+        <span class="eng-title">Marginalia</span>
+        <span class="eng-badge badge-special">small web</span>
       </div>
-      <div class="eng-why">The biggest index. The baseline everything else is compared to. You already know what this is.</div>
-      <form class="eng-search" onsubmit="go(event,'https://www.google.com/search?q=')"><input type="text" placeholder="Search Google"><button>Go</button></form>
+      <div class="eng-why">Specifically indexes non-commercial, small websites. Personal blogs, hobbyist pages, real humans writing about things they care about. The opposite of SEO content. Swedish, open source.</div>
+      <form class="eng-search" onsubmit="go(event,'https://search.marginalia.nu/search?query=')"><input type="text" placeholder="Search Marginalia"><button>Go</button></form>
     </div>
 
     <div class="eng-card">
       <div class="eng-header">
-        <span class="eng-title">Bing</span>
-        <span class="eng-badge badge-own">own index</span>
+        <span class="eng-title">Wiby</span>
+        <span class="eng-badge badge-special">small web</span>
       </div>
-      <div class="eng-why">Microsoft's index. Powers DuckDuckGo, Ecosia, Yahoo, and most "alternative" engines behind the scenes. Going direct cuts out the middleman.</div>
-      <form class="eng-search" onsubmit="go(event,'https://www.bing.com/search?q=')"><input type="text" placeholder="Search Bing"><button>Go</button></form>
+      <div class="eng-why">Indexes only old-school, lightweight web pages. No JavaScript-heavy sites, no content farms. If someone made a simple HTML page about a topic, Wiby probably found it. Feels like searching the 2003 internet.</div>
+      <form class="eng-search" onsubmit="go(event,'https://wiby.me/?q=')"><input type="text" placeholder="Search Wiby"><button>Go</button></form>
     </div>
 
     <div class="eng-card">
       <div class="eng-header">
-        <span class="eng-title">Brave Search</span>
-        <span class="eng-badge badge-own">own index</span>
+        <span class="eng-title">Million Short</span>
+        <span class="eng-badge badge-special">discovery</span>
       </div>
-      <div class="eng-why">Built their own index from scratch. Privacy-focused, no tracking. Falls back to Google/Bing for thin queries but core results are independent.</div>
-      <form class="eng-search" onsubmit="go(event,'https://search.brave.com/search?q=')"><input type="text" placeholder="Search Brave"><button>Go</button></form>
+      <div class="eng-why">Removes the top 100, 1,000, 10,000, 100,000, or 1,000,000 most popular sites from results. Forces discovery of smaller sites. Useful when Google keeps showing you the same 10 domains.</div>
+      <form class="eng-search" onsubmit="go(event,'https://millionshort.com/search?keywords=')"><input type="text" placeholder="Search Million Short"><button>Go</button></form>
     </div>
+
+    <!-- FORUMS & DISCUSSIONS -->
+    <div class="cat-label">Forums & Discussions</div>
+    <div class="cat-desc">Real people talking. Not articles, not marketing, not AI-generated content.</div>
+
+    <div class="eng-card">
+      <div class="eng-header">
+        <span class="eng-title">Boardreader</span>
+        <span class="eng-badge badge-special">forums</span>
+      </div>
+      <div class="eng-why">Searches 300+ million forum posts. When you want to know what actual people said about something, not what a blog post summarized. Includes niche forums Google doesn't index well.</div>
+      <form class="eng-search" onsubmit="go(event,'https://boardreader.com/s/')"><input type="text" placeholder="Search Boardreader"><button>Go</button></form>
+    </div>
+
+    <div class="eng-card">
+      <div class="eng-header">
+        <span class="eng-title">Hacker News</span>
+        <span class="eng-badge badge-special">tech forums</span>
+      </div>
+      <div class="eng-why">Tech discussions, startup culture, developer perspectives. Dedicated search via Algolia. When you want to know what engineers think about something.</div>
+      <form class="eng-search" onsubmit="go(event,'https://hn.algolia.com/?q=')"><input type="text" placeholder="Search Hacker News"><button>Go</button></form>
+    </div>
+
+    <div class="eng-card">
+      <div class="eng-header">
+        <span class="eng-title">Reddit (via Google)</span>
+        <span class="eng-badge badge-meta">filtered</span>
+      </div>
+      <div class="eng-why">Adding site:reddit.com to a Google search. Often the fastest way to find real opinions, reviews, and troubleshooting from people who actually dealt with the thing.</div>
+      <form class="eng-search" onsubmit="go(event,'https://www.google.com/search?q=site%3Areddit.com+')"><input type="text" placeholder="Search Reddit via Google"><button>Go</button></form>
+    </div>
+
+    <!-- ACADEMIC & RESEARCH -->
+    <div class="cat-label">Academic & Research</div>
+    <div class="cat-desc">Peer-reviewed papers, actual data, primary sources. When you need the real thing, not someone's interpretation of it.</div>
+
+    <div class="eng-card">
+      <div class="eng-header">
+        <span class="eng-title">Semantic Scholar</span>
+        <span class="eng-badge badge-special">academic</span>
+      </div>
+      <div class="eng-why">200+ million academic papers with AI-powered discovery. Shows citation graphs, related work, key findings. Free. When Google Scholar isn't cutting it.</div>
+      <form class="eng-search" onsubmit="go(event,'https://www.semanticscholar.org/search?q=')"><input type="text" placeholder="Search Semantic Scholar"><button>Go</button></form>
+    </div>
+
+    <div class="eng-card">
+      <div class="eng-header">
+        <span class="eng-title">Internet Archive</span>
+        <span class="eng-badge badge-special">archive</span>
+      </div>
+      <div class="eng-why">The Wayback Machine and 735+ billion web pages archived. Books, films, software, music. When something disappears from the internet, it's probably still here.</div>
+      <form class="eng-search" onsubmit="go(event,'https://archive.org/search?query=')"><input type="text" placeholder="Search Internet Archive"><button>Go</button></form>
+    </div>
+
+    <div class="eng-card">
+      <div class="eng-header">
+        <span class="eng-title">Google Scholar</span>
+        <span class="eng-badge badge-special">academic</span>
+      </div>
+      <div class="eng-why">The standard academic search. Papers, citations, patents, case law. Bigger index than Semantic Scholar but less intelligent discovery.</div>
+      <form class="eng-search" onsubmit="go(event,'https://scholar.google.com/scholar?q=')"><input type="text" placeholder="Search Google Scholar"><button>Go</button></form>
+    </div>
+
+    <!-- NON-ENGLISH PERSPECTIVES -->
+    <div class="cat-label">Non-English Perspectives</div>
+    <div class="cat-desc">Independent indexes from other countries. Completely different source material, editorial slant, and coverage. Use the Parallel Search tool to auto-translate queries.</div>
 
     <div class="eng-card">
       <div class="eng-header">
         <span class="eng-title">Yandex</span>
-        <span class="eng-badge badge-own">own index</span>
+        <span class="eng-badge badge-own">russian index</span>
       </div>
       <div class="eng-why">Russia's search engine. Completely different perspective on global events. Strongest for Eastern European and Russian-language content. Try searching in Russian for genuinely different results.</div>
       <form class="eng-search" onsubmit="go(event,'https://yandex.com/search/?text=')"><input type="text" placeholder="Search Yandex"><button>Go</button></form>
     </div>
+
+    <div class="eng-card">
+      <div class="eng-header">
+        <span class="eng-title">Naver</span>
+        <span class="eng-badge badge-own">korean index</span>
+      </div>
+      <div class="eng-why">South Korea's dominant search engine. Own index, massive Korean-language web coverage. Strong for tech, culture, and East Asian news. Search in Korean for best results.</div>
+      <form class="eng-search" onsubmit="go(event,'https://search.naver.com/search.naver?query=')"><input type="text" placeholder="Search Naver"><button>Go</button></form>
+    </div>
+
+    <div class="eng-card">
+      <div class="eng-header">
+        <span class="eng-title">Baidu</span>
+        <span class="eng-badge badge-own">chinese index</span>
+      </div>
+      <div class="eng-why">China's search engine. Completely different internet. Valuable for tech hardware, manufacturing, and getting the Chinese perspective on anything US-centric. Search in Chinese for real results.</div>
+      <form class="eng-search" onsubmit="go(event,'https://www.baidu.com/s?wd=')"><input type="text" placeholder="Search Baidu"><button>Go</button></form>
+    </div>
+
+    <div class="eng-card">
+      <div class="eng-header">
+        <span class="eng-title">Qwant</span>
+        <span class="eng-badge badge-hybrid">european index</span>
+      </div>
+      <div class="eng-why">French, building their own European index (strong for French and German). Falls back to Bing for other languages. Good for EU perspective on regulation, policy, tech privacy.</div>
+      <form class="eng-search" onsubmit="go(event,'https://www.qwant.com/?q=')"><input type="text" placeholder="Search Qwant"><button>Go</button></form>
+    </div>
+
+    <!-- INDEPENDENT ENGLISH INDEXES -->
+    <div class="cat-label">Independent English Indexes</div>
+    <div class="cat-desc">Their own crawlers, their own rankings. Not Google, not Bing, not wearing either as a costume.</div>
 
     <div class="eng-card">
       <div class="eng-header">
@@ -216,37 +313,6 @@
 
     <div class="eng-card">
       <div class="eng-header">
-        <span class="eng-title">Naver</span>
-        <span class="eng-badge badge-own">own index</span>
-      </div>
-      <div class="eng-why">South Korea's dominant search engine. Own index, massive Korean-language web coverage. Strong for tech, culture, and East Asian news. Search in Korean for best results.</div>
-      <form class="eng-search" onsubmit="go(event,'https://search.naver.com/search.naver?query=')"><input type="text" placeholder="Search Naver"><button>Go</button></form>
-    </div>
-
-    <div class="eng-card">
-      <div class="eng-header">
-        <span class="eng-title">Baidu</span>
-        <span class="eng-badge badge-own">own index</span>
-      </div>
-      <div class="eng-why">China's search engine. Completely different internet. Valuable for tech hardware, manufacturing, and getting the Chinese perspective on anything US-centric. Search in Chinese for real results.</div>
-      <form class="eng-search" onsubmit="go(event,'https://www.baidu.com/s?wd=')"><input type="text" placeholder="Search Baidu"><button>Go</button></form>
-    </div>
-
-    <!-- HYBRID ENGINES -->
-    <div class="cat-label">Hybrid Engines</div>
-    <div class="cat-desc">Own crawler plus results from others. Best of both worlds for some queries.</div>
-
-    <div class="eng-card">
-      <div class="eng-header">
-        <span class="eng-title">Qwant</span>
-        <span class="eng-badge badge-hybrid">hybrid</span>
-      </div>
-      <div class="eng-why">French, building their own European index (strong for French and German). Falls back to Bing for other languages. Good for EU perspective on regulation, policy, tech privacy.</div>
-      <form class="eng-search" onsubmit="go(event,'https://www.qwant.com/?q=')"><input type="text" placeholder="Search Qwant"><button>Go</button></form>
-    </div>
-
-    <div class="eng-card">
-      <div class="eng-header">
         <span class="eng-title">Presearch</span>
         <span class="eng-badge badge-hybrid">hybrid</span>
       </div>
@@ -263,100 +329,43 @@
       <form class="eng-search" onsubmit="go(event,'https://andisearch.com/?q=')"><input type="text" placeholder="Search Andi"><button>Go</button></form>
     </div>
 
-    <!-- SMALL WEB -->
-    <div class="cat-label">The Small Web</div>
-    <div class="cat-desc">Personal sites, classic pages, non-commercial content. What the internet used to feel like. What Google buries.</div>
+    <div class="eng-card">
+      <div class="eng-header">
+        <span class="eng-title">Brave Search</span>
+        <span class="eng-badge badge-own">own index</span>
+      </div>
+      <div class="eng-why">Built their own index from scratch. Privacy-focused, no tracking. Falls back to Google/Bing for thin queries but core results are independent.</div>
+      <form class="eng-search" onsubmit="go(event,'https://search.brave.com/search?q=')"><input type="text" placeholder="Search Brave"><button>Go</button></form>
+    </div>
+
+    <!-- THE FAMILIAR -->
+    <div class="cat-label">The Familiar</div>
+    <div class="cat-desc">The ones you already know. Here for convenience, not discovery.</div>
 
     <div class="eng-card">
       <div class="eng-header">
-        <span class="eng-title">Marginalia</span>
-        <span class="eng-badge badge-special">small web</span>
+        <span class="eng-title">Google</span>
+        <span class="eng-badge badge-own">own index</span>
       </div>
-      <div class="eng-why">Specifically indexes non-commercial, small websites. Personal blogs, hobbyist pages, real humans writing about things they care about. The opposite of SEO content. Swedish, open source.</div>
-      <form class="eng-search" onsubmit="go(event,'https://search.marginalia.nu/search?query=')"><input type="text" placeholder="Search Marginalia"><button>Go</button></form>
+      <div class="eng-why">The biggest index. The baseline everything else is compared to.</div>
+      <form class="eng-search" onsubmit="go(event,'https://www.google.com/search?q=')"><input type="text" placeholder="Search Google"><button>Go</button></form>
     </div>
 
     <div class="eng-card">
       <div class="eng-header">
-        <span class="eng-title">Wiby</span>
-        <span class="eng-badge badge-special">small web</span>
+        <span class="eng-title">Bing</span>
+        <span class="eng-badge badge-own">own index</span>
       </div>
-      <div class="eng-why">Indexes only old-school, lightweight web pages. No JavaScript-heavy sites, no content farms. If someone made a simple HTML page about a topic, Wiby probably found it. Feels like searching the 2003 internet.</div>
-      <form class="eng-search" onsubmit="go(event,'https://wiby.me/?q=')"><input type="text" placeholder="Search Wiby"><button>Go</button></form>
+      <div class="eng-why">Microsoft's index. Powers DuckDuckGo, Ecosia, Yahoo, and most "alternative" engines behind the scenes.</div>
+      <form class="eng-search" onsubmit="go(event,'https://www.bing.com/search?q=')"><input type="text" placeholder="Search Bing"><button>Go</button></form>
     </div>
-
-    <!-- FORUMS & DISCUSSIONS -->
-    <div class="cat-label">Forums & Discussions</div>
-    <div class="cat-desc">Real people talking. Not articles, not marketing, not AI-generated content.</div>
-
-    <div class="eng-card">
-      <div class="eng-header">
-        <span class="eng-title">Boardreader</span>
-        <span class="eng-badge badge-special">forums</span>
-      </div>
-      <div class="eng-why">Searches 300+ million forum posts. When you want to know what actual people said about something, not what a blog post summarized. Includes niche forums Google doesn't index well.</div>
-      <form class="eng-search" onsubmit="go(event,'https://boardreader.com/s/')"><input type="text" placeholder="Search Boardreader"><button>Go</button></form>
-    </div>
-
-    <div class="eng-card">
-      <div class="eng-header">
-        <span class="eng-title">Reddit (via Google)</span>
-        <span class="eng-badge badge-meta">filtered</span>
-      </div>
-      <div class="eng-why">Adding site:reddit.com to a Google search. Often the fastest way to find real opinions, reviews, and troubleshooting from people who actually dealt with the thing.</div>
-      <form class="eng-search" onsubmit="go(event,'https://www.google.com/search?q=site%3Areddit.com+')"><input type="text" placeholder="Search Reddit via Google"><button>Go</button></form>
-    </div>
-
-    <div class="eng-card">
-      <div class="eng-header">
-        <span class="eng-title">Hacker News (via Google)</span>
-        <span class="eng-badge badge-meta">filtered</span>
-      </div>
-      <div class="eng-why">Tech discussions, startup culture, developer perspectives. Adding site:news.ycombinator.com to Google for threads, or use the dedicated HN search below.</div>
-      <form class="eng-search" onsubmit="go(event,'https://hn.algolia.com/?q=')"><input type="text" placeholder="Search Hacker News"><button>Go</button></form>
-    </div>
-
-    <!-- ACADEMIC & RESEARCH -->
-    <div class="cat-label">Academic & Research</div>
-    <div class="cat-desc">Peer-reviewed papers, actual data, primary sources. When you need the real thing, not someone's interpretation of it.</div>
-
-    <div class="eng-card">
-      <div class="eng-header">
-        <span class="eng-title">Semantic Scholar</span>
-        <span class="eng-badge badge-special">academic</span>
-      </div>
-      <div class="eng-why">200+ million academic papers with AI-powered discovery. Shows citation graphs, related work, key findings. Free. When Google Scholar isn't cutting it.</div>
-      <form class="eng-search" onsubmit="go(event,'https://www.semanticscholar.org/search?q=')"><input type="text" placeholder="Search Semantic Scholar"><button>Go</button></form>
-    </div>
-
-    <div class="eng-card">
-      <div class="eng-header">
-        <span class="eng-title">Google Scholar</span>
-        <span class="eng-badge badge-special">academic</span>
-      </div>
-      <div class="eng-why">The standard academic search. Papers, citations, patents, case law. Bigger index than Semantic Scholar but less intelligent discovery.</div>
-      <form class="eng-search" onsubmit="go(event,'https://scholar.google.com/scholar?q=')"><input type="text" placeholder="Search Google Scholar"><button>Go</button></form>
-    </div>
-
-    <div class="eng-card">
-      <div class="eng-header">
-        <span class="eng-title">Internet Archive</span>
-        <span class="eng-badge badge-special">archive</span>
-      </div>
-      <div class="eng-why">The Wayback Machine and 735+ billion web pages archived. Books, films, software, music. When something disappears from the internet, it's probably still here.</div>
-      <form class="eng-search" onsubmit="go(event,'https://archive.org/search?query=')"><input type="text" placeholder="Search Internet Archive"><button>Go</button></form>
-    </div>
-
-    <!-- RESKINNED BUT USEFUL -->
-    <div class="cat-label">Reskinned But Useful</div>
-    <div class="cat-desc">Using someone else's index but adding something on top. Privacy, filtering, or a different focus.</div>
 
     <div class="eng-card">
       <div class="eng-header">
         <span class="eng-title">DuckDuckGo</span>
         <span class="eng-badge badge-meta">bing index</span>
       </div>
-      <div class="eng-why">Bing's index with privacy and !bangs (shortcuts: !w for Wikipedia, !yt for YouTube, !g for Google). The !bangs alone make it worth having. Type !bang to see the full list.</div>
+      <div class="eng-why">Bing's index with privacy and !bangs (shortcuts: !w for Wikipedia, !yt for YouTube, !g for Google). The !bangs alone make it worth having.</div>
       <form class="eng-search" onsubmit="go(event,'https://duckduckgo.com/?q=')"><input type="text" placeholder="Search DuckDuckGo"><button>Go</button></form>
     </div>
 
@@ -374,17 +383,8 @@
         <span class="eng-title">Ecosia</span>
         <span class="eng-badge badge-meta">bing index</span>
       </div>
-      <div class="eng-why">Bing's results, profits fund tree planting. Building their own European index alongside Qwant. Same results as Bing but you plant trees while searching.</div>
+      <div class="eng-why">Bing's results, profits fund tree planting. Building their own European index alongside Qwant.</div>
       <form class="eng-search" onsubmit="go(event,'https://www.ecosia.org/search?q=')"><input type="text" placeholder="Search Ecosia"><button>Go</button></form>
-    </div>
-
-    <div class="eng-card">
-      <div class="eng-header">
-        <span class="eng-title">Million Short</span>
-        <span class="eng-badge badge-meta">filtered</span>
-      </div>
-      <div class="eng-why">Removes the top 100, 1,000, 10,000, 100,000, or 1,000,000 most popular sites from results. Forces discovery of smaller sites. Useful when Google keeps showing you the same 10 domains.</div>
-      <form class="eng-search" onsubmit="go(event,'https://millionshort.com/search?keywords=')"><input type="text" placeholder="Search Million Short"><button>Go</button></form>
     </div>
 
   </div>
