@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parallel Search</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.search-container {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* Search input area */
+.search-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+}
+.search-bar input {
+  flex: 1;
+  font-family: var(--serif);
+  font-size: 18px;
+  padding: 14px 18px;
+  border: 2px solid var(--ink);
+  border-right: none;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+}
+.search-bar input::placeholder {
+  color: var(--ink-light);
+  font-style: italic;
+}
+.search-bar button {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 14px 24px;
+  border: 2px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.search-bar button:hover {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+/* Mode selector */
+.mode-selector {
+  display: flex;
+  gap: 0;
+  margin-bottom: 28px;
+}
+.mode-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 8px 18px;
+  border: 1.5px solid var(--ink-rule);
+  background: transparent;
+  color: var(--ink-light);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mode-btn:first-child { border-right: none; }
+.mode-btn.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.mode-btn:hover:not(.active) {
+  border-color: var(--ink-mid);
+  color: var(--ink-mid);
+}
+
+/* Mode descriptions */
+.mode-desc {
+  font-family: var(--serif);
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-light);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+/* Engines list for current mode */
+.engine-list {
+  margin-bottom: 32px;
+}
+.engine-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ink-rule);
+}
+.engine-row:last-child { border-bottom: none; }
+.engine-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  min-width: 100px;
+  letter-spacing: 0.02em;
+}
+.engine-lang {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--paper);
+  background: var(--ink-mid);
+  padding: 1px 6px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.engine-lang.lang-en { background: var(--ink-light); }
+.engine-lang.lang-fr { background: #2656a8; }
+.engine-lang.lang-ru { background: #a82626; }
+.engine-lang.lang-ko { background: #26a852; }
+.engine-lang.lang-zh { background: #a86826; }
+.engine-note {
+  font-family: var(--serif);
+  font-size: 12px;
+  color: var(--ink-light);
+  flex: 1;
+}
+
+/* Inline results area */
+.results-area {
+  margin-top: 32px;
+  display: none;
+}
+.results-area.visible { display: block; }
+.results-section {
+  margin-bottom: 28px;
+}
+.results-section-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--red);
+  border: 1.5px solid var(--red);
+  padding: 3px 8px;
+  display: inline-block;
+  margin-bottom: 12px;
+  opacity: 0.82;
+}
+.result-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ink-rule);
+}
+.result-item:last-child { border-bottom: none; }
+.result-item a {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--ink);
+  display: block;
+  line-height: 1.4;
+  transition: color 0.1s;
+}
+.result-item a:hover { color: var(--red); }
+.result-item .result-url {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-light);
+  margin-top: 3px;
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+.result-item .result-desc {
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--ink-mid);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.results-loading {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-light);
+  padding: 12px 0;
+  letter-spacing: 0.05em;
+}
+.results-empty {
+  font-family: var(--serif);
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-light);
+  padding: 12px 0;
+}
+
+/* Status bar */
+.status-bar {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-light);
+  letter-spacing: 0.03em;
+  padding: 12px 0;
+  border-top: 1px solid var(--ink-rule);
+  margin-top: 16px;
+  display: none;
+}
+.status-bar.visible { display: block; }
+.status-item { margin-bottom: 4px; }
+.status-ok { color: var(--ink-mid); }
+.status-err { color: var(--red); }
+
+/* Settings panel */
+.settings-toggle {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink-light);
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 4px 0;
+  margin-top: 24px;
+  transition: color 0.15s;
+}
+.settings-toggle:hover { color: var(--ink); }
+.settings-panel {
+  display: none;
+  margin-top: 16px;
+  padding: 20px;
+  background: var(--paper-2);
+  border: 1px solid var(--ink-rule);
+}
+.settings-panel.visible { display: block; }
+.settings-panel label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mid);
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+.settings-panel label:first-child { margin-top: 0; }
+.settings-panel input {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--ink-rule);
+  background: var(--paper);
+  color: var(--ink);
+}
+.settings-panel .settings-note {
+  font-family: var(--serif);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--ink-light);
+  margin-top: 4px;
+}
+.settings-save {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 8px 16px;
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background 0.15s;
+}
+.settings-save:hover { background: var(--red); border-color: var(--red); }
+
+/* Directory link */
+.directory-link {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-light);
+  border-bottom: 1px solid var(--ink-rule);
+  padding-bottom: 2px;
+  margin-top: 8px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.directory-link:hover { color: var(--ink); border-color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="/" class="site-name">Mark Price</a>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="page-hero">
+    <h1>Parallel Search</h1>
+    <p>Search across independent indexes in multiple languages. Break the bubble.</p>
+  </div>
+
+  <div class="search-container">
+
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="What are you looking for?" autofocus>
+      <button id="search-btn">Search</button>
+    </div>
+
+    <div class="mode-selector">
+      <button class="mode-btn active" data-mode="perspectives">Perspectives</button>
+      <button class="mode-btn" data-mode="deepweb">Deep Web</button>
+    </div>
+
+    <!-- Perspectives mode -->
+    <div id="mode-perspectives">
+      <div class="mode-desc">
+        Same query, different cultures. Your search is translated and sent to independent indexes around the world. Results open in tabs.
+      </div>
+      <div class="engine-list">
+        <div class="engine-row">
+          <span class="engine-name">Google</span>
+          <span class="engine-lang lang-en">EN</span>
+          <span class="engine-note">Largest index, baseline comparison</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Brave</span>
+          <span class="engine-lang lang-en">EN</span>
+          <span class="engine-note">Independent index, privacy-focused</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Stract</span>
+          <span class="engine-lang lang-en">EN</span>
+          <span class="engine-note">Open source, independent ranking</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Mojeek</span>
+          <span class="engine-lang lang-en">EN</span>
+          <span class="engine-note">UK-based, fully independent crawler</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Qwant</span>
+          <span class="engine-lang lang-fr">FR</span>
+          <span class="engine-note">European index, translated via DeepL</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Yandex</span>
+          <span class="engine-lang lang-ru">RU</span>
+          <span class="engine-note">Russian index, translated via DeepL</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Naver</span>
+          <span class="engine-lang lang-ko">KO</span>
+          <span class="engine-note">Korean index, translated via DeepL</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Baidu</span>
+          <span class="engine-lang lang-zh">ZH</span>
+          <span class="engine-note">Chinese index, translated via DeepL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deep Web mode -->
+    <div id="mode-deepweb" style="display:none;">
+      <div class="mode-desc">
+        Surface what Google buries. Personal sites, small publishers, classic web pages, forums. Inline results from independent APIs plus a Google tab for comparison.
+      </div>
+      <div class="engine-list">
+        <div class="engine-row">
+          <span class="engine-name">Marginalia</span>
+          <span class="engine-lang lang-en">API</span>
+          <span class="engine-note">Non-commercial web, small sites, real content</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Wiby</span>
+          <span class="engine-lang lang-en">API</span>
+          <span class="engine-note">Classic, lightweight web pages</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Stract</span>
+          <span class="engine-lang lang-en">TAB</span>
+          <span class="engine-note">Open source, independent ranking</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Mojeek</span>
+          <span class="engine-lang lang-en">TAB</span>
+          <span class="engine-note">Fully independent UK crawler</span>
+        </div>
+        <div class="engine-row">
+          <span class="engine-name">Google</span>
+          <span class="engine-lang lang-en">TAB</span>
+          <span class="engine-note">Mainstream baseline for comparison</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inline results -->
+    <div id="results-area" class="results-area">
+      <div id="marginalia-results" class="results-section"></div>
+      <div id="wiby-results" class="results-section"></div>
+    </div>
+
+    <!-- Status bar -->
+    <div id="status-bar" class="status-bar"></div>
+
+    <a href="engines.html" class="directory-link">Search Directory: all engines with descriptions</a>
+
+    <!-- Settings -->
+    <button class="settings-toggle" id="settings-toggle">Settings</button>
+    <div class="settings-panel" id="settings-panel">
+      <label for="deepl-key">DeepL API Key (Free tier)</label>
+      <input type="text" id="deepl-key" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx">
+      <div class="settings-note">Required for translated searches (Qwant, Yandex, Naver, Baidu). Get a free key at deepl.com/pro#developer</div>
+      <button class="settings-save" id="settings-save">Save</button>
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span class="footer-left">mark price · 2026</span>
+</footer>
+
+<script>
+// --- State ---
+let currentMode = 'perspectives';
+let deeplKey = localStorage.getItem('deepl_api_key') || '';
+
+// --- Elements ---
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('search-btn');
+const modeBtns = document.querySelectorAll('.mode-btn');
+const modePersp = document.getElementById('mode-perspectives');
+const modeDeep = document.getElementById('mode-deepweb');
+const resultsArea = document.getElementById('results-area');
+const statusBar = document.getElementById('status-bar');
+const settingsToggle = document.getElementById('settings-toggle');
+const settingsPanel = document.getElementById('settings-panel');
+const deeplInput = document.getElementById('deepl-key');
+const settingsSave = document.getElementById('settings-save');
+
+// --- URL Patterns ---
+const engines = {
+  google:   q => `https://www.google.com/search?q=${encodeURIComponent(q)}`,
+  brave:    q => `https://search.brave.com/search?q=${encodeURIComponent(q)}`,
+  stract:   q => `https://stract.com/search?q=${encodeURIComponent(q)}`,
+  mojeek:   q => `https://www.mojeek.com/search?q=${encodeURIComponent(q)}`,
+  qwant:    q => `https://www.qwant.com/?q=${encodeURIComponent(q)}`,
+  yandex:   q => `https://yandex.com/search/?text=${encodeURIComponent(q)}`,
+  naver:    q => `https://search.naver.com/search.naver?query=${encodeURIComponent(q)}`,
+  baidu:    q => `https://www.baidu.com/s?wd=${encodeURIComponent(q)}`,
+};
+
+// --- CORS proxy (same pattern as startpage) ---
+async function corsProxy(url, timeout = 8000) {
+  const race = fn => Promise.race([fn(), new Promise((_, rej) => setTimeout(rej, timeout))]);
+  try {
+    const text = await race(() => fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`).then(r => r.text()));
+    return text;
+  } catch(e) {}
+  try {
+    const res = await race(() => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`).then(r => r.json()));
+    return res.contents;
+  } catch(e) {}
+  throw new Error('CORS proxy failed');
+}
+
+// --- DeepL Translation ---
+async function translateDeepL(text, targetLang) {
+  if (!deeplKey) return null;
+  try {
+    const res = await fetch('https://api-free.deepl.com/v2/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        auth_key: deeplKey,
+        text: text,
+        target_lang: targetLang
+      })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.translations?.[0]?.text || null;
+  } catch(e) {
+    return null;
+  }
+}
+
+// --- Marginalia API ---
+async function searchMarginalia(query) {
+  try {
+    const url = `https://api.marginalia.nu/public/search/${encodeURIComponent(query)}`;
+    const text = await corsProxy(url);
+    const data = JSON.parse(text);
+    return (data.results || []).slice(0, 8).map(r => ({
+      title: r.title || r.url,
+      url: r.url,
+      desc: r.description || ''
+    }));
+  } catch(e) {
+    return null;
+  }
+}
+
+// --- Wiby API ---
+async function searchWiby(query) {
+  try {
+    const url = `https://wiby.me/json/?q=${encodeURIComponent(query)}`;
+    const text = await corsProxy(url);
+    const data = JSON.parse(text);
+    if (!Array.isArray(data)) return [];
+    return data.slice(0, 8).map(r => ({
+      title: r.Title || r.URL,
+      url: r.URL,
+      desc: r.Snippet || ''
+    }));
+  } catch(e) {
+    return null;
+  }
+}
+
+// --- Render Results ---
+function renderResults(containerId, title, results) {
+  const el = document.getElementById(containerId);
+  if (!results) {
+    el.innerHTML = `<div class="results-section-title">${title}</div><div class="results-empty">Could not reach this engine.</div>`;
+    return;
+  }
+  if (results.length === 0) {
+    el.innerHTML = `<div class="results-section-title">${title}</div><div class="results-empty">No results found.</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="results-section-title">${title}</div>` +
+    results.map(r => `<div class="result-item">
+      <a href="${r.url}" target="_blank" rel="noopener">${escHtml(r.title)}</a>
+      <div class="result-url">${escHtml(r.url)}</div>
+      ${r.desc ? `<div class="result-desc">${escHtml(r.desc)}</div>` : ''}
+    </div>`).join('');
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// --- Status ---
+function setStatus(items) {
+  statusBar.innerHTML = items.map(i =>
+    `<div class="status-item ${i.ok ? 'status-ok' : 'status-err'}">${i.ok ? '✓' : '✗'} ${i.text}</div>`
+  ).join('');
+  statusBar.classList.add('visible');
+}
+
+// --- Search: Perspectives ---
+async function searchPerspectives(query) {
+  const status = [];
+
+  // English tabs (open immediately)
+  window.open(engines.google(query), '_blank');
+  status.push({ ok: true, text: 'Google (EN)' });
+  window.open(engines.brave(query), '_blank');
+  status.push({ ok: true, text: 'Brave (EN)' });
+  window.open(engines.stract(query), '_blank');
+  status.push({ ok: true, text: 'Stract (EN)' });
+  window.open(engines.mojeek(query), '_blank');
+  status.push({ ok: true, text: 'Mojeek (EN)' });
+
+  // Translated tabs (parallel translation)
+  if (deeplKey) {
+    const [fr, ru, ko, zh] = await Promise.all([
+      translateDeepL(query, 'FR'),
+      translateDeepL(query, 'RU'),
+      translateDeepL(query, 'KO'),
+      translateDeepL(query, 'ZH')
+    ]);
+
+    if (fr) {
+      window.open(engines.qwant(fr), '_blank');
+      status.push({ ok: true, text: `Qwant (FR): "${fr}"` });
+    } else {
+      status.push({ ok: false, text: 'Qwant (FR): translation failed' });
+    }
+
+    if (ru) {
+      window.open(engines.yandex(ru), '_blank');
+      status.push({ ok: true, text: `Yandex (RU): "${ru}"` });
+    } else {
+      status.push({ ok: false, text: 'Yandex (RU): translation failed' });
+    }
+
+    if (ko) {
+      window.open(engines.naver(ko), '_blank');
+      status.push({ ok: true, text: `Naver (KO): "${ko}"` });
+    } else {
+      status.push({ ok: false, text: 'Naver (KO): translation failed' });
+    }
+
+    if (zh) {
+      window.open(engines.baidu(zh), '_blank');
+      status.push({ ok: true, text: `Baidu (ZH): "${zh}"` });
+    } else {
+      status.push({ ok: false, text: 'Baidu (ZH): translation failed' });
+    }
+  } else {
+    // No DeepL key: open with English queries and note it
+    window.open(engines.qwant(query), '_blank');
+    status.push({ ok: true, text: 'Qwant (EN, no DeepL key set)' });
+    window.open(engines.yandex(query), '_blank');
+    status.push({ ok: true, text: 'Yandex (EN, no DeepL key set)' });
+    window.open(engines.naver(query), '_blank');
+    status.push({ ok: true, text: 'Naver (EN, no DeepL key set)' });
+    window.open(engines.baidu(query), '_blank');
+    status.push({ ok: true, text: 'Baidu (EN, no DeepL key set)' });
+  }
+
+  setStatus(status);
+}
+
+// --- Search: Deep Web ---
+async function searchDeepWeb(query) {
+  const status = [];
+  resultsArea.classList.add('visible');
+
+  // Show loading
+  document.getElementById('marginalia-results').innerHTML =
+    '<div class="results-section-title">Marginalia</div><div class="results-loading">Searching the small web...</div>';
+  document.getElementById('wiby-results').innerHTML =
+    '<div class="results-section-title">Wiby</div><div class="results-loading">Searching the classic web...</div>';
+
+  // Open tab engines
+  window.open(engines.stract(query), '_blank');
+  status.push({ ok: true, text: 'Stract (tab)' });
+  window.open(engines.mojeek(query), '_blank');
+  status.push({ ok: true, text: 'Mojeek (tab)' });
+  window.open(engines.google(query), '_blank');
+  status.push({ ok: true, text: 'Google (tab)' });
+
+  // Fetch inline results in parallel
+  const [margResults, wibyResults] = await Promise.all([
+    searchMarginalia(query),
+    searchWiby(query)
+  ]);
+
+  renderResults('marginalia-results', 'Marginalia', margResults);
+  status.push({ ok: margResults !== null, text: `Marginalia (${margResults ? margResults.length + ' results' : 'failed'})` });
+
+  renderResults('wiby-results', 'Wiby', wibyResults);
+  status.push({ ok: wibyResults !== null, text: `Wiby (${wibyResults ? wibyResults.length + ' results' : 'failed'})` });
+
+  setStatus(status);
+}
+
+// --- Main search handler ---
+function doSearch() {
+  const query = searchInput.value.trim();
+  if (!query) return;
+
+  // Reset
+  resultsArea.classList.remove('visible');
+  statusBar.classList.remove('visible');
+  document.getElementById('marginalia-results').innerHTML = '';
+  document.getElementById('wiby-results').innerHTML = '';
+
+  if (currentMode === 'perspectives') {
+    searchPerspectives(query);
+  } else {
+    searchDeepWeb(query);
+  }
+}
+
+// --- Event listeners ---
+searchBtn.addEventListener('click', doSearch);
+searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+modeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    modeBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    modePersp.style.display = currentMode === 'perspectives' ? '' : 'none';
+    modeDeep.style.display = currentMode === 'deepweb' ? '' : 'none';
+    resultsArea.classList.remove('visible');
+    statusBar.classList.remove('visible');
+  });
+});
+
+settingsToggle.addEventListener('click', () => {
+  settingsPanel.classList.toggle('visible');
+  if (settingsPanel.classList.contains('visible')) {
+    deeplInput.value = deeplKey;
+  }
+});
+
+settingsSave.addEventListener('click', () => {
+  deeplKey = deeplInput.value.trim();
+  localStorage.setItem('deepl_api_key', deeplKey);
+  settingsPanel.classList.remove('visible');
+  settingsToggle.textContent = deeplKey ? 'Settings (DeepL configured)' : 'Settings';
+});
+
+// Init
+if (deeplKey) settingsToggle.textContent = 'Settings (DeepL configured)';
+</script>
+
+</body>
+</html>
