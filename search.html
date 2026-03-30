@@ -6,12 +6,7 @@
 <title>Parallel Search</title>
 <link rel="stylesheet" href="style.css">
 <style>
-.search-wrap {
-  max-width: 100%;
-  margin: 0 auto;
-}
-
-/* Search input */
+/* Search bar */
 .search-bar {
   display: flex;
   gap: 0;
@@ -29,10 +24,7 @@
   color: var(--ink);
   outline: none;
 }
-.search-bar input::placeholder {
-  color: var(--ink-light);
-  font-style: italic;
-}
+.search-bar input::placeholder { color: var(--ink-light); font-style: italic; }
 .search-bar button {
   font-family: var(--mono);
   font-size: 11px;
@@ -43,13 +35,9 @@
   background: var(--ink);
   color: var(--paper);
   cursor: pointer;
-  transition: background 0.15s;
   white-space: nowrap;
 }
-.search-bar button:hover {
-  background: var(--red);
-  border-color: var(--red);
-}
+.search-bar button:hover { background: var(--red); border-color: var(--red); }
 
 /* Mode selector */
 .mode-row {
@@ -68,24 +56,19 @@
   background: transparent;
   color: var(--ink-light);
   cursor: pointer;
-  transition: all 0.15s;
 }
 .mode-btn:first-child { border-right: none; }
-.mode-btn.active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--paper);
-}
+.mode-btn.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
-/* Settings row */
-.settings-row {
+/* Utility row */
+.util-row {
   max-width: 680px;
   margin: 0 auto 24px;
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.settings-toggle {
+.util-btn {
   font-family: var(--mono);
   font-size: 9px;
   text-transform: uppercase;
@@ -95,10 +78,9 @@
   border: none;
   background: none;
   padding: 0;
-  transition: color 0.15s;
 }
-.settings-toggle:hover { color: var(--ink); }
-.directory-link {
+.util-btn:hover { color: var(--ink); }
+.util-link {
   font-family: var(--mono);
   font-size: 9px;
   text-transform: uppercase;
@@ -106,11 +88,11 @@
   color: var(--ink-light);
   border-bottom: 1px solid var(--ink-rule);
   padding-bottom: 1px;
-  transition: color 0.15s;
   margin-left: auto;
 }
-.directory-link:hover { color: var(--ink); }
+.util-link:hover { color: var(--ink); }
 
+/* Settings */
 .settings-panel {
   display: none;
   max-width: 680px;
@@ -139,25 +121,13 @@
   color: var(--ink);
   margin-bottom: 4px;
 }
-.settings-note {
-  font-family: var(--serif);
-  font-size: 11px;
-  font-style: italic;
-  color: var(--ink-light);
-  margin-bottom: 12px;
+.s-note { font-family: var(--serif); font-size: 11px; font-style: italic; color: var(--ink-light); margin-bottom: 12px; }
+.s-save {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.1em; padding: 6px 14px; border: 1.5px solid var(--ink);
+  background: var(--ink); color: var(--paper); cursor: pointer;
 }
-.settings-save {
-  font-family: var(--mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 6px 14px;
-  border: 1.5px solid var(--ink);
-  background: var(--ink);
-  color: var(--paper);
-  cursor: pointer;
-}
-.settings-save:hover { background: var(--red); border-color: var(--red); }
+.s-save:hover { background: var(--red); border-color: var(--red); }
 
 /* ===== RESULTS GRID ===== */
 .results-grid {
@@ -168,18 +138,17 @@
 }
 .results-grid.visible { display: grid; }
 
-.result-panel {
+/* --- Panels --- */
+.panel {
   border: 1.5px solid var(--ink-rule);
   background: #fff;
   display: flex;
   flex-direction: column;
-  min-height: 500px;
+  min-height: 480px;
   max-height: 80vh;
   overflow: hidden;
 }
-
-/* Panel header */
-.panel-header {
+.panel-hd {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -188,59 +157,31 @@
   border-bottom: 1px solid var(--ink-rule);
   flex-shrink: 0;
 }
-.panel-name {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: 0.03em;
-}
-.panel-lang {
-  font-family: var(--mono);
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--paper);
-  padding: 1px 5px;
-  border-radius: 2px;
+.p-name { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--ink); letter-spacing: 0.03em; }
+.p-badge {
+  font-family: var(--mono); font-size: 8px; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--paper); padding: 1px 5px; border-radius: 2px;
   background: var(--ink-light);
 }
-.panel-lang.lang-fr { background: #2656a8; }
-.panel-lang.lang-ru { background: #a82626; }
-.panel-lang.lang-ko { background: #26a852; }
-.panel-lang.lang-zh { background: #a86826; }
-.panel-query {
-  font-family: var(--serif);
-  font-size: 11px;
-  font-style: italic;
-  color: var(--ink-light);
-  margin-left: auto;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.p-badge.b-fr { background: #2656a8; }
+.p-badge.b-ru { background: #a82626; }
+.p-badge.b-ko { background: #26a852; }
+.p-badge.b-zh { background: #a86826; }
+.p-badge.b-api { background: var(--red); }
+.p-query {
+  font-family: var(--serif); font-size: 11px; font-style: italic;
+  color: var(--ink-light); margin-left: auto; max-width: 200px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.panel-open {
-  font-family: var(--mono);
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-light);
-  border: 1px solid var(--ink-rule);
-  background: transparent;
-  padding: 2px 6px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.15s;
+.p-open {
+  font-family: var(--mono); font-size: 8px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--ink-light); border: 1px solid var(--ink-rule);
+  background: transparent; padding: 2px 6px; cursor: pointer; text-decoration: none;
   flex-shrink: 0;
 }
-.panel-open:hover {
-  background: var(--ink);
-  color: var(--paper);
-  border-color: var(--ink);
-}
+.p-open:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
-/* Panel body: either iframe or API results */
+/* Panel body */
 .panel-body {
   flex: 1;
   overflow: hidden;
@@ -251,89 +192,63 @@
   height: 100%;
   border: none;
 }
-.panel-body .api-results {
+
+/* API results list */
+.api-list {
   overflow-y: auto;
   height: 100%;
-  padding: 8px 12px;
+  padding: 6px 12px;
 }
-
-/* API result items */
-.r-item {
+.api-list .r {
   padding: 10px 0;
   border-bottom: 1px solid var(--ink-rule);
 }
-.r-item:last-child { border-bottom: none; }
-.r-item a {
-  font-family: var(--serif);
-  font-size: 14px;
-  color: var(--ink);
-  display: block;
-  line-height: 1.35;
-  transition: color 0.1s;
+.api-list .r:last-child { border-bottom: none; }
+.api-list .r a {
+  font-family: var(--serif); font-size: 14px; color: var(--ink);
+  display: block; line-height: 1.35;
 }
-.r-item a:hover { color: var(--red); }
-.r-url {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--ink-light);
-  margin-top: 2px;
-  letter-spacing: 0.02em;
-  word-break: break-all;
+.api-list .r a:hover { color: var(--red); }
+.api-list .r-u {
+  font-family: var(--mono); font-size: 9px; color: var(--ink-light);
+  margin-top: 2px; word-break: break-all;
 }
-.r-desc {
-  font-family: var(--serif);
-  font-size: 12px;
-  color: var(--ink-mid);
-  margin-top: 3px;
-  line-height: 1.45;
+.api-list .r-d {
+  font-family: var(--serif); font-size: 12px; color: var(--ink-mid);
+  margin-top: 3px; line-height: 1.45;
 }
-.r-loading {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--ink-light);
-  padding: 20px 0;
-}
-.r-error {
-  font-family: var(--serif);
-  font-size: 13px;
-  font-style: italic;
-  color: var(--ink-light);
-  padding: 20px 0;
-  text-align: center;
+.api-list .r-status {
+  font-family: var(--mono); font-size: 11px; color: var(--ink-light);
+  padding: 16px 0;
 }
 
-/* Iframe blocked overlay */
-.iframe-blocked {
-  position: absolute;
-  inset: 0;
-  display: none;
+/* Click-to-open panel (no iframe, no API) */
+.click-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: 12px;
-  background: var(--paper);
-  padding: 24px;
+  padding: 32px 24px;
   text-align: center;
+  gap: 16px;
 }
-.iframe-blocked.visible { display: flex; }
-.iframe-blocked p {
-  font-family: var(--serif);
-  font-size: 13px;
-  color: var(--ink-light);
-  font-style: italic;
+.click-body .cb-desc {
+  font-family: var(--serif); font-size: 14px; color: var(--ink-mid);
+  line-height: 1.6; max-width: 320px;
 }
-.iframe-blocked a {
-  font-family: var(--mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 8px 16px;
-  border: 1.5px solid var(--ink);
-  background: var(--ink);
-  color: var(--paper);
+.click-body .cb-go {
+  display: inline-block;
+  font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.12em; padding: 12px 28px; border: 2px solid var(--ink);
+  background: var(--ink); color: var(--paper); text-decoration: none;
   transition: background 0.15s;
 }
-.iframe-blocked a:hover { background: var(--red); border-color: var(--red); }
+.click-body .cb-go:hover { background: var(--red); border-color: var(--red); }
+.click-body .cb-note {
+  font-family: var(--mono); font-size: 9px; color: var(--ink-light);
+  letter-spacing: 0.05em;
+}
 </style>
 </head>
 <body>
@@ -351,34 +266,29 @@
     <p>Search across independent indexes. Compare results side by side.</p>
   </div>
 
-  <div class="search-wrap">
-
-    <div class="search-bar">
-      <input type="text" id="q" placeholder="What are you looking for?" autofocus>
-      <button id="go">Search</button>
-    </div>
-
-    <div class="mode-row">
-      <button class="mode-btn active" data-mode="perspectives">Perspectives</button>
-      <button class="mode-btn" data-mode="deepweb">Deep Web</button>
-    </div>
-
-    <div class="settings-row">
-      <button class="settings-toggle" id="stoggle">Settings</button>
-      <a href="engines.html" class="directory-link">Search Directory</a>
-    </div>
-
-    <div class="settings-panel" id="spanel">
-      <label for="deepl-key">DeepL API Key (Free tier)</label>
-      <input type="text" id="deepl-key" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx">
-      <div class="settings-note">Required for auto-translation. Get free at deepl.com/pro#developer. Without it, non-English engines get the English query.</div>
-      <button class="settings-save" id="ssave">Save</button>
-    </div>
-
-    <!-- Results grid: filled dynamically -->
-    <div class="results-grid" id="grid"></div>
-
+  <div class="search-bar">
+    <input type="text" id="q" placeholder="What are you looking for?" autofocus>
+    <button id="go">Search</button>
   </div>
+
+  <div class="mode-row">
+    <button class="mode-btn active" data-mode="perspectives">Perspectives</button>
+    <button class="mode-btn" data-mode="deepweb">Deep Web</button>
+  </div>
+
+  <div class="util-row">
+    <button class="util-btn" id="stoggle">Settings</button>
+    <a href="engines.html" class="util-link">Search Directory</a>
+  </div>
+
+  <div class="settings-panel" id="spanel">
+    <label for="dk">DeepL API Key (Free tier)</label>
+    <input type="text" id="dk" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx">
+    <div class="s-note">Required for auto-translation. Get free at deepl.com/pro#developer</div>
+    <button class="s-save" id="ssave">Save</button>
+  </div>
+
+  <div class="results-grid" id="grid"></div>
 
 </main>
 
@@ -387,112 +297,184 @@
 </footer>
 
 <script>
-// ===== CONFIG =====
+// ===== STATE =====
 let mode = 'perspectives';
-let deeplKey = localStorage.getItem('deepl_api_key') || '';
+let dk = localStorage.getItem('deepl_api_key') || '';
 
-// Search engine URL patterns
-const url = {
-  google:   q => `https://www.google.com/search?igu=1&q=${enc(q)}`,
-  brave:    q => `https://search.brave.com/search?q=${enc(q)}`,
-  stract:   q => `https://stract.com/search?q=${enc(q)}`,
-  mojeek:   q => `https://www.mojeek.com/search?q=${enc(q)}`,
-  qwant:    q => `https://www.qwant.com/?q=${enc(q)}`,
-  yandex:   q => `https://yandex.com/search/?text=${enc(q)}`,
-  naver:    q => `https://search.naver.com/search.naver?query=${enc(q)}`,
-  baidu:    q => `https://www.baidu.com/s?wd=${enc(q)}`,
-  ddg:      q => `https://lite.duckduckgo.com/lite/?q=${enc(q)}`,
+const enc = s => encodeURIComponent(s);
+const esc = s => { const d = document.createElement('span'); d.textContent = s; return d.innerHTML; };
+
+// ===== SEARCH URLs =====
+const surl = {
+  google:     q => `https://www.google.com/search?igu=1&q=${enc(q)}`,
+  brave:      q => `https://search.brave.com/search?q=${enc(q)}`,
+  stract:     q => `https://stract.com/search?q=${enc(q)}`,
+  mojeek:     q => `https://www.mojeek.com/search?q=${enc(q)}`,
+  qwant:      q => `https://www.qwant.com/?q=${enc(q)}`,
+  yandex:     q => `https://yandex.com/search/?text=${enc(q)}`,
+  naver:      q => `https://search.naver.com/search.naver?query=${enc(q)}`,
+  baidu:      q => `https://www.baidu.com/s?wd=${enc(q)}`,
   marginalia: q => `https://search.marginalia.nu/search?query=${enc(q)}`,
-  wiby:     q => `https://wiby.me/?q=${enc(q)}`,
+  wiby:       q => `https://wiby.me/?q=${enc(q)}`,
 };
 
-function enc(s) { return encodeURIComponent(s); }
-
-// ===== ENGINE DEFINITIONS =====
-const perspectives = [
-  { id: 'google',  name: 'Google',  lang: 'EN', langClass: '', type: 'iframe' },
-  { id: 'brave',   name: 'Brave',   lang: 'EN', langClass: '', type: 'iframe' },
-  { id: 'stract',  name: 'Stract',  lang: 'EN', langClass: '', type: 'iframe' },
-  { id: 'mojeek',  name: 'Mojeek',  lang: 'EN', langClass: '', type: 'iframe' },
-  { id: 'qwant',   name: 'Qwant',   lang: 'FR', langClass: 'lang-fr', translate: 'FR', type: 'iframe' },
-  { id: 'yandex',  name: 'Yandex',  lang: 'RU', langClass: 'lang-ru', translate: 'RU', type: 'iframe' },
-  { id: 'naver',   name: 'Naver',   lang: 'KO', langClass: 'lang-ko', translate: 'KO', type: 'iframe' },
-  { id: 'baidu',   name: 'Baidu',   lang: 'ZH', langClass: 'lang-zh', translate: 'ZH', type: 'iframe' },
+// ===== ENGINE CONFIGS =====
+// type: 'iframe' = embed directly, 'api' = fetch results, 'click' = button to open
+const perspectives_engines = [
+  { id: 'google',  name: 'Google',  badge: 'EN', bc: '', type: 'iframe',
+    desc: 'Largest index. Your baseline.' },
+  { id: 'marginalia', name: 'Marginalia', badge: 'API', bc: 'b-api', type: 'api',
+    desc: 'Non-commercial small web. Blogs, hobbyist pages, real humans.' },
+  { id: 'brave',   name: 'Brave',   badge: 'EN', bc: '', type: 'click',
+    desc: 'Independent index, privacy-focused. Different ranking from Google.' },
+  { id: 'stract',  name: 'Stract',  badge: 'EN', bc: '', type: 'click',
+    desc: 'Open source, own crawler. No corporate agenda.' },
+  { id: 'mojeek',  name: 'Mojeek',  badge: 'EN', bc: '', type: 'click',
+    desc: 'UK-based, fully independent. Surfaces things nobody else does.' },
+  { id: 'qwant',   name: 'Qwant',   badge: 'FR', bc: 'b-fr', type: 'click', translate: 'FR',
+    desc: 'European index. Strong for French/German content, EU perspective.' },
+  { id: 'yandex',  name: 'Yandex',  badge: 'RU', bc: 'b-ru', type: 'click', translate: 'RU',
+    desc: 'Russia\'s engine. Completely different take on global events.' },
+  { id: 'naver',   name: 'Naver',   badge: 'KO', bc: 'b-ko', type: 'click', translate: 'KO',
+    desc: 'South Korea\'s dominant engine. Strong for tech and East Asian coverage.' },
+  { id: 'baidu',   name: 'Baidu',   badge: 'ZH', bc: 'b-zh', type: 'click', translate: 'ZH',
+    desc: 'China\'s engine. Different internet entirely. Great for hardware and manufacturing.' },
 ];
 
-const deepweb = [
-  { id: 'marginalia', name: 'Marginalia', lang: 'API', langClass: '', type: 'iframe' },
-  { id: 'wiby',       name: 'Wiby',       lang: 'API', langClass: '', type: 'iframe' },
-  { id: 'stract',     name: 'Stract',     lang: 'EN',  langClass: '', type: 'iframe' },
-  { id: 'mojeek',     name: 'Mojeek',     lang: 'EN',  langClass: '', type: 'iframe' },
-  { id: 'ddg',        name: 'DuckDuckGo', lang: 'EN',  langClass: '', type: 'iframe' },
-  { id: 'google',     name: 'Google',     lang: 'EN',  langClass: '', type: 'iframe' },
+const deepweb_engines = [
+  { id: 'marginalia', name: 'Marginalia', badge: 'API', bc: 'b-api', type: 'api',
+    desc: 'Non-commercial web. Personal blogs, hobbyist pages.' },
+  { id: 'wiby',    name: 'Wiby', badge: 'API', bc: 'b-api', type: 'api',
+    desc: 'Old-school lightweight web pages. The 2003 internet.' },
+  { id: 'google',  name: 'Google', badge: 'EN', bc: '', type: 'iframe',
+    desc: 'Mainstream baseline for comparison.' },
+  { id: 'stract',  name: 'Stract', badge: 'EN', bc: '', type: 'click',
+    desc: 'Open source, independent ranking.' },
+  { id: 'mojeek',  name: 'Mojeek', badge: 'EN', bc: '', type: 'click',
+    desc: 'Fully independent UK crawler.' },
+  { id: 'brave',   name: 'Brave',  badge: 'EN', bc: '', type: 'click',
+    desc: 'Independent index, different from Google and Bing.' },
 ];
 
-// ===== DEEPL =====
-async function translateDeepL(text, targetLang) {
-  if (!deeplKey) return null;
+// ===== CORS PROXY =====
+async function corsProxy(url, timeout = 10000) {
+  const race = fn => Promise.race([fn(), new Promise((_, rej) => setTimeout(() => rej('timeout'), timeout))]);
+  try {
+    return await race(() => fetch(`https://corsproxy.io/?${enc(url)}`).then(r => r.text()));
+  } catch(e) {}
+  try {
+    const res = await race(() => fetch(`https://api.allorigins.win/get?url=${enc(url)}`).then(r => r.json()));
+    return res.contents;
+  } catch(e) {}
+  return null;
+}
+
+// ===== DeepL =====
+async function translate(text, lang) {
+  if (!dk) return null;
   try {
     const res = await fetch('https://api-free.deepl.com/v2/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ auth_key: deeplKey, text, target_lang: targetLang })
+      body: new URLSearchParams({ auth_key: dk, text, target_lang: lang })
     });
     if (!res.ok) return null;
-    const data = await res.json();
-    return data.translations?.[0]?.text || null;
+    const d = await res.json();
+    return d.translations?.[0]?.text || null;
   } catch(e) { return null; }
 }
 
-// ===== BUILD PANEL =====
-function makePanel(engine, query, translatedQuery) {
-  const actualQuery = translatedQuery || query;
-  const searchUrl = url[engine.id](actualQuery);
-  // Direct link (always opens in new tab as fallback)
-  const directUrl = url[engine.id](actualQuery);
+// ===== API: Marginalia =====
+async function fetchMarginalia(query) {
+  try {
+    const text = await corsProxy(`https://api.marginalia.nu/public/search/${enc(query)}`);
+    if (!text) return null;
+    const data = JSON.parse(text);
+    return (data.results || []).slice(0, 10).map(r => ({
+      title: r.title || r.url, url: r.url, desc: r.description || ''
+    }));
+  } catch(e) { return null; }
+}
 
-  const panel = document.createElement('div');
-  panel.className = 'result-panel';
-  panel.innerHTML = `
-    <div class="panel-header">
-      <span class="panel-name">${engine.name}</span>
-      <span class="panel-lang ${engine.langClass}">${engine.lang}</span>
-      ${translatedQuery ? `<span class="panel-query" title="${esc(translatedQuery)}">${esc(translatedQuery)}</span>` : ''}
-      <a class="panel-open" href="${directUrl}" target="_blank" rel="noopener">open</a>
-    </div>
-    <div class="panel-body">
-      <iframe src="${searchUrl}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" referrerpolicy="no-referrer"></iframe>
-      <div class="iframe-blocked">
-        <p>This engine blocks embedded viewing.</p>
-        <a href="${directUrl}" target="_blank" rel="noopener">Open in new tab</a>
-      </div>
-    </div>
-  `;
+// ===== API: Wiby =====
+async function fetchWiby(query) {
+  try {
+    const text = await corsProxy(`https://wiby.me/json/?q=${enc(query)}`);
+    if (!text) return null;
+    const data = JSON.parse(text);
+    if (!Array.isArray(data)) return [];
+    return data.slice(0, 10).map(r => ({
+      title: r.Title || r.URL, url: r.URL, desc: r.Snippet || ''
+    }));
+  } catch(e) { return null; }
+}
 
-  // Detect iframe blocking: if iframe fails to load content, show fallback
-  const iframe = panel.querySelector('iframe');
-  const blocked = panel.querySelector('.iframe-blocked');
+// ===== BUILD PANELS =====
 
-  // Use a timeout check: if iframe hasn't loaded in 5s, show fallback
-  let loaded = false;
-  iframe.addEventListener('load', () => { loaded = true; });
-  setTimeout(() => {
-    if (!loaded) {
-      iframe.style.display = 'none';
-      blocked.classList.add('visible');
+function panelHeader(eng, query, tq) {
+  const actualQ = tq || query;
+  const openUrl = surl[eng.id](actualQ);
+  return `<div class="panel-hd">
+    <span class="p-name">${eng.name}</span>
+    <span class="p-badge ${eng.bc}">${eng.badge}</span>
+    ${tq ? `<span class="p-query" title="${esc(tq)}">${esc(tq)}</span>` : ''}
+    <a class="p-open" href="${openUrl}" target="_blank" rel="noopener">open</a>
+  </div>`;
+}
+
+function makeIframePanel(eng, query, tq) {
+  const actualQ = tq || query;
+  const el = document.createElement('div');
+  el.className = 'panel';
+  el.innerHTML = panelHeader(eng, query, tq) +
+    `<div class="panel-body"><iframe src="${surl[eng.id](actualQ)}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" referrerpolicy="no-referrer"></iframe></div>`;
+  return el;
+}
+
+function makeApiPanel(eng, query) {
+  const el = document.createElement('div');
+  el.className = 'panel';
+  el.innerHTML = panelHeader(eng, query, null) +
+    `<div class="panel-body"><div class="api-list"><div class="r-status">Searching...</div></div></div>`;
+
+  const list = el.querySelector('.api-list');
+
+  // Fetch results
+  const fetchFn = eng.id === 'marginalia' ? fetchMarginalia : fetchWiby;
+  fetchFn(query).then(results => {
+    if (results === null) {
+      list.innerHTML = '<div class="r-status">Could not reach this engine. Try the "open" link above.</div>';
+    } else if (results.length === 0) {
+      list.innerHTML = '<div class="r-status">No results found.</div>';
+    } else {
+      list.innerHTML = results.map(r =>
+        `<div class="r">
+          <a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
+          <div class="r-u">${esc(r.url)}</div>
+          ${r.desc ? `<div class="r-d">${esc(r.desc)}</div>` : ''}
+        </div>`
+      ).join('');
     }
-  }, 6000);
+  });
 
-  return panel;
+  return el;
 }
 
-function esc(s) {
-  const d = document.createElement('span');
-  d.textContent = s;
-  return d.innerHTML;
+function makeClickPanel(eng, query, tq) {
+  const actualQ = tq || query;
+  const openUrl = surl[eng.id](actualQ);
+  const el = document.createElement('div');
+  el.className = 'panel';
+  el.innerHTML = panelHeader(eng, query, tq) +
+    `<div class="click-body">
+      <div class="cb-desc">${eng.desc}</div>
+      <a class="cb-go" href="${openUrl}" target="_blank" rel="noopener">Search ${eng.name}</a>
+      ${tq ? `<div class="cb-note">Translated: "${esc(tq)}"</div>` : ''}
+    </div>`;
+  return el;
 }
 
-// ===== SEARCH =====
+// ===== MAIN SEARCH =====
 async function doSearch() {
   const query = document.getElementById('q').value.trim();
   if (!query) return;
@@ -501,31 +483,34 @@ async function doSearch() {
   grid.innerHTML = '';
   grid.classList.add('visible');
 
-  const engines = mode === 'perspectives' ? perspectives : deepweb;
+  const engines = mode === 'perspectives' ? perspectives_engines : deepweb_engines;
 
-  // Start translations in parallel for engines that need them
-  const translationPromises = {};
-  for (const eng of engines) {
-    if (eng.translate) {
-      translationPromises[eng.id] = translateDeepL(query, eng.translate);
-    }
+  // Translate in parallel
+  const tps = {};
+  for (const e of engines) {
+    if (e.translate) tps[e.id] = translate(query, e.translate);
   }
-
-  // Wait for all translations
   const translations = {};
-  for (const [id, promise] of Object.entries(translationPromises)) {
-    translations[id] = await promise;
+  for (const [id, p] of Object.entries(tps)) {
+    translations[id] = await p;
   }
 
-  // Build all panels
+  // Build panels
   for (const eng of engines) {
-    const translated = translations[eng.id] || null;
-    const panel = makePanel(eng, query, translated);
+    const tq = translations[eng.id] || null;
+    let panel;
+    if (eng.type === 'iframe') {
+      panel = makeIframePanel(eng, query, tq);
+    } else if (eng.type === 'api') {
+      panel = makeApiPanel(eng, query);
+    } else {
+      panel = makeClickPanel(eng, query, tq);
+    }
     grid.appendChild(panel);
   }
 }
 
-// ===== EVENT LISTENERS =====
+// ===== EVENTS =====
 document.getElementById('go').addEventListener('click', doSearch);
 document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
@@ -534,7 +519,6 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     mode = btn.dataset.mode;
-    // Clear results when switching modes
     document.getElementById('grid').innerHTML = '';
     document.getElementById('grid').classList.remove('visible');
   });
@@ -543,17 +527,17 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
 document.getElementById('stoggle').addEventListener('click', () => {
   const p = document.getElementById('spanel');
   p.classList.toggle('visible');
-  if (p.classList.contains('visible')) document.getElementById('deepl-key').value = deeplKey;
+  if (p.classList.contains('visible')) document.getElementById('dk').value = dk;
 });
 
 document.getElementById('ssave').addEventListener('click', () => {
-  deeplKey = document.getElementById('deepl-key').value.trim();
-  localStorage.setItem('deepl_api_key', deeplKey);
+  dk = document.getElementById('dk').value.trim();
+  localStorage.setItem('deepl_api_key', dk);
   document.getElementById('spanel').classList.remove('visible');
-  document.getElementById('stoggle').textContent = deeplKey ? 'Settings (DeepL ✓)' : 'Settings';
+  document.getElementById('stoggle').textContent = dk ? 'Settings (DeepL ✓)' : 'Settings';
 });
 
-if (deeplKey) document.getElementById('stoggle').textContent = 'Settings (DeepL ✓)';
+if (dk) document.getElementById('stoggle').textContent = 'Settings (DeepL ✓)';
 </script>
 
 </body>
