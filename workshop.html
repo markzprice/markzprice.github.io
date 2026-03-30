@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workshop</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.workshop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.ws-card {
+  background: var(--paper-2);
+  border: 1px solid var(--ink-rule);
+  border-radius: 4px;
+  padding: 16px 18px;
+  transition: border-color 0.2s;
+}
+.ws-card:hover {
+  border-color: var(--ink-mid);
+}
+.ws-card a {
+  display: block;
+}
+.ws-card-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.ws-card-desc {
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--ink-mid);
+  line-height: 1.5;
+}
+.ws-section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-light);
+  margin-top: 32px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--ink-rule);
+}
+.ws-section-label:first-of-type { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="/" class="site-name">Mark Price</a>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="page-hero">
+    <h1>Workshop</h1>
+  </div>
+
+  <div class="ws-section-label">Tools</div>
+  <div class="workshop-grid">
+
+    <div class="ws-card">
+      <a href="https://markzprice.github.io/startpage/" target="_blank" rel="noopener">
+        <div class="ws-card-title">Start Page</div>
+        <div class="ws-card-desc">Weather, air quality, headlines, river gauge, earthquakes, moon phase.</div>
+      </a>
+    </div>
+
+    <div class="ws-card">
+      <a href="timer.html">
+        <div class="ws-card-title">Timer</div>
+        <div class="ws-card-desc">Pomodoro and session timer with presets.</div>
+      </a>
+    </div>
+
+    <div class="ws-card">
+      <a href="timer-guide.html">
+        <div class="ws-card-title">Timer Guide</div>
+        <div class="ws-card-desc">How to use the timer, presets, and workflow.</div>
+      </a>
+    </div>
+
+    <div class="ws-card">
+      <a href="https://ground.news/" target="_blank" rel="noopener">
+        <div class="ws-card-title">Ground News</div>
+        <div class="ws-card-desc">Bias comparison, blind spots, factuality ratings. Install the browser extension.</div>
+      </a>
+    </div>
+
+  </div>
+
+  <div class="ws-section-label">Site</div>
+  <div class="workshop-grid">
+
+    <div class="ws-card">
+      <a href="tv.html">
+        <div class="ws-card-title">TV Guide</div>
+        <div class="ws-card-desc">Streaming services and what to watch.</div>
+      </a>
+    </div>
+
+    <div class="ws-card">
+      <a href="news.html">
+        <div class="ws-card-title">News Sources</div>
+        <div class="ws-card-desc">What I read and where I get information.</div>
+      </a>
+    </div>
+
+    <div class="ws-card">
+      <a href="https://github.com/markzprice" target="_blank" rel="noopener">
+        <div class="ws-card-title">GitHub</div>
+        <div class="ws-card-desc">Repos, startpage source, site source.</div>
+      </a>
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span class="footer-left">mark price · 2026</span>
+</footer>
+
+</body>
+</html>
