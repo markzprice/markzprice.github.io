@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Recipes">
+<meta name="theme-color" content="#f2ece0">
+<title>Recipe Builder</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Courier New', Courier, monospace;
+  background: #f2ece0;
+  color: #0e0800;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ===== LAYOUT ===== */
+.app { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
+.sidebar {
+  background: #e8e0d0;
+  border-right: 2px solid #0e0800;
+  padding: 20px 16px;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.main { padding: 24px 28px; overflow-y: auto; }
+
+/* ===== TYPOGRAPHY ===== */
+.section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #c42a00;
+  border: 1.5px solid #c42a00;
+  display: inline-block;
+  padding: 2px 8px;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+h2 { font-size: 13px; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.05em; }
+h3 { font-size: 12px; font-weight: bold; margin-bottom: 6px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* ===== INPUTS ===== */
+input[type="text"], input[type="number"], select {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  background: #f2ece0;
+  border: 1.5px solid #a09080;
+  color: #0e0800;
+  padding: 4px 8px;
+  width: 100%;
+  outline: none;
+}
+input[type="text"]:focus, input[type="number"]:focus, select:focus {
+  border-color: #0e0800;
+}
+input[type="number"] { width: 80px; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 14px;
+  border: 1.5px solid #0e0800;
+  background: transparent;
+  color: #0e0800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s;
+}
+.btn:hover { background: #0e0800; color: #f2ece0; }
+.btn--red { border-color: #c42a00; color: #c42a00; }
+.btn--red:hover { background: #c42a00; color: #f2ece0; }
+.btn--small { font-size: 9px; padding: 3px 8px; }
+
+/* ===== SEARCH & ADD ===== */
+.search-wrap { position: relative; margin-bottom: 12px; }
+.search-status {
+  font-size: 10px;
+  color: #7a6a52;
+  font-style: italic;
+  padding: 4px 0;
+}
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #f2ece0;
+  border: 1.5px solid #0e0800;
+  border-top: none;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 50;
+  display: none;
+}
+.search-results.open { display: block; }
+.search-result {
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  border-bottom: 1px solid #e8e0d0;
+}
+.search-result:hover, .search-result.highlighted { background: #e8e0d0; }
+.search-result-name { font-weight: bold; }
+.search-result-brand { font-size: 10px; color: #7a6a52; }
+.search-result-meta {
+  font-size: 10px;
+  color: #7a6a52;
+  margin-top: 2px;
+}
+
+.add-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
+.add-row .field { display: flex; flex-direction: column; gap: 2px; }
+.add-row .field label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #7a6a52; }
+
+.selected-info {
+  font-size: 10px;
+  color: #7a6a52;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid #c4baaa;
+  margin-bottom: 12px;
+}
+
+/* ===== CUSTOM INGREDIENT ===== */
+.custom-form {
+  background: #ddd5c5;
+  border: 1.5px solid #a09080;
+  padding: 12px;
+  margin-bottom: 16px;
+  display: none;
+}
+.custom-form.open { display: block; }
+.custom-form .field-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.custom-form .field-row .field { flex: 1; min-width: 80px; }
+.custom-form .field-row .field label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #7a6a52; display: block; margin-bottom: 2px; }
+
+/* ===== INGREDIENT LIST ===== */
+.ingredient-list { margin-bottom: 20px; }
+.ingredient-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #c4baaa;
+  font-size: 12px;
+}
+.ingredient-item:last-child { border-bottom: none; }
+.ingredient-name { flex: 1; }
+.ingredient-amount { color: #7a6a52; margin-right: 8px; white-space: nowrap; }
+.ingredient-remove {
+  background: none;
+  border: none;
+  color: #c42a00;
+  cursor: pointer;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+.ingredient-remove:hover { opacity: 1; }
+
+/* ===== SERVINGS ===== */
+.servings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px 0;
+  border-top: 1.5px solid #0e0800;
+  border-bottom: 1.5px solid #0e0800;
+}
+.servings-row label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; }
+.servings-row input[type="number"] { width: 60px; text-align: center; }
+
+/* ===== NUTRITION DISPLAY ===== */
+.nutrition-panel {
+  border: 2px solid #0e0800;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.nutrition-title {
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.nutrition-subtitle {
+  font-size: 10px;
+  color: #7a6a52;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+}
+
+.macro-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #c4baaa;
+  font-size: 13px;
+}
+.macro-row:last-child { border-bottom: none; }
+.macro-row.macro-row--total {
+  border-top: 2px solid #0e0800;
+  border-bottom: none;
+  font-weight: bold;
+  padding-top: 10px;
+  margin-top: 4px;
+}
+.macro-label { color: #4a3c28; }
+.macro-value { font-weight: bold; text-align: right; }
+
+.macro-bar {
+  display: flex;
+  height: 16px;
+  margin: 12px 0 20px;
+  border: 1.5px solid #0e0800;
+  overflow: hidden;
+}
+.macro-bar-segment { height: 100%; transition: width 0.3s; }
+.macro-bar-protein { background: #c42a00; }
+.macro-bar-carbs { background: #e8c200; }
+.macro-bar-fat { background: #4a3c28; }
+
+.macro-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 10px;
+  color: #7a6a52;
+  margin-bottom: 16px;
+}
+.macro-legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ===== BREAKDOWN TABLE ===== */
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-top: 12px;
+}
+.breakdown-table th {
+  text-align: left;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #7a6a52;
+  padding: 4px 6px;
+  border-bottom: 2px solid #0e0800;
+}
+.breakdown-table th:not(:first-child) { text-align: right; }
+.breakdown-table td {
+  padding: 5px 6px;
+  border-bottom: 1px solid #c4baaa;
+}
+.breakdown-table td:not(:first-child) { text-align: right; color: #4a3c28; }
+.breakdown-table tr:last-child td { border-bottom: none; }
+.breakdown-table tfoot td {
+  font-weight: bold;
+  border-top: 2px solid #0e0800;
+  border-bottom: none;
+  padding-top: 8px;
+}
+
+/* ===== SAVED RECIPES ===== */
+.saved-list { margin-top: 12px; }
+.saved-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #c4baaa;
+  font-size: 12px;
+  cursor: pointer;
+}
+.saved-item:hover { color: #c42a00; }
+.saved-item:last-child { border-bottom: none; }
+
+/* ===== API KEY SETUP ===== */
+.api-setup {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 8, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.api-setup-box {
+  background: #f2ece0;
+  border: 2px solid #0e0800;
+  padding: 32px;
+  max-width: 420px;
+  width: 90%;
+}
+.api-setup-box h2 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+.api-setup-box p {
+  font-size: 12px;
+  color: #4a3c28;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.api-setup-box input {
+  margin-bottom: 12px;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  color: #7a6a52;
+  font-size: 12px;
+  padding: 20px 0;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 700px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 2px solid #0e0800;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- API Key Setup Modal -->
+<div class="api-setup" id="api-setup" style="display:none;">
+  <div class="api-setup-box">
+    <h2>USDA API Key</h2>
+    <p>This tool uses the USDA FoodData Central database. Enter your free API key below. It will be saved in your browser.</p>
+    <input type="text" id="api-key-input" placeholder="paste your API key here">
+    <div style="margin-top: 8px;">
+      <button class="btn" id="api-key-save">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="section-label">Recipe Builder</div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <input type="text" id="ingredient-search" placeholder="search ingredients (e.g. chicken breast)..." autocomplete="off">
+      <div class="search-status" id="search-status"></div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+
+    <!-- Selected food info + amount/unit/add -->
+    <div id="selected-section" style="display:none;">
+      <div class="selected-info" id="selected-info"></div>
+      <div class="add-row">
+        <div class="field">
+          <label>Amount</label>
+          <input type="number" id="add-amount" min="0" step="any" value="100">
+        </div>
+        <div class="field">
+          <label>Unit</label>
+          <select id="add-unit">
+            <option value="g">g</option>
+            <option value="oz">oz</option>
+            <option value="lb">lb</option>
+            <option value="cup">cup</option>
+            <option value="tbsp">tbsp</option>
+            <option value="tsp">tsp</option>
+            <option value="ml">ml</option>
+            <option value="fl oz">fl oz</option>
+          </select>
+        </div>
+        <button class="btn btn--small" id="add-btn">Add</button>
+      </div>
+    </div>
+
+    <!-- Custom ingredient toggle -->
+    <div style="margin-bottom: 10px;">
+      <button class="btn btn--small btn--red" id="custom-toggle">+ Custom Ingredient</button>
+    </div>
+
+    <!-- Custom ingredient form -->
+    <div class="custom-form" id="custom-form">
+      <div class="field-row">
+        <div class="field" style="flex:2;">
+          <label>Name</label>
+          <input type="text" id="custom-name" placeholder="e.g. my protein powder">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Serving Size (g)</label>
+          <input type="number" id="custom-serving" value="100" min="1">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Calories</label>
+          <input type="number" id="custom-cal" min="0" step="any">
+        </div>
+        <div class="field">
+          <label>Protein (g)</label>
+          <input type="number" id="custom-protein" min="0" step="any">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Carbs (g)</label>
+          <input type="number" id="custom-carbs" min="0" step="any">
+        </div>
+        <div class="field">
+          <label>Fat (g)</label>
+          <input type="number" id="custom-fat" min="0" step="any">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Sodium (mg)</label>
+          <input type="number" id="custom-sodium" min="0" step="any">
+        </div>
+      </div>
+      <div style="margin-top: 8px; display: flex; gap: 6px;">
+        <button class="btn btn--small" id="custom-add">Add to Recipe</button>
+        <button class="btn btn--small btn--red" id="custom-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <h3>Ingredients</h3>
+    <div class="ingredient-list" id="ingredient-list">
+      <div class="empty-state">no ingredients yet</div>
+    </div>
+
+    <!-- Servings -->
+    <div class="servings-row">
+      <label>Servings:</label>
+      <input type="number" id="servings" value="4" min="1" step="1">
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+      <button class="btn btn--small" id="save-btn">Save Recipe</button>
+      <button class="btn btn--small btn--red" id="clear-btn">Clear All</button>
+      <button class="btn btn--small" id="change-key-btn" style="opacity:0.5;">API Key</button>
+    </div>
+
+    <!-- Saved recipes -->
+    <div style="margin-top: 20px;">
+      <h3>Saved Recipes</h3>
+      <div class="saved-list" id="saved-list">
+        <div class="empty-state">no saved recipes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="nutrition-panel" id="nutrition-panel">
+      <div class="nutrition-title">Nutrition Per Serving</div>
+      <div class="nutrition-subtitle" id="serving-info">add ingredients to see nutrition</div>
+
+      <div class="macro-bar" id="macro-bar" style="display:none;">
+        <div class="macro-bar-segment macro-bar-protein" id="bar-protein"></div>
+        <div class="macro-bar-segment macro-bar-carbs" id="bar-carbs"></div>
+        <div class="macro-bar-segment macro-bar-fat" id="bar-fat"></div>
+      </div>
+      <div class="macro-legend" id="macro-legend" style="display:none;">
+        <span><span class="macro-legend-dot" style="background:#c42a00;"></span>Protein</span>
+        <span><span class="macro-legend-dot" style="background:#e8c200;"></span>Carbs</span>
+        <span><span class="macro-legend-dot" style="background:#4a3c28;"></span>Fat</span>
+      </div>
+
+      <div id="macro-rows">
+        <div class="macro-row"><span class="macro-label">Calories</span><span class="macro-value">--</span></div>
+        <div class="macro-row"><span class="macro-label">Protein</span><span class="macro-value">--</span></div>
+        <div class="macro-row"><span class="macro-label">Carbs</span><span class="macro-value">--</span></div>
+        <div class="macro-row"><span class="macro-label">Fat</span><span class="macro-value">--</span></div>
+        <div class="macro-row"><span class="macro-label">Sodium</span><span class="macro-value">--</span></div>
+      </div>
+    </div>
+
+    <!-- Serving size estimate -->
+    <div class="nutrition-panel" id="serving-size-panel" style="display:none;">
+      <div class="nutrition-title">Estimated Serving Size</div>
+      <div id="serving-size-info"></div>
+    </div>
+
+    <!-- Per-ingredient breakdown -->
+    <div id="breakdown-wrap" style="display:none;">
+      <div class="section-label">Ingredient Breakdown</div>
+      <table class="breakdown-table" id="breakdown-table">
+        <thead>
+          <tr>
+            <th>Ingredient</th>
+            <th>Cal</th>
+            <th>Protein</th>
+            <th>Carbs</th>
+            <th>Fat</th>
+            <th>Sodium</th>
+          </tr>
+        </thead>
+        <tbody id="breakdown-body"></tbody>
+        <tfoot id="breakdown-foot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== API KEY MANAGEMENT =====
+const API_BASE = 'https://api.nal.usda.gov/fdc/v1';
+
+function getApiKey() {
+  return localStorage.getItem('usda_api_key') || '';
+}
+
+function showKeyPrompt() {
+  document.getElementById('api-setup').style.display = 'flex';
+}
+
+document.getElementById('api-key-save').addEventListener('click', () => {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) return;
+  localStorage.setItem('usda_api_key', key);
+  document.getElementById('api-setup').style.display = 'none';
+});
+
+document.getElementById('change-key-btn').addEventListener('click', () => {
+  document.getElementById('api-key-input').value = getApiKey();
+  showKeyPrompt();
+});
+
+if (!getApiKey()) showKeyPrompt();
+
+// ===== UNIT CONVERSIONS (to grams) =====
+const UNIT_TO_GRAMS = {
+  "g": 1, "oz": 28.35, "lb": 453.6, "ml": 1, "cup": 240,
+  "tbsp": 15, "tsp": 5, "fl oz": 30
+};
+
+// ===== STATE =====
+let recipe = [];
+let selectedFood = null; // { fdcId, name, brand, nutrients: { cal, protein, carbs, fat, sodium } } all per 100g
+let searchCache = {};
+let searchTimer = null;
+let highlightedIdx = -1;
+let savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]');
+
+// ===== DOM REFS =====
+const searchInput = document.getElementById('ingredient-search');
+const searchStatus = document.getElementById('search-status');
+const searchResults = document.getElementById('search-results');
+const selectedSection = document.getElementById('selected-section');
+const selectedInfo = document.getElementById('selected-info');
+const addAmount = document.getElementById('add-amount');
+const addUnit = document.getElementById('add-unit');
+const addBtn = document.getElementById('add-btn');
+const ingredientList = document.getElementById('ingredient-list');
+const servingsInput = document.getElementById('servings');
+const customToggle = document.getElementById('custom-toggle');
+const customForm = document.getElementById('custom-form');
+const customCancel = document.getElementById('custom-cancel');
+const customAddBtn = document.getElementById('custom-add');
+const saveBtn = document.getElementById('save-btn');
+const clearBtn = document.getElementById('clear-btn');
+const savedList = document.getElementById('saved-list');
+
+// ===== USDA API SEARCH =====
+async function searchUSDA(query) {
+  const key = getApiKey();
+  if (!key) { showKeyPrompt(); return []; }
+  if (searchCache[query]) return searchCache[query];
+
+  const url = `${API_BASE}/foods/search?api_key=${encodeURIComponent(key)}&query=${encodeURIComponent(query)}&pageSize=25&dataType=Foundation,SR%20Legacy,Survey%20(FNDDS),Branded`;
+
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    if (resp.status === 403) {
+      searchStatus.textContent = 'invalid API key';
+      return [];
+    }
+    searchStatus.textContent = 'search error';
+    return [];
+  }
+  const data = await resp.json();
+  const results = (data.foods || []).map(f => {
+    const nutrients = {};
+    (f.foodNutrients || []).forEach(n => {
+      // USDA nutrient IDs: 1008=Energy(kcal), 1003=Protein, 1005=Carbs, 1004=Fat, 1093=Sodium
+      if (n.nutrientId === 1008 || n.nutrientName === 'Energy') nutrients.cal = n.value || 0;
+      if (n.nutrientId === 1003 || n.nutrientName === 'Protein') nutrients.protein = n.value || 0;
+      if (n.nutrientId === 1005 || n.nutrientName === 'Carbohydrate, by difference') nutrients.carbs = n.value || 0;
+      if (n.nutrientId === 1004 || n.nutrientName === 'Total lipid (fat)') nutrients.fat = n.value || 0;
+      if (n.nutrientId === 1093 || n.nutrientName === 'Sodium, Na') nutrients.sodium = n.value || 0;
+    });
+    return {
+      fdcId: f.fdcId,
+      name: f.description || 'Unknown',
+      brand: f.brandOwner || f.brandName || '',
+      dataType: f.dataType || '',
+      nutrients: {
+        cal: nutrients.cal || 0,
+        protein: nutrients.protein || 0,
+        carbs: nutrients.carbs || 0,
+        fat: nutrients.fat || 0,
+        sodium: nutrients.sodium || 0
+      }
+    };
+  });
+
+  searchCache[query] = results;
+  return results;
+}
+
+// ===== SEARCH INPUT =====
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  highlightedIdx = -1;
+  if (q.length < 2) {
+    searchResults.classList.remove('open');
+    searchStatus.textContent = '';
+    return;
+  }
+  // Debounce
+  clearTimeout(searchTimer);
+  searchStatus.textContent = 'searching...';
+  searchTimer = setTimeout(async () => {
+    const results = await searchUSDA(q);
+    if (searchInput.value.trim() !== q) return; // stale
+    if (results.length === 0) {
+      searchResults.innerHTML = '<div class="search-result" style="color:#7a6a52;font-style:italic;">no results found</div>';
+      searchResults.classList.add('open');
+      searchStatus.textContent = '';
+      return;
+    }
+    searchStatus.textContent = `${results.length} results`;
+    renderSearchResults(results);
+  }, 350);
+});
+
+function renderSearchResults(results) {
+  // Sort: Foundation/SR Legacy first (generic foods), then FNDDS, then Branded
+  const typeOrder = { 'Foundation': 0, 'SR Legacy': 1, 'Survey (FNDDS)': 2, 'Branded': 3 };
+  results.sort((a, b) => (typeOrder[a.dataType] ?? 9) - (typeOrder[b.dataType] ?? 9));
+
+  searchResults.innerHTML = results.map((f, i) => {
+    const n = f.nutrients;
+    const brandLine = f.brand ? `<div class="search-result-brand">${escHtml(f.brand)}</div>` : '';
+    const typeBadge = f.dataType === 'Branded' ? ' [branded]' : '';
+    return `<div class="search-result" data-idx="${i}">
+      <div class="search-result-name">${escHtml(f.name)}${typeBadge}</div>
+      ${brandLine}
+      <div class="search-result-meta">${Math.round(n.cal)} cal | ${n.protein.toFixed(1)}g P | ${n.carbs.toFixed(1)}g C | ${n.fat.toFixed(1)}g F | ${Math.round(n.sodium)}mg Na per 100g</div>
+    </div>`;
+  }).join('');
+  searchResults.classList.add('open');
+
+  searchResults.querySelectorAll('.search-result[data-idx]').forEach(el => {
+    el.addEventListener('click', () => {
+      selectFood(results[parseInt(el.dataset.idx)]);
+    });
+  });
+}
+
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+searchInput.addEventListener('keydown', (e) => {
+  const items = searchResults.querySelectorAll('.search-result[data-idx]');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    highlightedIdx = Math.min(highlightedIdx + 1, items.length - 1);
+    updateHighlight(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    highlightedIdx = Math.max(highlightedIdx - 1, 0);
+    updateHighlight(items);
+  } else if (e.key === 'Enter' && highlightedIdx >= 0) {
+    e.preventDefault();
+    items[highlightedIdx].click();
+  }
+});
+
+function updateHighlight(items) {
+  items.forEach((el, i) => el.classList.toggle('highlighted', i === highlightedIdx));
+  if (highlightedIdx >= 0 && items[highlightedIdx]) {
+    items[highlightedIdx].scrollIntoView({ block: 'nearest' });
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-wrap')) {
+    searchResults.classList.remove('open');
+  }
+});
+
+// ===== SELECT FOOD =====
+function selectFood(food) {
+  selectedFood = food;
+  searchInput.value = food.name;
+  searchResults.classList.remove('open');
+  searchStatus.textContent = '';
+
+  const n = food.nutrients;
+  selectedInfo.innerHTML = `<strong>${escHtml(food.name)}</strong>${food.brand ? ' (' + escHtml(food.brand) + ')' : ''}<br>
+    Per 100g: ${Math.round(n.cal)} cal | ${n.protein.toFixed(1)}g protein | ${n.carbs.toFixed(1)}g carbs | ${n.fat.toFixed(1)}g fat | ${Math.round(n.sodium)}mg sodium`;
+  selectedSection.style.display = 'block';
+  addAmount.value = 100;
+  addAmount.focus();
+  addAmount.select();
+}
+
+// ===== ADD INGREDIENT =====
+addBtn.addEventListener('click', addIngredient);
+addAmount.addEventListener('keydown', (e) => { if (e.key === 'Enter') addIngredient(); });
+
+function addIngredient() {
+  if (!selectedFood) return;
+  const amount = parseFloat(addAmount.value);
+  if (!amount || amount <= 0) return;
+  const unit = addUnit.value;
+  const grams = amount * (UNIT_TO_GRAMS[unit] || 1);
+
+  recipe.push({
+    food: { ...selectedFood },
+    amount,
+    unit,
+    grams
+  });
+
+  selectedFood = null;
+  searchInput.value = '';
+  selectedSection.style.display = 'none';
+  renderIngredients();
+  renderNutrition();
+}
+
+// ===== CUSTOM INGREDIENT =====
+customToggle.addEventListener('click', () => {
+  customForm.classList.toggle('open');
+});
+customCancel.addEventListener('click', () => {
+  customForm.classList.remove('open');
+});
+customAddBtn.addEventListener('click', () => {
+  const name = document.getElementById('custom-name').value.trim();
+  const servingSize = parseFloat(document.getElementById('custom-serving').value) || 100;
+  const cal = parseFloat(document.getElementById('custom-cal').value) || 0;
+  const protein = parseFloat(document.getElementById('custom-protein').value) || 0;
+  const carbs = parseFloat(document.getElementById('custom-carbs').value) || 0;
+  const fat = parseFloat(document.getElementById('custom-fat').value) || 0;
+  const sodium = parseFloat(document.getElementById('custom-sodium').value) || 0;
+
+  if (!name) return;
+
+  // Normalize to per-100g
+  const scale = 100 / servingSize;
+  const food = {
+    fdcId: null,
+    name: name,
+    brand: 'custom',
+    nutrients: {
+      cal: cal * scale,
+      protein: protein * scale,
+      carbs: carbs * scale,
+      fat: fat * scale,
+      sodium: sodium * scale
+    }
+  };
+
+  recipe.push({
+    food,
+    amount: servingSize,
+    unit: "g",
+    grams: servingSize
+  });
+
+  // Clear form
+  document.getElementById('custom-name').value = '';
+  document.getElementById('custom-serving').value = '100';
+  document.getElementById('custom-cal').value = '';
+  document.getElementById('custom-protein').value = '';
+  document.getElementById('custom-carbs').value = '';
+  document.getElementById('custom-fat').value = '';
+  document.getElementById('custom-sodium').value = '';
+  customForm.classList.remove('open');
+
+  renderIngredients();
+  renderNutrition();
+});
+
+// ===== RENDER INGREDIENTS =====
+function renderIngredients() {
+  if (recipe.length === 0) {
+    ingredientList.innerHTML = '<div class="empty-state">no ingredients yet</div>';
+    return;
+  }
+  ingredientList.innerHTML = recipe.map((item, i) =>
+    `<div class="ingredient-item">
+      <span class="ingredient-amount">${item.amount} ${item.unit}</span>
+      <span class="ingredient-name">${escHtml(item.food.name)}</span>
+      <button class="ingredient-remove" data-idx="${i}" title="Remove">&times;</button>
+    </div>`
+  ).join('');
+
+  ingredientList.querySelectorAll('.ingredient-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      recipe.splice(parseInt(btn.dataset.idx), 1);
+      renderIngredients();
+      renderNutrition();
+    });
+  });
+}
+
+// ===== RENDER NUTRITION =====
+function renderNutrition() {
+  const servings = parseInt(servingsInput.value) || 1;
+  const servingInfo = document.getElementById('serving-info');
+  const macroRows = document.getElementById('macro-rows');
+  const macroBar = document.getElementById('macro-bar');
+  const macroLegend = document.getElementById('macro-legend');
+  const breakdownWrap = document.getElementById('breakdown-wrap');
+  const breakdownBody = document.getElementById('breakdown-body');
+  const breakdownFoot = document.getElementById('breakdown-foot');
+  const servingSizePanel = document.getElementById('serving-size-panel');
+  const servingSizeInfo = document.getElementById('serving-size-info');
+
+  if (recipe.length === 0) {
+    servingInfo.textContent = 'add ingredients to see nutrition';
+    macroRows.innerHTML = `
+      <div class="macro-row"><span class="macro-label">Calories</span><span class="macro-value">--</span></div>
+      <div class="macro-row"><span class="macro-label">Protein</span><span class="macro-value">--</span></div>
+      <div class="macro-row"><span class="macro-label">Carbs</span><span class="macro-value">--</span></div>
+      <div class="macro-row"><span class="macro-label">Fat</span><span class="macro-value">--</span></div>
+      <div class="macro-row"><span class="macro-label">Sodium</span><span class="macro-value">--</span></div>`;
+    macroBar.style.display = 'none';
+    macroLegend.style.display = 'none';
+    breakdownWrap.style.display = 'none';
+    servingSizePanel.style.display = 'none';
+    return;
+  }
+
+  // Calculate totals (USDA data is per 100g)
+  let totalCal = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0, totalSodium = 0, totalGrams = 0;
+  const perItem = recipe.map(item => {
+    const scale = item.grams / 100;
+    const n = item.food.nutrients;
+    const cal = n.cal * scale;
+    const protein = n.protein * scale;
+    const carbs = n.carbs * scale;
+    const fat = n.fat * scale;
+    const sodium = n.sodium * scale;
+    totalCal += cal;
+    totalProtein += protein;
+    totalCarbs += carbs;
+    totalFat += fat;
+    totalSodium += sodium;
+    totalGrams += item.grams;
+    return { name: item.food.name, amount: item.amount, unit: item.unit, cal, protein, carbs, fat, sodium, grams: item.grams };
+  });
+
+  // Per serving
+  const psCal = totalCal / servings;
+  const psProtein = totalProtein / servings;
+  const psCarbs = totalCarbs / servings;
+  const psFat = totalFat / servings;
+  const psSodium = totalSodium / servings;
+  const psGrams = totalGrams / servings;
+
+  servingInfo.textContent = `${servings} serving${servings > 1 ? 's' : ''} total`;
+
+  macroRows.innerHTML = `
+    <div class="macro-row"><span class="macro-label">Calories</span><span class="macro-value">${Math.round(psCal)}</span></div>
+    <div class="macro-row"><span class="macro-label">Protein</span><span class="macro-value">${psProtein.toFixed(1)}g</span></div>
+    <div class="macro-row"><span class="macro-label">Carbs</span><span class="macro-value">${psCarbs.toFixed(1)}g</span></div>
+    <div class="macro-row"><span class="macro-label">Fat</span><span class="macro-value">${psFat.toFixed(1)}g</span></div>
+    <div class="macro-row"><span class="macro-label">Sodium</span><span class="macro-value">${Math.round(psSodium)}mg</span></div>
+    <div class="macro-row macro-row--total"><span class="macro-label">Total Recipe</span><span class="macro-value">${Math.round(totalCal)} cal</span></div>`;
+
+  // Macro bar
+  const totalMacroGrams = psProtein + psCarbs + psFat;
+  if (totalMacroGrams > 0) {
+    const pPct = (psProtein / totalMacroGrams * 100).toFixed(1);
+    const cPct = (psCarbs / totalMacroGrams * 100).toFixed(1);
+    const fPct = (psFat / totalMacroGrams * 100).toFixed(1);
+    document.getElementById('bar-protein').style.width = pPct + '%';
+    document.getElementById('bar-carbs').style.width = cPct + '%';
+    document.getElementById('bar-fat').style.width = fPct + '%';
+    macroBar.style.display = 'flex';
+    macroLegend.style.display = 'flex';
+    macroLegend.innerHTML = `
+      <span><span class="macro-legend-dot" style="background:#c42a00;"></span>Protein ${pPct}%</span>
+      <span><span class="macro-legend-dot" style="background:#e8c200;"></span>Carbs ${cPct}%</span>
+      <span><span class="macro-legend-dot" style="background:#4a3c28;"></span>Fat ${fPct}%</span>`;
+  }
+
+  // Serving size estimate
+  servingSizePanel.style.display = 'block';
+  const psOz = (psGrams / 28.35).toFixed(1);
+  const psCups = (psGrams / 240).toFixed(1);
+  servingSizeInfo.innerHTML = `
+    <div class="macro-row"><span class="macro-label">Approx. weight per serving</span><span class="macro-value">${Math.round(psGrams)}g (${psOz} oz)</span></div>
+    <div class="macro-row"><span class="macro-label">Approx. volume per serving</span><span class="macro-value">~${psCups} cups</span></div>
+    <div class="macro-row"><span class="macro-label">Total recipe weight</span><span class="macro-value">${Math.round(totalGrams)}g (${(totalGrams / 453.6).toFixed(1)} lb)</span></div>`;
+
+  // Breakdown table
+  breakdownWrap.style.display = 'block';
+  breakdownBody.innerHTML = perItem.map(item =>
+    `<tr>
+      <td>${item.amount} ${item.unit} ${escHtml(item.name)}</td>
+      <td>${Math.round(item.cal)}</td>
+      <td>${item.protein.toFixed(1)}g</td>
+      <td>${item.carbs.toFixed(1)}g</td>
+      <td>${item.fat.toFixed(1)}g</td>
+      <td>${Math.round(item.sodium)}mg</td>
+    </tr>`
+  ).join('');
+  breakdownFoot.innerHTML = `
+    <tr>
+      <td>Total</td>
+      <td>${Math.round(totalCal)}</td>
+      <td>${totalProtein.toFixed(1)}g</td>
+      <td>${totalCarbs.toFixed(1)}g</td>
+      <td>${totalFat.toFixed(1)}g</td>
+      <td>${Math.round(totalSodium)}mg</td>
+    </tr>
+    <tr>
+      <td>Per Serving (${servings})</td>
+      <td>${Math.round(psCal)}</td>
+      <td>${psProtein.toFixed(1)}g</td>
+      <td>${psCarbs.toFixed(1)}g</td>
+      <td>${psFat.toFixed(1)}g</td>
+      <td>${Math.round(psSodium)}mg</td>
+    </tr>`;
+}
+
+servingsInput.addEventListener('input', renderNutrition);
+
+// ===== SAVE / LOAD / CLEAR =====
+saveBtn.addEventListener('click', () => {
+  if (recipe.length === 0) return;
+  const name = prompt('Recipe name:');
+  if (!name) return;
+  savedRecipes.push({
+    name,
+    servings: parseInt(servingsInput.value) || 4,
+    items: recipe.map(r => ({ food: r.food, amount: r.amount, unit: r.unit, grams: r.grams }))
+  });
+  localStorage.setItem('savedRecipes', JSON.stringify(savedRecipes));
+  renderSaved();
+});
+
+clearBtn.addEventListener('click', () => {
+  recipe = [];
+  selectedFood = null;
+  searchInput.value = '';
+  selectedSection.style.display = 'none';
+  renderIngredients();
+  renderNutrition();
+});
+
+function renderSaved() {
+  if (savedRecipes.length === 0) {
+    savedList.innerHTML = '<div class="empty-state">no saved recipes</div>';
+    return;
+  }
+  savedList.innerHTML = savedRecipes.map((r, i) =>
+    `<div class="saved-item">
+      <span data-load="${i}">${escHtml(r.name)}</span>
+      <button class="ingredient-remove" data-del="${i}" title="Delete">&times;</button>
+    </div>`
+  ).join('');
+
+  savedList.querySelectorAll('[data-load]').forEach(el => {
+    el.addEventListener('click', () => {
+      const r = savedRecipes[parseInt(el.dataset.load)];
+      recipe = r.items.map(item => ({ ...item, food: { ...item.food, nutrients: { ...item.food.nutrients } } }));
+      servingsInput.value = r.servings;
+      renderIngredients();
+      renderNutrition();
+    });
+  });
+
+  savedList.querySelectorAll('[data-del]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      savedRecipes.splice(parseInt(el.dataset.del), 1);
+      localStorage.setItem('savedRecipes', JSON.stringify(savedRecipes));
+      renderSaved();
+    });
+  });
+}
+
+renderSaved();
+</script>
+</body>
+</html>
