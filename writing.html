@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Margin Notes | Mark Price</title>
+<title>Mark Price</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,8 +12,8 @@
   <div class="site-header-inner">
     <a href="/" class="site-name">Mark Price</a>
     <nav class="site-nav">
-      <a href="/">home</a>
-      <a href="writing.html" class="active">notes</a>
+      <a href="/">notes</a>
+      <a href="writing.html" class="active">video</a>
       <a href="projects.html">projects</a>
       <a href="zines.html">zines</a>
       <a href="about.html">about</a>
@@ -21,15 +21,26 @@
   </div>
 </header>
 
-<main class="page page--notes">
+<main class="page">
 
-  <div class="page-hero">
-    <h1>Margin Notes</h1>
-    <p>the things I keep trying to write in the book of life</p>
+  <div class="home-masthead">
+    <span class="home-masthead-tagline">artificer / artist<a href="artist.html" style="text-decoration:none;color:var(--ink)">*</a></span>
+    <span class="home-masthead-above">rubber stamps · twisted wire · words · cameras · whatever is at hand · tulsa, oklahoma</span>
   </div>
 
-  <div class="post-list" id="post-list">
-    <div class="empty-state">No posts yet. Check back soon.</div>
+  <div class="section-label">Latest</div>
+  <div class="feed-grid">
+
+    <div class="feed-panel">
+      <div class="feed-panel-title">YouTube</div>
+      <div id="yt-feed"><div class="feed-loading">loading...</div></div>
+    </div>
+
+    <div class="feed-panel">
+      <div class="feed-panel-title">Tumblr</div>
+      <div id="tumblr-feed"><div class="feed-loading">loading...</div></div>
+    </div>
+
   </div>
 
 </main>
@@ -43,6 +54,82 @@
   </div>
   <a href="workshop.html" class="footer-quiet">workshop</a>
 </footer>
+
+<script>
+const YOUTUBE_CHANNEL_ID = 'UCU7-zHXXOqXLso35M6WQmug';
+const TUMBLR_BLOG = 'markpricecentral';
+
+async function corsProxy(url, timeout = 8000) {
+  const race = fn => Promise.race([fn(), new Promise((_,rej) => setTimeout(rej, timeout))]);
+  try {
+    const text = await race(() => fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`).then(r => r.text()));
+    return { contents: text };
+  } catch(e) {}
+  try {
+    return await race(() => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`).then(r => r.json()));
+  } catch(e) {}
+  throw new Error('CORS proxy failed');
+}
+
+function timeAgo(dateStr) {
+  const diff = (Date.now() - new Date(dateStr)) / 1000;
+  if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+async function loadYouTube() {
+  const el = document.getElementById('yt-feed');
+  if (YOUTUBE_CHANNEL_ID === 'REPLACE_WITH_CHANNEL_ID') {
+    el.innerHTML = '<div class="feed-loading">Channel ID not configured yet.</div>';
+    return;
+  }
+  try {
+    const url = `https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`;
+    const res = await corsProxy(url);
+    const doc = new DOMParser().parseFromString(res.contents, 'text/xml');
+    const entries = Array.from(doc.querySelectorAll('entry')).slice(0, 4);
+    if (!entries.length) { el.innerHTML = '<div class="feed-loading">No videos found.</div>'; return; }
+    el.innerHTML = entries.map(e => {
+      const title = e.querySelector('title')?.textContent || '';
+      const link  = e.querySelector('link')?.getAttribute('href') || '#';
+      const date  = e.querySelector('published')?.textContent || '';
+      return `<div class="feed-item">
+        <a href="${link}" target="_blank" rel="noopener">${title}</a>
+        <div class="feed-item-date">${date ? timeAgo(date) : ''}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="feed-loading">Unavailable</div>';
+  }
+}
+
+async function loadTumblr() {
+  const el = document.getElementById('tumblr-feed');
+  try {
+    const url = `https://${TUMBLR_BLOG}.tumblr.com/rss`;
+    const res = await corsProxy(url);
+    const doc = new DOMParser().parseFromString(res.contents, 'text/xml');
+    const items = Array.from(doc.querySelectorAll('item')).slice(0, 4);
+    if (!items.length) { el.innerHTML = '<div class="feed-loading">No posts found.</div>'; return; }
+    el.innerHTML = items.map(it => {
+      const title = it.querySelector('title')?.textContent?.trim() || '(untitled)';
+      const link  = it.querySelector('link')?.textContent?.trim() || '#';
+      const date  = it.querySelector('pubDate')?.textContent || '';
+      return `<div class="feed-item">
+        <a href="${link}" target="_blank" rel="noopener">${title}</a>
+        <div class="feed-item-date">${date ? timeAgo(date) : ''}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="feed-loading">Unavailable</div>';
+  }
+}
+
+loadYouTube();
+loadTumblr();
+</script>
 
 </body>
 </html>
