@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Films</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.films-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.films-card {
+  background: var(--paper-2);
+  border: 1px solid var(--ink-rule);
+  border-radius: 4px;
+  padding: 16px 18px;
+  transition: border-color 0.2s;
+}
+.films-card:hover {
+  border-color: var(--ink-mid);
+}
+.films-card a {
+  display: block;
+}
+.films-card-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.films-card-desc {
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--ink-mid);
+  line-height: 1.5;
+}
+.films-section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-light);
+  margin-top: 32px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--ink-rule);
+}
+.films-section-label:first-of-type { margin-top: 0; }
+.films-note {
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--ink-mid);
+  line-height: 1.6;
+  max-width: 720px;
+  margin-top: 16px;
+}
+.films-note strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="/" class="site-name">Mark Price</a>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="page-hero">
+    <h1>Films</h1>
+    <p class="films-note">Sites that legally distribute films in the public domain. Strong on silent era and pre-Code, useful for everything else PD too. As of 2026, every film released in the United States in 1930 or earlier is unambiguously public domain. Many films from 1931 to 1963 also fell into PD because their copyrights were never renewed under the 1909 Act's 28-year requirement, which is why so many B-films, sci-fi, and horror titles from that window are freely available.</p>
+  </div>
+
+  <div class="films-section-label">Canonical Hub</div>
+  <div class="films-grid">
+
+    <div class="films-card">
+      <a href="https://archive.org/details/feature_films" target="_blank" rel="noopener">
+        <div class="films-card-title">Internet Archive · Feature Films</div>
+        <div class="films-card-desc">The largest free library of public-domain feature films. Tens of thousands of titles, downloadable directly in MP4, MKV, AVI, MPEG-4. Massive silent-era collection. Also hosts the Prelinger Archives and most smaller archives' digital donations.</div>
+      </a>
+    </div>
+
+    <div class="films-card">
+      <a href="https://archive.org/details/silent_films" target="_blank" rel="noopener">
+        <div class="films-card-title">Internet Archive · Silent Films</div>
+        <div class="films-card-desc">The silent-films-specific subset of the Archive. Curated, browsable by year and director. The single best starting point if silent cinema is the focus.</div>
+      </a>
+    </div>
+
+  </div>
+
+  <div class="films-section-label">Preservation Archives</div>
+  <div class="films-grid">
+
+    <div class="films-card">
+      <a href="https://www.loc.gov/collections/national-screening-room/" target="_blank" rel="noopener">
+        <div class="films-card-title">Library of Congress · National Screening Room</div>
+        <div class="films-card-desc">Preservation-quality scans of films in the LoC archive. Smaller catalog than the Archive but often the highest-quality version available for the films they hold. Government-produced and historic US film.</div>
+      </a>
+    </div>
+
+    <div class="films-card">
+      <a href="https://filmpreservation.org/" target="_blank" rel="noopener">
+        <div class="films-card-title">National Film Preservation Foundation</div>
+        <div class="films-card-desc">Streaming and selected downloads of restored silents. Lower volume, exceptional quality. The Treasures from American Film Archives series is the canonical preservation reference for the silent era.</div>
+      </a>
+    </div>
+
+    <div class="films-card">
+      <a href="https://www.eyefilm.nl/en/collection" target="_blank" rel="noopener">
+        <div class="films-card-title">Eye Filmmuseum</div>
+        <div class="films-card-desc">Dutch national film archive. Substantial silent-era holdings. Some titles downloadable, many streaming-only depending on rights. Strong on European silent cinema and early experimental work.</div>
+      </a>
+    </div>
+
+  </div>
+
+  <div class="films-section-label">Aggregators and Torrent</div>
+  <div class="films-grid">
+
+    <div class="films-card">
+      <a href="https://www.publicdomaintorrents.info/" target="_blank" rel="noopener">
+        <div class="films-card-title">Public Domain Torrents</div>
+        <div class="films-card-desc">Older aggregator, still operational. Torrent-based but everything they host is verified public domain. Smaller curated selection focused on classic Hollywood, B-films, sci-fi, horror, westerns. Particularly good for the lapsed-copyright window from 1931 to 1963.</div>
+      </a>
+    </div>
+
+    <div class="films-card">
+      <a href="https://www.openculture.com/freemoviesonline" target="_blank" rel="noopener">
+        <div class="films-card-title">Open Culture · Free Movies</div>
+        <div class="films-card-desc">Aggregator that points to legal sources. Useful when you have a specific film in mind and want to know where it is freely available. Well-maintained, dependable.</div>
+      </a>
+    </div>
+
+    <div class="films-card">
+      <a href="https://www.silentera.com/" target="_blank" rel="noopener">
+        <div class="films-card-title">Silent Era</div>
+        <div class="films-card-desc">Reference site, not a download source. The canonical guide for what silent films exist, where they live, which restoration is which. Useful when you find a film in multiple places and need to know which print is the best one.</div>
+      </a>
+    </div>
+
+  </div>
+
+  <div class="films-section-label">Notes</div>
+  <div class="films-note">
+    <strong>The 2025 and 2026 expansions.</strong> The 1929 cohort entered public domain on January 1, 2025. The 1930 cohort entered on January 1, 2026. The 1931 cohort enters January 1, 2027. Several pre-Code Hollywood films per year transition into PD this way over the next decade.<br><br>
+    <strong>The lapsed-copyright window.</strong> Under the 1909 Copyright Act, films released between 1923 and 1963 had to actively renew their copyright at the 28-year mark or fall into PD. Many studios and producers missed this for B-films and lower-budget productions. This is why titles like Reefer Madness, Plan 9 from Outer Space, and most of the Republic Pictures catalog are legally free even though they postdate 1930.<br><br>
+    <strong>Cross-jurisdictional caveat.</strong> Some films are PD in the United States but still copyrighted in their country of origin, and vice versa. For personal viewing in the US, US PD status is what matters. International distribution is a different question.
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span class="footer-left">mark price &middot; 2026</span>
+</footer>
+
+</body>
+</html>
