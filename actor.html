@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Actor Reference</title>
+<style>
+:root {
+  --paper:     #f2ece0;
+  --paper-2:   #e4ddd0;
+  --ink:       #0e0800;
+  --ink-mid:   #4a3c28;
+  --ink-light: #7a6a52;
+  --ink-rule:  #c4baaa;
+  --red:       #c42a00;
+  --sans:      -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 15px;
+  min-height: 100vh;
+  padding-bottom: 48px;
+}
+
+/* grain */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9000;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px;
+}
+
+/* search bar */
+.search-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+  padding: 10px 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.site-link {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink-light);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  font-size: 16px;
+  font-family: var(--sans);
+  background: var(--paper-2);
+  border: 1.5px solid var(--ink-rule);
+  border-radius: 6px;
+  color: var(--ink);
+  outline: none;
+  -webkit-appearance: none;
+}
+.search-input:focus { border-color: var(--ink-mid); }
+
+.search-btn {
+  padding: 9px 14px;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.search-btn:active { opacity: 0.8; }
+
+/* main */
+#main { max-width: 500px; margin: 0 auto; }
+
+.status {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--ink-light);
+  font-size: 14px;
+}
+
+/* disambiguation */
+.disambig { padding: 16px; }
+
+.disambig-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-light);
+  margin-bottom: 10px;
+}
+
+.disambig-item {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--ink-rule);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.disambig-item:active { opacity: 0.6; }
+
+.disambig-name { font-size: 16px; font-weight: 600; }
+.disambig-desc { font-size: 13px; color: var(--ink-mid); margin-top: 2px; }
+
+/* actor card */
+.card { padding: 16px; }
+
+/* name block */
+.name-block {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.actor-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--ink-rule);
+  display: block;
+}
+
+.name-info { flex: 1; min-width: 0; }
+
+.stage-name {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.alt-names {
+  font-size: 13px;
+  color: var(--ink-mid);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.role-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 7px;
+}
+
+.role-chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 10px;
+}
+
+/* fact table */
+.facts {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 14px;
+}
+.facts tr { border-bottom: 1px solid var(--ink-rule); }
+.facts tr:last-child { border-bottom: none; }
+.facts td { padding: 5px 0; vertical-align: top; line-height: 1.4; }
+
+.fact-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-light);
+  padding-right: 12px;
+  white-space: nowrap;
+  width: 1%;
+}
+
+.fact-value { font-size: 14px; }
+.fact-dim { color: var(--ink-light); }
+
+/* groups */
+.section-block {
+  margin-bottom: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--ink-rule);
+}
+
+.section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-light);
+  margin-bottom: 6px;
+}
+
+.group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px dotted var(--ink-rule);
+  font-size: 14px;
+}
+.group-item:last-child { border-bottom: none; }
+.group-years { font-size: 12px; color: var(--ink-light); flex-shrink: 0; margin-left: 8px; }
+
+/* external links */
+.ext-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 0;
+  border-top: 1px solid var(--ink-rule);
+  border-bottom: 1px solid var(--ink-rule);
+  margin-bottom: 14px;
+}
+
+.ext-link {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 6px 12px;
+  border: 1.5px solid var(--ink-rule);
+  border-radius: 5px;
+  color: var(--ink-mid);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.ext-link:active { background: var(--paper-2); }
+
+/* expand buttons */
+.expand-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.xbtn {
+  padding: 9px 14px;
+  background: var(--paper-2);
+  border: 1.5px solid var(--ink-rule);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-mid);
+  cursor: pointer;
+  font-family: var(--sans);
+  -webkit-tap-highlight-color: transparent;
+}
+.xbtn.open {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+/* expanded panel */
+.xpanel {
+  background: var(--paper-2);
+  border-radius: 7px;
+  padding: 14px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  line-height: 1.65;
+  display: none;
+}
+.xpanel.open { display: block; }
+
+.xpanel-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-light);
+  margin-bottom: 8px;
+}
+.xpanel a { color: var(--ink-mid); text-decoration: underline; }
+
+/* recent searches */
+.recent-wrap {
+  max-width: 500px;
+  margin: 4px auto 0;
+  padding: 14px 16px;
+  border-top: 1px solid var(--ink-rule);
+}
+
+.recent-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-light);
+  margin-bottom: 8px;
+}
+
+.recent-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.rchip {
+  font-size: 13px;
+  padding: 5px 12px;
+  background: transparent;
+  border: 1.5px solid var(--ink-rule);
+  border-radius: 14px;
+  color: var(--ink-mid);
+  cursor: pointer;
+  font-family: var(--sans);
+  -webkit-tap-highlight-color: transparent;
+}
+.rchip:active { background: var(--paper-2); }
+</style>
+</head>
+<body>
+
+<div class="search-wrap">
+  <a href="/" class="site-link">mrp</a>
+  <input type="search" class="search-input" id="q"
+    placeholder="Actor name..."
+    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <button class="search-btn" onclick="doSearch()">Go</button>
+</div>
+
+<div id="main">
+  <div class="status">Search for an actor above.</div>
+</div>
+
+<div id="recentWrap" style="display:none" class="recent-wrap">
+  <div class="recent-label">Recent</div>
+  <div class="recent-chips" id="recentChips"></div>
+</div>
+
+<script>
+'use strict';
+
+const WD   = 'https://www.wikidata.org/w/api.php';
+const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
+const IMG  = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
+const RKEY = 'ar_recent_v1';
+const RMAX = 20;
+
+const P = {
+  DOB:'P569', PLACE_BIRTH:'P19', NATION:'P27',
+  HEIGHT:'P2048', WEIGHT:'P2067', BLOOD:'P1853',
+  OCC:'P106', MEMBER:'P463', SCHOOL:'P69', DEGREE:'P512',
+  SPOUSE:'P26', FATHER:'P22', MOTHER:'P25', SIBLING:'P3373', CHILD:'P40',
+  IMAGE:'P18', MILITARY:'P241', START:'P580', END:'P582',
+};
+
+const OCC_LABELS = {
+  'Q33999':'Actor','Q10800557':'Actor','Q10798782':'Actor',
+  'Q2259451':'Comedian','Q177220':'Singer','Q639669':'Musician',
+  'Q488205':'Singer-songwriter','Q947873':'Host/MC','Q7042855':'Host/MC',
+  'Q4610556':'Presenter','Q2519376':'Model','Q214917':'Dancer',
+  'Q13382416':'Voice Actor','Q5716684':'Rapper','Q753110':'Director',
+  'Q36180':'Writer','Q28389':'Screenwriter',
+};
+
+const BLOOD_LABELS = {
+  'Q205702':'A','Q205706':'B','Q1378330':'AB','Q205708':'O',
+  'Q205703':'A+','Q205704':'A-','Q205707':'B+',
+  'Q205709':'O+','Q205710':'O-','Q7170167':'AB+','Q7170168':'AB-',
+};
+
+// ---- utilities ----
+
+function $id(id) { return document.getElementById(id); }
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getAge(wdDate) {
+  if (!wdDate) return null;
+  const b = new Date(wdDate.replace(/^\+/,'').split('T')[0]);
+  if (isNaN(b)) return null;
+  const n = new Date();
+  let age = n.getFullYear() - b.getFullYear();
+  const dm = n.getMonth() - b.getMonth();
+  if (dm < 0 || (dm === 0 && n.getDate() < b.getDate())) age--;
+  return age;
+}
+
+function fmtDate(wdDate) {
+  if (!wdDate) return null;
+  const [y, m, d] = wdDate.replace(/^\+/,'').split('T')[0].split('-').map(Number);
+  if (!y) return null;
+  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if (!m || m === 0) return String(y);
+  if (!d || d === 0) return `${mo[m-1]} ${y}`;
+  return `${mo[m-1]} ${d}, ${y}`;
+}
+
+function cmToImperial(cm) {
+  const totalIn = cm / 2.54;
+  const ft = Math.floor(totalIn / 12);
+  const inch = Math.round(totalIn % 12);
+  return `${ft}'${inch}"`;
+}
+
+function claimVal(claims, prop) {
+  const c = claims?.[prop]?.[0]?.mainsnak;
+  if (!c || c.snaktype !== 'value') return null;
+  return c.datavalue?.value;
+}
+
+function allClaimVals(claims, prop) {
+  if (!claims?.[prop]) return [];
+  return claims[prop]
+    .filter(c => c.mainsnak?.snaktype === 'value')
+    .map(c => c.mainsnak.datavalue?.value)
+    .filter(Boolean);
+}
+
+function allClaims(claims, prop) {
+  if (!claims?.[prop]) return [];
+  return claims[prop].filter(c => c.mainsnak?.snaktype === 'value');
+}
+
+function qualVal(claim, prop) {
+  const q = claim.qualifiers?.[prop]?.[0];
+  if (!q || q.snaktype !== 'value') return null;
+  return q.datavalue?.value;
+}
+
+function imgUrl(fn, w) {
+  return `${IMG}${encodeURIComponent(fn.replace(/ /g,'_'))}?width=${w || 120}`;
+}
+
+// ---- recent searches ----
+
+function getRecent() {
+  try { return JSON.parse(localStorage.getItem(RKEY) || '[]'); } catch { return []; }
+}
+
+function saveRecent(name, qid) {
+  let r = getRecent().filter(x => x.qid !== qid);
+  r.unshift({ name, qid });
+  localStorage.setItem(RKEY, JSON.stringify(r.slice(0, RMAX)));
+  renderRecent();
+}
+
+function renderRecent() {
+  const r = getRecent();
+  const wrap = $id('recentWrap');
+  if (!r.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  $id('recentChips').innerHTML = r.map(x =>
+    `<button class="rchip" onclick="loadActor('${x.qid}','${x.name.replace(/'/g,"&#39;")}')">${esc(x.name)}</button>`
+  ).join('');
+}
+
+// ---- search ----
+
+$id('q').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+async function doSearch() {
+  const term = $id('q').value.trim();
+  if (!term) return;
+  setStatus('Searching...');
+  try {
+    const url = `${WD}?action=wbsearchentities&search=${encodeURIComponent(term)}&language=en&type=item&limit=10&format=json&origin=*`;
+    const data = await (await fetch(url)).json();
+    const all = data.search || [];
+    const filtered = all.filter(r => {
+      const d = (r.description || '').toLowerCase();
+      return d.includes('actor') || d.includes('actress') || d.includes('singer') ||
+        d.includes('comedian') || d.includes('musician') || d.includes('rapper') ||
+        d.includes('model') || d.includes('korean') || d.includes('chinese') ||
+        d.includes('japanese') || d.includes('thai') || d.includes('taiwanese') ||
+        d.includes('idol') || d.includes('entertainer') || d.includes('artist') ||
+        d.includes('presenter') || d.includes('host');
+    });
+    const pool = (filtered.length ? filtered : all).slice(0, 8);
+    if (!pool.length) { setStatus('No results found.'); return; }
+    if (pool.length === 1) { loadActor(pool[0].id, pool[0].label); return; }
+    showDisambig(pool);
+  } catch(e) {
+    setStatus('Search failed. Check connection.');
+    console.error(e);
+  }
+}
+
+function showDisambig(pool) {
+  $id('main').innerHTML = `<div class="disambig">
+    <div class="disambig-title">Select actor</div>
+    ${pool.map(r =>
+      `<div class="disambig-item" onclick="loadActor('${r.id}','${esc(r.label||'').replace(/'/g,"&#39;")}')">
+        <div class="disambig-name">${esc(r.label || r.id)}</div>
+        ${r.description ? `<div class="disambig-desc">${esc(r.description)}</div>` : ''}
+      </div>`
+    ).join('')}
+  </div>`;
+}
+
+// ---- load actor ----
+
+async function loadActor(qid, hint) {
+  setStatus('Loading...');
+  try {
+    const data = await (await fetch(`${WD}?action=wbgetentities&ids=${qid}&format=json&origin=*`)).json();
+    const entity = data.entities?.[qid];
+    if (!entity) { setStatus('No data found.'); return; }
+
+    const enWikiTitle = entity.sitelinks?.enwiki?.title;
+    let wiki = null;
+    if (enWikiTitle) {
+      try {
+        const wr = await fetch(`${WIKI}${encodeURIComponent(enWikiTitle)}`);
+        if (wr.ok) wiki = await wr.json();
+      } catch {}
+    }
+
+    const displayName =
+      entity.labels?.en?.value || entity.labels?.ko?.value ||
+      entity.labels?.zh?.value || entity.labels?.ja?.value || hint;
+
+    saveRecent(displayName, qid);
+    await buildCard(entity, wiki);
+  } catch(e) {
+    setStatus('Failed to load.');
+    console.error(e);
+  }
+}
+
+// ---- build card ----
+
+async function buildCard(entity, wiki) {
+  const c = entity.claims || {};
+  const labels = entity.labels || {};
+  const aliases = entity.aliases || {};
+
+  // Names
+  const enName = labels.en?.value || '';
+  const koName = labels.ko?.value || '';
+  const zhName = labels.zh?.value || '';
+  const jaName = labels.ja?.value || '';
+  const stageName = enName || koName || zhName || jaName || '?';
+  const nativeName = koName || zhName || jaName || '';
+  const showNative = nativeName && nativeName !== stageName;
+  const altNames = (aliases.en || []).map(a => a.value).filter(a => a !== stageName);
+
+  // Occupations
+  const occIds = allClaimVals(c, P.OCC).map(v => v?.id).filter(Boolean);
+  const occs = [...new Set(occIds.map(id => OCC_LABELS[id]).filter(Boolean))];
+
+  // Photo
+  const imgFn = claimVal(c, P.IMAGE);
+  const photoUrl = imgFn ? imgUrl(imgFn, 120) : null;
+
+  // Birth date
+  const dobRaw = claimVal(c, P.DOB)?.time;
+  const dobStr = fmtDate(dobRaw);
+  const age = getAge(dobRaw);
+
+  // Height
+  let htDisplay = null;
+  const htVal = claimVal(c, P.HEIGHT);
+  if (htVal) {
+    const amt = parseFloat(htVal.amount);
+    const unit = (htVal.unit || '').split('/').pop();
+    let cm = null;
+    if (unit === 'Q11573' || (!unit && amt < 3)) cm = Math.round(amt * 100);
+    else if (unit === 'Q174728' || amt > 50) cm = Math.round(amt);
+    if (cm) htDisplay = `${cm} cm / ${cmToImperial(cm)}`;
+  }
+
+  // Weight
+  let wtDisplay = null;
+  const wtVal = claimVal(c, P.WEIGHT);
+  if (wtVal) {
+    const amt = parseFloat(wtVal.amount);
+    const unit = (wtVal.unit || '').split('/').pop();
+    let kg = null;
+    if (unit === 'Q11570' || (!unit && amt < 200)) kg = Math.round(amt);
+    else if (unit === 'Q100995') kg = Math.round(amt / 2.2046);
+    if (kg) wtDisplay = `${kg} kg / ${Math.round(kg * 2.2046)} lbs`;
+  }
+
+  // Blood type
+  const bloodId = claimVal(c, P.BLOOD)?.id;
+  const bloodDisplay = bloodId ? (BLOOD_LABELS[bloodId] || null) : null;
+
+  // Military service
+  const hasMilitary = !!(c[P.MILITARY]);
+
+  // Groups (member of)
+  const memberClaims = allClaims(c, P.MEMBER);
+  const groupQids = memberClaims.map(cl => cl.mainsnak?.datavalue?.value?.id).filter(Boolean);
+  const groupYears = memberClaims.map(cl => {
+    const sy = qualVal(cl, P.START)?.time?.replace(/^\+/,'').slice(0,4);
+    const ey = qualVal(cl, P.END)?.time?.replace(/^\+/,'').slice(0,4);
+    return sy ? (ey ? `${sy}-${ey}` : `${sy}-present`) : null;
+  });
+
+  // Education
+  const schoolClaims = allClaims(c, P.SCHOOL);
+  const schoolQids = schoolClaims.map(cl => cl.mainsnak?.datavalue?.value?.id).filter(Boolean);
+  const degreeQids = schoolClaims.map(cl => qualVal(cl, P.DEGREE)?.id);
+
+  // Family QIDs
+  const spouseQids = allClaimVals(c, P.SPOUSE).map(v => v?.id).filter(Boolean);
+  const fatherQid  = claimVal(c, P.FATHER)?.id;
+  const motherQid  = claimVal(c, P.MOTHER)?.id;
+  const sibQids    = allClaimVals(c, P.SIBLING).map(v => v?.id).filter(Boolean);
+  const childQids  = allClaimVals(c, P.CHILD).map(v => v?.id).filter(Boolean);
+
+  // Location QIDs
+  const bpQid  = claimVal(c, P.PLACE_BIRTH)?.id;
+  const natQids = allClaimVals(c, P.NATION).map(v => v?.id).filter(Boolean);
+
+  // Batch label fetch
+  const toResolve = [
+    bpQid, ...natQids, ...groupQids, ...schoolQids,
+    ...degreeQids.filter(Boolean),
+    ...spouseQids, fatherQid, motherQid, ...sibQids, ...childQids,
+  ].filter(Boolean);
+  const lm = toResolve.length ? await fetchLabels([...new Set(toResolve)]) : {};
+
+  // Resolved display values
+  const birthplaceDisplay = bpQid ? lm[bpQid] : null;
+  const natDisplay = natQids.map(id => lm[id] || id).join(', ') || null;
+
+  const groups = groupQids.map((qid, i) => ({
+    name: lm[qid] || qid,
+    years: groupYears[i],
+  }));
+
+  const schools = schoolQids.map((qid, i) => ({
+    name: lm[qid] || qid,
+    degree: degreeQids[i] ? (lm[degreeQids[i]] || null) : null,
+  }));
+
+  const family = [
+    ...spouseQids.map(qid => lm[qid] ? { name: lm[qid], rel: 'spouse' } : null),
+    fatherQid && lm[fatherQid] ? { name: lm[fatherQid], rel: 'father' } : null,
+    motherQid && lm[motherQid] ? { name: lm[motherQid], rel: 'mother' } : null,
+    ...sibQids.map(qid => lm[qid] ? { name: lm[qid], rel: 'sibling' } : null),
+    ...childQids.map(qid => lm[qid] ? { name: lm[qid], rel: 'child' } : null),
+  ].filter(Boolean);
+
+  // External links
+  const enWikiTitle = entity.sitelinks?.enwiki?.title;
+  const wikiLink = enWikiTitle
+    ? `https://en.wikipedia.org/wiki/${encodeURIComponent(enWikiTitle)}`
+    : null;
+  const sn = encodeURIComponent(stageName);
+  const mdlLink = `https://mydramalist.com/search?q=${sn}`;
+  const kpLink  = `https://kprofiles.com/?s=${sn}`;
+  const awLink  = `https://asianwiki.com/${encodeURIComponent(stageName.replace(/ /g,'_'))}`;
+
+  // Bio text
+  const bioText = wiki?.extract || null;
+
+  // ---- build fact rows ----
+  const rows = [];
+  if (dobStr) rows.push(['Born', `${esc(dobStr)}${age ? ` <span class="fact-dim">(${age})</span>` : ''}`]);
+  if (birthplaceDisplay) rows.push(['From',    esc(birthplaceDisplay)]);
+  if (natDisplay)        rows.push(['Nation',  esc(natDisplay)]);
+  if (htDisplay)         rows.push(['Height',  esc(htDisplay)]);
+  if (wtDisplay)         rows.push(['Weight',  esc(wtDisplay)]);
+  if (bloodDisplay)      rows.push(['Blood',   esc(bloodDisplay)]);
+  rows.push(['MBTI', '<span class="fact-dim">-</span>']);
+  if (schools.length) {
+    const eduHtml = schools
+      .map(s => `${esc(s.name)}${s.degree ? ` <span class="fact-dim">(${esc(s.degree)})</span>` : ''}`)
+      .join('<br>');
+    rows.push(['Education', eduHtml]);
+  }
+  if (hasMilitary) rows.push(['Military', 'Service on record']);
+  rows.push(['Talents', '<span class="fact-dim">-</span>']);
+  if (family.length) {
+    const famHtml = family
+      .map(f => `${esc(f.name)} <span class="fact-dim">(${f.rel})</span>`)
+      .join('<br>');
+    rows.push(['Family', famHtml]);
+  }
+
+  // ---- render ----
+  $id('main').innerHTML = `<div class="card">
+
+    <div class="name-block">
+      ${photoUrl
+        ? `<img class="actor-photo" src="${photoUrl}" alt="${esc(stageName)}" loading="lazy" onerror="this.remove()">`
+        : ''}
+      <div class="name-info">
+        <div class="stage-name">${esc(stageName)}</div>
+        ${(showNative || altNames.length) ? `<div class="alt-names">
+          ${showNative ? esc(nativeName) : ''}
+          ${altNames.length ? `${showNative ? '<br>' : ''}${altNames.slice(0,2).map(esc).join(' / ')}` : ''}
+        </div>` : ''}
+        ${occs.length
+          ? `<div class="role-chips">${occs.map(o => `<span class="role-chip">${esc(o)}</span>`).join('')}</div>`
+          : ''}
+      </div>
+    </div>
+
+    <table class="facts">
+      ${rows.map(([l,v]) =>
+        `<tr><td class="fact-label">${l}</td><td class="fact-value">${v}</td></tr>`
+      ).join('')}
+    </table>
+
+    ${groups.length ? `<div class="section-block">
+      <div class="section-title">Groups</div>
+      ${groups.map(g => `
+        <div class="group-item">
+          <span>${esc(g.name)}</span>
+          ${g.years ? `<span class="group-years">${esc(g.years)}</span>` : ''}
+        </div>`).join('')}
+    </div>` : ''}
+
+    <div class="ext-links">
+      ${wikiLink ? `<a class="ext-link" href="${wikiLink}" target="_blank" rel="noopener">Wikipedia</a>` : ''}
+      <a class="ext-link" href="${mdlLink}" target="_blank" rel="noopener">MDL</a>
+      <a class="ext-link" href="${kpLink}" target="_blank" rel="noopener">Kprofiles</a>
+      <a class="ext-link" href="${awLink}" target="_blank" rel="noopener">AsianWiki</a>
+    </div>
+
+    <div class="expand-row">
+      <button class="xbtn" onclick="xToggle(this,'xVariety')">Variety</button>
+      <button class="xbtn" onclick="xToggle(this,'xBio')">Bio</button>
+      <button class="xbtn" onclick="xToggle(this,'xMusic')">Music</button>
+      <button class="xbtn" onclick="xToggle(this,'xDramas')">Dramas</button>
+      <button class="xbtn" onclick="xToggle(this,'xMovies')">Movies</button>
+    </div>
+
+    <div id="xVariety" class="xpanel">
+      <div class="xpanel-title">Variety Appearances</div>
+      <p>Variety data not yet integrated. <a href="${mdlLink}" target="_blank" rel="noopener">Search MDL</a> for a full list.</p>
+    </div>
+
+    <div id="xBio" class="xpanel">
+      <div class="xpanel-title">Biography</div>
+      ${bioText
+        ? `<p>${esc(bioText)}</p>`
+        : '<p class="fact-dim">No biography available.</p>'}
+      ${wikiLink ? `<p style="margin-top:10px"><a href="${wikiLink}" target="_blank" rel="noopener">Full Wikipedia article</a></p>` : ''}
+    </div>
+
+    <div id="xMusic" class="xpanel">
+      <div class="xpanel-title">Music</div>
+      <p class="fact-dim">Full music expansion coming in a later build.</p>
+    </div>
+
+    <div id="xDramas" class="xpanel">
+      <div class="xpanel-title">Dramas</div>
+      <p class="fact-dim">Drama list coming in a later build. <a href="${mdlLink}" target="_blank" rel="noopener">See MDL</a> for now.</p>
+    </div>
+
+    <div id="xMovies" class="xpanel">
+      <div class="xpanel-title">Movies</div>
+      <p class="fact-dim">Movie list coming in a later build. <a href="${mdlLink}" target="_blank" rel="noopener">See MDL</a> for now.</p>
+    </div>
+
+  </div>`;
+}
+
+function xToggle(btn, panelId) {
+  const panel = $id(panelId);
+  const open = panel.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+async function fetchLabels(qids) {
+  if (!qids.length) return {};
+  const results = {};
+  const chunks = [];
+  for (let i = 0; i < qids.length; i += 50) chunks.push(qids.slice(i, i + 50));
+  await Promise.all(chunks.map(async chunk => {
+    const url = `${WD}?action=wbgetentities&ids=${chunk.join('|')}&props=labels&languages=en&format=json&origin=*`;
+    try {
+      const data = await (await fetch(url)).json();
+      for (const [id, ent] of Object.entries(data.entities || {})) {
+        results[id] = ent.labels?.en?.value || null;
+      }
+    } catch {}
+  }));
+  return results;
+}
+
+function setStatus(msg) {
+  $id('main').innerHTML = `<div class="status">${msg}</div>`;
+}
+
+renderRecent();
+</script>
+</body>
+</html>
