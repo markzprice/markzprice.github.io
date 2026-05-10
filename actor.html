@@ -353,6 +353,8 @@ const WAPI = 'https://en.wikipedia.org/w/api.php';
 const IMG  = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
 const RKEY = 'ar_recent_v1';
 const RMAX = 20;
+// Set this to your deployed Cloudflare Worker URL after setup
+const WORKER_URL = 'https://kp-actor.YOUR-SUBDOMAIN.workers.dev';
 
 const NONE = '<span class="fact-dim">-</span>';
 const NA   = '<span class="fact-dim">N/A</span>';
@@ -520,6 +522,17 @@ function showDisambig(pool) {
   </div>`;
 }
 
+// ---- Kprofiles Worker fetch ----
+
+async function fetchKprofiles(name) {
+  if (!name || WORKER_URL.includes('YOUR-SUBDOMAIN')) return {};
+  try {
+    const res = await fetch(`${WORKER_URL}?name=${encodeURIComponent(name)}`);
+    if (!res.ok) return {};
+    return await res.json();
+  } catch { return {}; }
+}
+
 // ---- Wikipedia infobox ----
 
 async function fetchInfobox(wikiTitle) {
@@ -574,20 +587,22 @@ async function loadActor(qid, hint) {
 
     const enWikiTitle = entity.sitelinks?.enwiki?.title;
 
-    let wiki = null, infobox = {};
-    if (enWikiTitle) {
-      [wiki, infobox] = await Promise.all([
-        fetch(`${WIKI}${encodeURIComponent(enWikiTitle)}`).then(r => r.ok ? r.json() : null).catch(() => null),
-        fetchInfobox(enWikiTitle),
-      ]);
-    }
-
+    // Resolve display name early so we can use it for Kprofiles search
     const displayName =
       entity.labels?.en?.value || entity.labels?.ko?.value ||
       entity.labels?.zh?.value || entity.labels?.ja?.value || hint;
 
+    // Fetch Wikipedia summary, Wikipedia infobox, and Kprofiles in parallel
+    const [wiki, infobox, kp] = await Promise.all([
+      enWikiTitle
+        ? fetch(`${WIKI}${encodeURIComponent(enWikiTitle)}`).then(r => r.ok ? r.json() : null).catch(() => null)
+        : Promise.resolve(null),
+      enWikiTitle ? fetchInfobox(enWikiTitle) : Promise.resolve({}),
+      fetchKprofiles(displayName),
+    ]);
+
     saveRecent(displayName, qid);
-    await buildCard(entity, wiki, infobox);
+    await buildCard(entity, wiki, infobox, kp);
   } catch(e) {
     setStatus('Failed to load.');
     console.error(e);
@@ -596,7 +611,7 @@ async function loadActor(qid, hint) {
 
 // ---- build card ----
 
-async function buildCard(entity, wiki, infobox) {
+async function buildCard(entity, wiki, infobox, kp = {}) {
   const c = entity.claims || {};
   const labels = entity.labels || {};
   const aliases = entity.aliases || {};
@@ -631,7 +646,7 @@ async function buildCard(entity, wiki, infobox) {
   const dobStr = fmtDate(dobRaw);
   const age = getAge(dobRaw);
 
-  // Height: Wikidata first, infobox fallback
+  // Height: Wikidata → Kprofiles → infobox
   let htDisplay = null;
   const htVal = claimVal(c, P.HEIGHT);
   if (htVal) {
@@ -642,11 +657,10 @@ async function buildCard(entity, wiki, infobox) {
     else if (unit === 'Q174728' || amt > 50) cm = Math.round(amt);
     if (cm) htDisplay = `${cm} cm / ${cmToImperial(cm)}`;
   }
-  if (!htDisplay && infobox.height) {
-    htDisplay = infobox.height;
-  }
+  if (!htDisplay && kp.height) htDisplay = kp.height;
+  if (!htDisplay && infobox.height) htDisplay = infobox.height;
 
-  // Weight: Wikidata first, infobox fallback
+  // Weight: Wikidata → Kprofiles → infobox
   let wtDisplay = null;
   const wtVal = claimVal(c, P.WEIGHT);
   if (wtVal) {
@@ -657,20 +671,18 @@ async function buildCard(entity, wiki, infobox) {
     else if (unit === 'Q100995') kg = Math.round(amt / 2.2046);
     if (kg) wtDisplay = `${kg} kg / ${Math.round(kg * 2.2046)} lbs`;
   }
-  if (!wtDisplay && infobox.weight) {
-    wtDisplay = infobox.weight;
-  }
+  if (!wtDisplay && kp.weight) wtDisplay = kp.weight;
+  if (!wtDisplay && infobox.weight) wtDisplay = infobox.weight;
 
-  // Blood type: Wikidata first, infobox fallback
+  // Blood type: Wikidata → Kprofiles → infobox
   let bloodDisplay = null;
   const bloodId = claimVal(c, P.BLOOD)?.id;
   if (bloodId) bloodDisplay = BLOOD_LABELS[bloodId] || null;
-  if (!bloodDisplay && infobox.bloodType) {
-    bloodDisplay = infobox.bloodType;
-  }
+  if (!bloodDisplay && kp.bloodType) bloodDisplay = kp.bloodType;
+  if (!bloodDisplay && infobox.bloodType) bloodDisplay = infobox.bloodType;
 
-  // MBTI: infobox only (not in Wikidata)
-  const mbtiDisplay = infobox.mbti || null;
+  // MBTI: Kprofiles → infobox (not in Wikidata)
+  const mbtiDisplay = kp.mbti || infobox.mbti || null;
 
   // Military service
   const hasMilitaryData = !!(c[P.MILITARY]);
