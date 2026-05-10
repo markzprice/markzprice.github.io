@@ -28,7 +28,6 @@ body {
   padding-bottom: 48px;
 }
 
-/* grain */
 body::before {
   content: '';
   position: fixed;
@@ -40,7 +39,6 @@ body::before {
   background-size: 180px;
 }
 
-/* search bar */
 .search-wrap {
   position: sticky;
   top: 0;
@@ -93,7 +91,6 @@ body::before {
 }
 .search-btn:active { opacity: 0.8; }
 
-/* main */
 #main { max-width: 500px; margin: 0 auto; }
 
 .status {
@@ -103,7 +100,6 @@ body::before {
   font-size: 14px;
 }
 
-/* disambiguation */
 .disambig { padding: 16px; }
 
 .disambig-title {
@@ -122,14 +118,11 @@ body::before {
   -webkit-tap-highlight-color: transparent;
 }
 .disambig-item:active { opacity: 0.6; }
-
 .disambig-name { font-size: 16px; font-weight: 600; }
 .disambig-desc { font-size: 13px; color: var(--ink-mid); margin-top: 2px; }
 
-/* actor card */
 .card { padding: 16px; }
 
-/* name block */
 .name-block {
   display: flex;
   gap: 13px;
@@ -182,7 +175,6 @@ body::before {
   border-radius: 10px;
 }
 
-/* fact table */
 .facts {
   width: 100%;
   border-collapse: collapse;
@@ -204,9 +196,8 @@ body::before {
 }
 
 .fact-value { font-size: 14px; }
-.fact-dim { color: var(--ink-light); }
+.fact-dim { color: var(--ink-light); font-style: italic; }
 
-/* groups */
 .section-block {
   margin-bottom: 14px;
   padding-top: 10px;
@@ -233,7 +224,6 @@ body::before {
 .group-item:last-child { border-bottom: none; }
 .group-years { font-size: 12px; color: var(--ink-light); flex-shrink: 0; margin-left: 8px; }
 
-/* external links */
 .ext-links {
   display: flex;
   flex-wrap: wrap;
@@ -257,7 +247,6 @@ body::before {
 }
 .ext-link:active { background: var(--paper-2); }
 
-/* expand buttons */
 .expand-row {
   display: flex;
   flex-wrap: wrap;
@@ -283,7 +272,6 @@ body::before {
   border-color: var(--ink);
 }
 
-/* expanded panel */
 .xpanel {
   background: var(--paper-2);
   border-radius: 7px;
@@ -305,7 +293,6 @@ body::before {
 }
 .xpanel a { color: var(--ink-mid); text-decoration: underline; }
 
-/* recent searches */
 .recent-wrap {
   max-width: 500px;
   margin: 4px auto 0;
@@ -362,17 +349,24 @@ body::before {
 
 const WD   = 'https://www.wikidata.org/w/api.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
+const WAPI = 'https://en.wikipedia.org/w/api.php';
 const IMG  = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
 const RKEY = 'ar_recent_v1';
 const RMAX = 20;
 
+const NONE = '<span class="fact-dim">-</span>';
+const NA   = '<span class="fact-dim">N/A</span>';
+
 const P = {
-  DOB:'P569', PLACE_BIRTH:'P19', NATION:'P27',
+  DOB:'P569', PLACE_BIRTH:'P19', NATION:'P27', GENDER:'P21',
   HEIGHT:'P2048', WEIGHT:'P2067', BLOOD:'P1853',
   OCC:'P106', MEMBER:'P463', SCHOOL:'P69', DEGREE:'P512',
   SPOUSE:'P26', FATHER:'P22', MOTHER:'P25', SIBLING:'P3373', CHILD:'P40',
   IMAGE:'P18', MILITARY:'P241', START:'P580', END:'P582',
 };
+
+const MALE_QID = 'Q6581097';
+const SK_QID   = 'Q884';
 
 const OCC_LABELS = {
   'Q33999':'Actor','Q10800557':'Actor','Q10798782':'Actor',
@@ -399,6 +393,11 @@ function esc(s) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function cleanText(s) {
+  // Remove citation markers like [1], [a], leading/trailing whitespace
+  return s.replace(/\[\d+\]/g,'').replace(/\[[a-z]\]/g,'').trim();
+}
+
 function getAge(wdDate) {
   if (!wdDate) return null;
   const b = new Date(wdDate.replace(/^\+/,'').split('T')[0]);
@@ -421,9 +420,8 @@ function fmtDate(wdDate) {
 }
 
 function cmToImperial(cm) {
-  const totalIn = cm / 2.54;
-  const ft = Math.floor(totalIn / 12);
-  const inch = Math.round(totalIn % 12);
+  const ft = Math.floor(cm / 30.48);
+  const inch = Math.round((cm % 30.48) / 2.54);
   return `${ft}'${inch}"`;
 }
 
@@ -522,6 +520,49 @@ function showDisambig(pool) {
   </div>`;
 }
 
+// ---- Wikipedia infobox ----
+
+async function fetchInfobox(wikiTitle) {
+  try {
+    const url = `${WAPI}?action=parse&page=${encodeURIComponent(wikiTitle)}&prop=text&section=0&format=json&origin=*`;
+    const data = await (await fetch(url)).json();
+    const html = data?.parse?.text?.['*'];
+    if (!html) return {};
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const table = doc.querySelector('.infobox');
+    if (!table) return {};
+
+    const result = {};
+    for (const row of table.querySelectorAll('tr')) {
+      const th = row.querySelector('th');
+      const td = row.querySelector('td');
+      if (!th || !td) continue;
+      const label = th.textContent.trim().toLowerCase();
+      const raw = cleanText(td.textContent);
+
+      if (label.includes('height') && !result.height) {
+        result.height = raw;
+      }
+      if (label.includes('weight') && !result.weight) {
+        result.weight = raw;
+      }
+      if ((label.includes('blood') || label === 'blood type') && !result.bloodType) {
+        result.bloodType = raw;
+      }
+      if (label.includes('mbti') && !result.mbti) {
+        result.mbti = raw;
+      }
+      if (label === 'born' && !result.birthplace) {
+        // Born cell often has "Date\nCity, Country" - grab location part
+        const lines = raw.split('\n').map(s => s.trim()).filter(Boolean);
+        if (lines.length > 1) result.birthplace = lines[lines.length - 1];
+      }
+    }
+    return result;
+  } catch { return {}; }
+}
+
 // ---- load actor ----
 
 async function loadActor(qid, hint) {
@@ -532,12 +573,13 @@ async function loadActor(qid, hint) {
     if (!entity) { setStatus('No data found.'); return; }
 
     const enWikiTitle = entity.sitelinks?.enwiki?.title;
-    let wiki = null;
+
+    let wiki = null, infobox = {};
     if (enWikiTitle) {
-      try {
-        const wr = await fetch(`${WIKI}${encodeURIComponent(enWikiTitle)}`);
-        if (wr.ok) wiki = await wr.json();
-      } catch {}
+      [wiki, infobox] = await Promise.all([
+        fetch(`${WIKI}${encodeURIComponent(enWikiTitle)}`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetchInfobox(enWikiTitle),
+      ]);
     }
 
     const displayName =
@@ -545,7 +587,7 @@ async function loadActor(qid, hint) {
       entity.labels?.zh?.value || entity.labels?.ja?.value || hint;
 
     saveRecent(displayName, qid);
-    await buildCard(entity, wiki);
+    await buildCard(entity, wiki, infobox);
   } catch(e) {
     setStatus('Failed to load.');
     console.error(e);
@@ -554,7 +596,7 @@ async function loadActor(qid, hint) {
 
 // ---- build card ----
 
-async function buildCard(entity, wiki) {
+async function buildCard(entity, wiki, infobox) {
   const c = entity.claims || {};
   const labels = entity.labels || {};
   const aliases = entity.aliases || {};
@@ -573,6 +615,13 @@ async function buildCard(entity, wiki) {
   const occIds = allClaimVals(c, P.OCC).map(v => v?.id).filter(Boolean);
   const occs = [...new Set(occIds.map(id => OCC_LABELS[id]).filter(Boolean))];
 
+  // Gender + nationality for military N/A logic
+  const genderQid = claimVal(c, P.GENDER)?.id;
+  const isMale = genderQid === MALE_QID;
+  const natQids = allClaimVals(c, P.NATION).map(v => v?.id).filter(Boolean);
+  const isSouthKorean = natQids.includes(SK_QID);
+  const militaryApplies = isMale && isSouthKorean;
+
   // Photo
   const imgFn = claimVal(c, P.IMAGE);
   const photoUrl = imgFn ? imgUrl(imgFn, 120) : null;
@@ -582,7 +631,7 @@ async function buildCard(entity, wiki) {
   const dobStr = fmtDate(dobRaw);
   const age = getAge(dobRaw);
 
-  // Height
+  // Height: Wikidata first, infobox fallback
   let htDisplay = null;
   const htVal = claimVal(c, P.HEIGHT);
   if (htVal) {
@@ -593,8 +642,11 @@ async function buildCard(entity, wiki) {
     else if (unit === 'Q174728' || amt > 50) cm = Math.round(amt);
     if (cm) htDisplay = `${cm} cm / ${cmToImperial(cm)}`;
   }
+  if (!htDisplay && infobox.height) {
+    htDisplay = infobox.height;
+  }
 
-  // Weight
+  // Weight: Wikidata first, infobox fallback
   let wtDisplay = null;
   const wtVal = claimVal(c, P.WEIGHT);
   if (wtVal) {
@@ -605,13 +657,23 @@ async function buildCard(entity, wiki) {
     else if (unit === 'Q100995') kg = Math.round(amt / 2.2046);
     if (kg) wtDisplay = `${kg} kg / ${Math.round(kg * 2.2046)} lbs`;
   }
+  if (!wtDisplay && infobox.weight) {
+    wtDisplay = infobox.weight;
+  }
 
-  // Blood type
+  // Blood type: Wikidata first, infobox fallback
+  let bloodDisplay = null;
   const bloodId = claimVal(c, P.BLOOD)?.id;
-  const bloodDisplay = bloodId ? (BLOOD_LABELS[bloodId] || null) : null;
+  if (bloodId) bloodDisplay = BLOOD_LABELS[bloodId] || null;
+  if (!bloodDisplay && infobox.bloodType) {
+    bloodDisplay = infobox.bloodType;
+  }
+
+  // MBTI: infobox only (not in Wikidata)
+  const mbtiDisplay = infobox.mbti || null;
 
   // Military service
-  const hasMilitary = !!(c[P.MILITARY]);
+  const hasMilitaryData = !!(c[P.MILITARY]);
 
   // Groups (member of)
   const memberClaims = allClaims(c, P.MEMBER);
@@ -635,8 +697,7 @@ async function buildCard(entity, wiki) {
   const childQids  = allClaimVals(c, P.CHILD).map(v => v?.id).filter(Boolean);
 
   // Location QIDs
-  const bpQid  = claimVal(c, P.PLACE_BIRTH)?.id;
-  const natQids = allClaimVals(c, P.NATION).map(v => v?.id).filter(Boolean);
+  const bpQid = claimVal(c, P.PLACE_BIRTH)?.id;
 
   // Batch label fetch
   const toResolve = [
@@ -646,9 +707,18 @@ async function buildCard(entity, wiki) {
   ].filter(Boolean);
   const lm = toResolve.length ? await fetchLabels([...new Set(toResolve)]) : {};
 
-  // Resolved display values
-  const birthplaceDisplay = bpQid ? lm[bpQid] : null;
+  // Resolved values
+  let birthplaceDisplay = bpQid ? (lm[bpQid] || null) : null;
+  // If infobox has a more specific birthplace, prefer it
+  if (infobox.birthplace && (!birthplaceDisplay || birthplaceDisplay === (lm[SK_QID] || 'South Korea'))) {
+    birthplaceDisplay = infobox.birthplace;
+  }
   const natDisplay = natQids.map(id => lm[id] || id).join(', ') || null;
+
+  // Deduplicate From/Nation: if birthplace resolves to same string as nationality, blank out From
+  const fromDisplay = (birthplaceDisplay && natDisplay && birthplaceDisplay === natDisplay)
+    ? null
+    : birthplaceDisplay;
 
   const groups = groupQids.map((qid, i) => ({
     name: lm[qid] || qid,
@@ -678,49 +748,51 @@ async function buildCard(entity, wiki) {
   const kpLink  = `https://kprofiles.com/?s=${sn}`;
   const awLink  = `https://asianwiki.com/${encodeURIComponent(stageName.replace(/ /g,'_'))}`;
 
-  // Bio text
   const bioText = wiki?.extract || null;
 
-  // ---- build fact rows ----
-  const rows = [];
-  if (dobStr) rows.push(['Born', `${esc(dobStr)}${age ? ` <span class="fact-dim">(${age})</span>` : ''}`]);
-  if (birthplaceDisplay) rows.push(['From',    esc(birthplaceDisplay)]);
-  if (natDisplay)        rows.push(['Nation',  esc(natDisplay)]);
-  if (htDisplay)         rows.push(['Height',  esc(htDisplay)]);
-  if (wtDisplay)         rows.push(['Weight',  esc(wtDisplay)]);
-  if (bloodDisplay)      rows.push(['Blood',   esc(bloodDisplay)]);
-  rows.push(['MBTI', '<span class="fact-dim">-</span>']);
-  if (schools.length) {
-    const eduHtml = schools
-      .map(s => `${esc(s.name)}${s.degree ? ` <span class="fact-dim">(${esc(s.degree)})</span>` : ''}`)
-      .join('<br>');
-    rows.push(['Education', eduHtml]);
+  // ---- fact rows (always all shown) ----
+  const eduHtml = schools.length
+    ? schools.map(s => `${esc(s.name)}${s.degree ? ` <span class="fact-dim">(${esc(s.degree)})</span>` : ''}`).join('<br>')
+    : null;
+
+  const famHtml = family.length
+    ? family.map(f => `${esc(f.name)} <span class="fact-dim">(${f.rel})</span>`).join('<br>')
+    : null;
+
+  let militaryHtml;
+  if (hasMilitaryData) {
+    militaryHtml = 'Service on record';
+  } else if (!militaryApplies) {
+    militaryHtml = NA;
+  } else {
+    militaryHtml = NONE;
   }
-  if (hasMilitary) rows.push(['Military', 'Service on record']);
-  rows.push(['Talents', '<span class="fact-dim">-</span>']);
-  if (family.length) {
-    const famHtml = family
-      .map(f => `${esc(f.name)} <span class="fact-dim">(${f.rel})</span>`)
-      .join('<br>');
-    rows.push(['Family', famHtml]);
-  }
+
+  const rows = [
+    ['Born',       dobStr ? `${esc(dobStr)}${age ? ` <span class="fact-dim">(${age})</span>` : ''}` : NONE],
+    ['From',       fromDisplay ? esc(fromDisplay) : NONE],
+    ['Nation',     natDisplay ? esc(natDisplay) : NONE],
+    ['Height',     htDisplay ? esc(htDisplay) : NONE],
+    ['Weight',     wtDisplay ? esc(wtDisplay) : NONE],
+    ['Blood',      bloodDisplay ? esc(bloodDisplay) : NONE],
+    ['MBTI',       mbtiDisplay ? esc(mbtiDisplay) : NONE],
+    ['Education',  eduHtml || NONE],
+    ['Military',   militaryHtml],
+    ['Talents',    NONE],
+    ['Family',     famHtml || NONE],
+  ];
 
   // ---- render ----
   $id('main').innerHTML = `<div class="card">
 
     <div class="name-block">
-      ${photoUrl
-        ? `<img class="actor-photo" src="${photoUrl}" alt="${esc(stageName)}" loading="lazy" onerror="this.remove()">`
-        : ''}
+      ${photoUrl ? `<img class="actor-photo" src="${photoUrl}" alt="${esc(stageName)}" loading="lazy" onerror="this.remove()">` : ''}
       <div class="name-info">
         <div class="stage-name">${esc(stageName)}</div>
         ${(showNative || altNames.length) ? `<div class="alt-names">
-          ${showNative ? esc(nativeName) : ''}
-          ${altNames.length ? `${showNative ? '<br>' : ''}${altNames.slice(0,2).map(esc).join(' / ')}` : ''}
+          ${[showNative ? esc(nativeName) : '', altNames.slice(0,2).map(esc).join(' / ')].filter(Boolean).join('<br>')}
         </div>` : ''}
-        ${occs.length
-          ? `<div class="role-chips">${occs.map(o => `<span class="role-chip">${esc(o)}</span>`).join('')}</div>`
-          : ''}
+        ${occs.length ? `<div class="role-chips">${occs.map(o => `<span class="role-chip">${esc(o)}</span>`).join('')}</div>` : ''}
       </div>
     </div>
 
@@ -761,9 +833,7 @@ async function buildCard(entity, wiki) {
 
     <div id="xBio" class="xpanel">
       <div class="xpanel-title">Biography</div>
-      ${bioText
-        ? `<p>${esc(bioText)}</p>`
-        : '<p class="fact-dim">No biography available.</p>'}
+      ${bioText ? `<p>${esc(bioText)}</p>` : '<p class="fact-dim">No biography available.</p>'}
       ${wikiLink ? `<p style="margin-top:10px"><a href="${wikiLink}" target="_blank" rel="noopener">Full Wikipedia article</a></p>` : ''}
     </div>
 
