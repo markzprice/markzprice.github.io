@@ -12,9 +12,23 @@
 
 export default {
   async fetch(request) {
+    // Allow both the GitHub Pages origin and the custom domain, in both
+    // http and https. The custom domain (markrprice.com) currently serves
+    // over http because GitHub Pages has not yet provisioned an HTTPS cert
+    // for it. Once Enforce HTTPS becomes available in the Pages settings,
+    // the http entries can be removed.
+    const allowedOrigins = [
+      'http://markrprice.com',
+      'https://markrprice.com',
+      'http://markzprice.github.io',
+      'https://markzprice.github.io',
+    ];
+    const origin = request.headers.get('Origin') || '';
+    const allowOrigin = allowedOrigins.includes(origin) ? origin : 'http://markrprice.com';
     const CORS = {
-      'Access-Control-Allow-Origin': 'https://markzprice.github.io',
+      'Access-Control-Allow-Origin': allowOrigin,
       'Access-Control-Allow-Methods': 'GET,OPTIONS',
+      'Vary': 'Origin',
       'Content-Type': 'application/json',
     };
 
@@ -38,16 +52,19 @@ export default {
         { headers: { 'User-Agent': UA } }
       ).then(r => r.text());
 
-      // Find the first profile article link (skip category/tag/page URLs)
-      const linkMatch = searchHtml.match(
-        /href="(https:\/\/kprofiles\.com\/(?!(?:category|tag|page|author)\/)[\w-]+-(?:profile|facts)\/?)"/
-      );
-      if (!linkMatch) {
-        // Looser fallback: any kprofiles.com post link
-        const loose = searchHtml.match(/href="(https:\/\/kprofiles\.com\/[\w-]{5,}\/?)"/);
-        if (!loose) return new Response(JSON.stringify({}), { headers: CORS });
-        linkMatch = loose; // reassignment
+      // Collect every search result link. Kprofiles' theme wraps each result
+      // heading in class "entry-title" containing the link. Then prefer the
+      // first hit whose URL contains "-profile" since Kprofiles publishes
+      // discography, news, and compilation pages alongside person/group
+      // profile pages, and the first hit is not always the profile.
+      const allMatches = [...searchHtml.matchAll(
+        /entry-title[^>]*>\s*<a[^>]+href="(https:\/\/kprofiles\.com\/[^"]+?)"/g
+      )];
+      if (allMatches.length === 0) {
+        return new Response(JSON.stringify({ note: 'no search results' }), { headers: CORS });
       }
+      const profileHit = allMatches.find(m => /-profile(?:-|\/?$)/.test(m[1]));
+      const linkMatch = profileHit || allMatches[0];
 
       // 2. Fetch the profile page
       const profileUrl = linkMatch[1];
@@ -56,23 +73,44 @@ export default {
         { headers: { 'User-Agent': UA } }
       ).then(r => r.text());
 
-      // 3. Parse fields via regex against the raw HTML
+      // 3. Strip HTML tags and decode entities so label-value patterns reduce
+      // to plain text. Kprofiles wraps labels in <span> tags
+      // ("<span>Height:</span> 168 cm") and uses numeric entities for typographic
+      // quotes like &#8217; (right single quote) and &#8243; (double prime),
+      // both of which a naive regex stripper would mangle into noise.
+      const decodeEntity = (m, code) => {
+        if (code === 'nbsp') return ' ';
+        if (code === 'amp')  return '&';
+        if (code === 'lt')   return '<';
+        if (code === 'gt')   return '>';
+        if (code === 'quot') return '"';
+        if (code === 'apos') return "'";
+        if (code.startsWith('#x')) return String.fromCharCode(parseInt(code.slice(2), 16));
+        if (code.startsWith('#'))  return String.fromCharCode(parseInt(code.slice(1), 10));
+        return ' ';
+      };
+      const text = profileHtml
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, decodeEntity)
+        .replace(/\s+/g, ' ');
+
       const result = { profileUrl };
 
-      // Height: "180 cm (5 feet 11 inches)" or "180cm" etc.
-      const htMatch = profileHtml.match(/[Hh]eight\s*[:\-–]\s*([0-9]+\s*cm[^<\n]{0,35})/);
-      if (htMatch) result.height = htMatch[1].replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' ').trim();
+      // Height: "168 cm (5'6")" etc. Capture digits + cm, plus any non-uppercase
+      // follow text up to the next field label (Weight, Blood, MBTI all start uppercase).
+      const htMatch = text.match(/[Hh]eight\s*[:\-–]\s*([0-9]+\s*cm[^A-Z]{0,35})/);
+      if (htMatch) result.height = htMatch[1].trim();
 
-      // Weight: "65 kg (143 lbs)" etc.
-      const wtMatch = profileHtml.match(/[Ww]eight\s*[:\-–]\s*([0-9]+\s*kg[^<\n]{0,30})/);
-      if (wtMatch) result.weight = wtMatch[1].replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' ').trim();
+      // Weight: "47 kg (103 lbs)" etc.
+      const wtMatch = text.match(/[Ww]eight\s*[:\-–]\s*([0-9]+\s*kg[^A-Z]{0,30})/);
+      if (wtMatch) result.weight = wtMatch[1].trim();
 
       // Blood type: A / B / AB / O (with optional +/-)
-      const btMatch = profileHtml.match(/[Bb]lood\s*[Tt]ype\s*[:\-–]\s*([ABO]{1,2}[+-]?)/);
+      const btMatch = text.match(/[Bb]lood\s*[Tt]ype\s*[:\-–]\s*([ABO]{1,2}[+-]?)/);
       if (btMatch) result.bloodType = btMatch[1].trim();
 
       // MBTI: four uppercase letters, e.g. ENFP
-      const mbtiMatch = profileHtml.match(/MBTI\s*[:\-–]\s*([A-Z]{4})/);
+      const mbtiMatch = text.match(/MBTI\s*[:\-–]\s*([A-Z]{4})/);
       if (mbtiMatch) result.mbti = mbtiMatch[1];
 
       return new Response(JSON.stringify(result), { headers: CORS });
