@@ -1,5 +1,5 @@
 // ============================================================
-// Kprofiles proxy — Cloudflare Worker
+// Kprofiles proxy: Cloudflare Worker
 // ============================================================
 // This is NOT a client-side file. Deploy it to Cloudflare Workers:
 //   1. https://dash.cloudflare.com → Workers & Pages → Create
@@ -78,7 +78,7 @@ export default {
       return new Response(JSON.stringify(result), { headers: CORS });
 
     } catch (e) {
-      // Swallow errors gracefully — the client falls back to dashes
+      // Swallow errors gracefully; the client falls back to dashes
       return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: CORS });
     }
   }
