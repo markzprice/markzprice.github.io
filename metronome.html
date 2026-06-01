@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metronome</title>
+<style>
+  :root{
+    --bg:#f2ece0;
+    --ink:#0e0800;
+    --muted:#6b5d4a;
+    --line:#d8cdb8;
+    --card:#ece3d2;
+    --accent:#c8631a;      /* amber-orange */
+    --accent-soft:#e8a35c;
+    --accent-deep:#9a4410;
+    --flash:#f0b06a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:28px 16px 60px;
+  }
+  .wrap{width:100%;max-width:480px;}
+  h1{
+    font-size:20px;letter-spacing:2px;text-transform:uppercase;
+    margin:0 0 4px;font-weight:700;
+  }
+  .sub{color:var(--muted);font-size:12px;margin:0 0 22px;letter-spacing:1px;}
+
+  /* beat lights */
+  .beats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:22px;min-height:26px;}
+  .dot{
+    width:20px;height:20px;border-radius:50%;
+    border:2px solid var(--line);background:transparent;
+    transition:background .04s linear, transform .04s linear, border-color .04s;
+  }
+  .dot.accent{border-color:var(--accent-deep);}
+  .dot.on{background:var(--accent);border-color:var(--accent);transform:scale(1.18);}
+  .dot.on.accent{background:var(--accent-deep);border-color:var(--accent-deep);}
+
+  /* BPM readout */
+  .bpm-row{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-bottom:6px;}
+  .bpm-num{font-size:64px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+  .bpm-lab{font-size:13px;color:var(--muted);letter-spacing:2px;}
+  .marking{text-align:center;color:var(--muted);font-size:12px;height:16px;margin-bottom:14px;letter-spacing:1px;}
+
+  input[type=range]{width:100%;accent-color:var(--accent);height:28px;}
+
+  .nudge{display:flex;gap:8px;justify-content:center;margin:10px 0 4px;flex-wrap:wrap;}
+  button{
+    font-family:inherit;cursor:pointer;color:var(--ink);
+    background:var(--card);border:1.5px solid var(--line);border-radius:8px;
+    padding:9px 14px;font-size:13px;transition:background .12s,border-color .12s,transform .04s;
+  }
+  button:hover{border-color:var(--accent-soft);}
+  button:active{transform:translateY(1px);}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;letter-spacing:1px;}
+  button.primary.running{background:var(--accent-deep);border-color:var(--accent-deep);}
+
+  .start{display:flex;gap:10px;margin:18px 0 8px;}
+  .start button{flex:1;padding:16px;font-size:16px;}
+
+  .panel{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-top:18px;}
+  .panel h2{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:0 0 12px;}
+  .field{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{font-size:13px;}
+  .field .val{font-variant-numeric:tabular-nums;font-weight:700;min-width:42px;text-align:right;}
+  .stepper{display:flex;align-items:center;gap:8px;}
+  .stepper button{padding:6px 12px;font-size:16px;line-height:1;min-width:38px;}
+
+  select{
+    font-family:inherit;font-size:13px;padding:8px 10px;border-radius:8px;
+    border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%;
+  }
+  .sound-grid{display:flex;flex-direction:column;gap:10px;}
+  .row{display:flex;gap:8px;align-items:center;}
+  .row .grow{flex:1;}
+  .filelabel{
+    display:inline-block;background:var(--bg);border:1.5px dashed var(--line);
+    border-radius:8px;padding:9px 12px;font-size:12px;color:var(--muted);cursor:pointer;text-align:center;width:100%;
+  }
+  .filelabel:hover{border-color:var(--accent-soft);color:var(--ink);}
+  input[type=file]{display:none;}
+  .status{font-size:11px;color:var(--muted);margin-top:4px;min-height:14px;}
+  .hint{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px;}
+  .pitch-wrap{display:none;}
+  .pitch-wrap.show{display:block;}
+  a{color:var(--accent-deep);}
+  kbd{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;}
+
+  /* collapsible panels */
+  .panel.collap > .phead{cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+  .panel.collap > .phead h2{margin:0;}
+  .panel.collap > .phead::after{content:"\25B8";color:var(--accent);font-size:13px;transition:transform .15s;}
+  .panel.collap.open > .phead::after{transform:rotate(90deg);}
+  .panel .pbody{margin-top:14px;}
+  .panel.collap:not(.open) .pbody{display:none;}
+  .toggle-btn.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+  .band{font-variant-numeric:tabular-nums;font-weight:700;min-width:50px;text-align:right;color:var(--accent-deep);}
+  .subsec{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+    margin:20px 0 10px;padding-top:14px;border-top:1px solid var(--line);}
+  .subsec:first-child{margin-top:0;padding-top:0;border-top:none;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+  .chip{padding:6px 11px;font-size:12px;border-radius:7px;}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+  .chiplabel{font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:6px;}
+  .cheat{font-size:12px;line-height:1.6;}
+  .cheat table{width:100%;border-collapse:collapse;margin:4px 0 2px;}
+  .cheat th,.cheat td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top;}
+  .cheat th{color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;}
+  .cheat td:first-child{font-weight:700;color:var(--accent-deep);white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Metronome</h1>
+  <p class="sub">two metronomes · beat tones · noise · drift-free timing</p>
+
+  <!-- metronome instances injected here -->
+  <div id="metros"></div>
+
+  <div class="panel collap" id="binauralPanel">
+    <div class="phead"><h2>Binaural beat</h2></div>
+    <div class="pbody">
+      <div class="field"><label>Layer</label><button class="toggle-btn" data-tone="binaural" data-act="toggle">Off</button></div>
+      <div class="field"><label>Carrier</label>
+        <input type="range" data-tone="binaural" data-p="carrier" min="60" max="500" value="200" step="1" style="flex:1;max-width:160px;">
+        <span class="val" data-tone="binaural" data-show="carrier">200</span></div>
+      <div class="chiplabel">Quick band</div>
+      <div class="chips" data-bandchips="binaural">
+        <button class="chip" data-band="2">Delta</button>
+        <button class="chip" data-band="6">Theta</button>
+        <button class="chip" data-band="10">Alpha</button>
+        <button class="chip" data-band="20">Beta</button>
+        <button class="chip" data-band="40">Gamma</button>
+      </div>
+      <div class="field"><label>Beat rate</label>
+        <input type="range" data-tone="binaural" data-p="beatHz" min="0.5" max="40" value="7" step="0.1" style="flex:1;max-width:160px;">
+        <span class="val" data-tone="binaural" data-show="beatHz">7.0</span></div>
+      <div class="field"><label>Band</label><span class="band" data-tone="binaural" data-show="band">Theta</span></div>
+      <div class="field"><label>Higher tone in</label><button class="toggle-btn" data-tone="binaural" data-act="swap">Right ear</button></div>
+      <div class="field"><label>Volume</label>
+        <input type="range" data-tone="binaural" data-p="vol" min="0" max="100" value="35" style="flex:1;max-width:200px;"></div>
+      <div class="hint">Two tones, one per ear, a beat-rate apart. The beat exists only in your head, so this one <b>needs headphones</b>. Swap flips which ear gets the higher tone.</div>
+    </div>
+  </div>
+
+  <div class="panel collap" id="monauralPanel">
+    <div class="phead"><h2>Monaural beat</h2></div>
+    <div class="pbody">
+      <div class="field"><label>Layer</label><button class="toggle-btn" data-tone="monaural" data-act="toggle">Off</button></div>
+      <div class="field"><label>Carrier</label>
+        <input type="range" data-tone="monaural" data-p="carrier" min="60" max="500" value="200" step="1" style="flex:1;max-width:160px;">
+        <span class="val" data-tone="monaural" data-show="carrier">200</span></div>
+      <div class="chiplabel">Quick band</div>
+      <div class="chips" data-bandchips="monaural">
+        <button class="chip" data-band="2">Delta</button>
+        <button class="chip" data-band="6">Theta</button>
+        <button class="chip" data-band="10">Alpha</button>
+        <button class="chip" data-band="20">Beta</button>
+        <button class="chip" data-band="40">Gamma</button>
+      </div>
+      <div class="field"><label>Beat rate</label>
+        <input type="range" data-tone="monaural" data-p="beatHz" min="0.5" max="40" value="7" step="0.1" style="flex:1;max-width:160px;">
+        <span class="val" data-tone="monaural" data-show="beatHz">7.0</span></div>
+      <div class="field"><label>Band</label><span class="band" data-tone="monaural" data-show="band">Theta</span></div>
+      <div class="field"><label>Volume</label>
+        <input type="range" data-tone="monaural" data-p="vol" min="0" max="100" value="35" style="flex:1;max-width:200px;"></div>
+      <div class="hint">Both tones summed into one centered signal, so the beating is physically in the sound. <b>Works on any speakers or headphones.</b> No ear-swap (it's centered).</div>
+    </div>
+  </div>
+
+  <div class="panel collap" id="isoPanel">
+    <div class="phead"><h2>Isochronic tone</h2></div>
+    <div class="pbody">
+      <div class="field"><label>Layer</label><button class="toggle-btn" data-tone="isochronic" data-act="toggle">Off</button></div>
+      <div class="field"><label>Carrier</label>
+        <input type="range" data-tone="isochronic" data-p="carrier" min="60" max="500" value="200" step="1" style="flex:1;max-width:160px;">
+        <span class="val" data-tone="isochronic" data-show="carrier">200</span></div>
+      <div class="chiplabel">Quick band</div>
+      <div class="chips" data-bandchips="isochronic">
+        <button class="chip" data-band="2">Delta</button>
+        <button class="chip" data-band="6">Theta</button>
+        <button class="chip" data-band="10">Alpha</button>
+        <button class="chip" data-band="20">Beta</button>
+        <button class="chip" data-band="40">Gamma</button>
+      </div>
+      <div class="field"><label>Pulse rate</label>
+        <input type="range" data-tone="isochronic" data-p="beatHz" min="0.5" max="40" value="10" step="0.1" style="flex:1;max-width:160px;">
+        <span class="val" data-tone="isochronic" data-show="beatHz">10.0</span></div>
+      <div class="field"><label>Band</label><span class="band" data-tone="isochronic" data-show="band">Alpha</span></div>
+      <div class="field"><label>Pulse depth</label>
+        <input type="range" data-tone="isochronic" data-p="depth" min="10" max="100" value="100" style="flex:1;max-width:200px;"></div>
+      <div class="field"><label>Volume</label>
+        <input type="range" data-tone="isochronic" data-p="vol" min="0" max="100" value="35" style="flex:1;max-width:200px;"></div>
+      <div class="hint">A single tone switched on and off at the pulse rate. <b>Works on any output.</b> Pulse depth sets how far the tone dips between pulses (100% = full silence, lower = a gentle throb).</div>
+    </div>
+  </div>
+
+  <div class="panel collap" id="purePanel">
+    <div class="phead"><h2>Pure tone (drone)</h2></div>
+    <div class="pbody">
+      <div class="field"><label>Layer</label><button class="toggle-btn" data-tone="pure" data-act="toggle">Off</button></div>
+      <div class="field"><label>Frequency</label>
+        <input type="range" data-tone="pure" data-p="carrier" min="40" max="1000" value="200" step="1" style="flex:1;max-width:160px;">
+        <span class="val" data-tone="pure" data-show="carrier">200</span></div>
+      <div class="field"><label>Volume</label>
+        <input type="range" data-tone="pure" data-p="vol" min="0" max="100" value="30" style="flex:1;max-width:200px;"></div>
+      <div class="hint">A steady sine tone, no beat. A plain drone layer to sit under anything else.</div>
+    </div>
+  </div>
+
+  <div class="panel collap" id="noisePanel">
+    <div class="phead"><h2>Noise</h2></div>
+    <div class="pbody">
+      <div class="field">
+        <label for="noiseToggle">Layer</label>
+        <button class="toggle-btn" id="noiseToggle">Off</button>
+      </div>
+      <div class="chiplabel">Color</div>
+      <div class="chips" id="noiseChips">
+        <button class="chip" data-color="brown">Brown</button>
+        <button class="chip" data-color="pink">Pink</button>
+        <button class="chip" data-color="white">White</button>
+      </div>
+      <div class="field">
+        <label for="noiseTone">Fine tune (deeper ↔ brighter)</label>
+        <input type="range" id="noiseTone" min="0" max="100" value="50" style="flex:1;max-width:180px;">
+      </div>
+      <div class="field">
+        <label for="noiseVol">Volume</label>
+        <input type="range" id="noiseVol" min="0" max="100" value="40" style="flex:1;max-width:200px;">
+      </div>
+      <div class="hint">
+        The three buttons are true noise colors: <b>brown</b> is deep and rumbly
+        (like heavy rain or a waterfall), <b>pink</b> is balanced and natural
+        (like steady rainfall), <b>white</b> is bright full-spectrum hiss. The
+        fine-tune slider then shapes the brightness from there. Runs continuously,
+        independent of the metronomes.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel collap" id="cheatPanel">
+    <div class="phead"><h2>Cheatsheet (the lore)</h2></div>
+    <div class="pbody">
+      <div class="cheat">
+        <div class="subsec" style="margin-top:0">Brainwave bands</div>
+        <table>
+          <tr><th>Band</th><th>Rate</th><th>What it's "for" (lore)</th></tr>
+          <tr><td>Delta</td><td>0.5–4 Hz</td><td>Deep dreamless sleep, physical recovery. Used for sleep onset and deep rest.</td></tr>
+          <tr><td>Theta</td><td>4–8 Hz</td><td>Drowsy, meditative, hypnagogic. Used for meditation, creativity, deep relaxation.</td></tr>
+          <tr><td>Alpha</td><td>8–12 Hz</td><td>Calm but awake, "relaxed alert." Used for relaxation, light focus, stress relief.</td></tr>
+          <tr><td>Beta</td><td>13–30 Hz</td><td>Active, engaged, problem-solving. Used for focus, alertness, concentration.</td></tr>
+          <tr><td>Gamma</td><td>30 Hz+</td><td>Peak concentration, high-level processing. Used for sharp focus, "flow."</td></tr>
+        </table>
+        <div class="subsec">Noise colors</div>
+        <table>
+          <tr><th>Color</th><th>Character</th><th>What it's "for" (lore)</th></tr>
+          <tr><td>Brown</td><td>Deep, rumbly, bass-heavy</td><td>Masking low rumble, grounding, sleep. Like a waterfall or heavy rain.</td></tr>
+          <tr><td>Pink</td><td>Balanced, natural</td><td>Focus and sleep; the most "natural" sounding. Like steady rainfall or wind.</td></tr>
+          <tr><td>White</td><td>Bright, full hiss</td><td>Masking sudden sounds, blocking distractions. Like static or a fan.</td></tr>
+        </table>
+        <div class="subsec">Tone delivery</div>
+        <table>
+          <tr><th>Type</th><th>Needs</th><th>What it's "for" (lore)</th></tr>
+          <tr><td>Binaural</td><td>Headphones</td><td>The classic. Subtle; the beat is built by your brain from the two ears.</td></tr>
+          <tr><td>Monaural</td><td>Anything</td><td>Stronger, more present beat. Works on speakers; good when headphones aren't an option.</td></tr>
+          <tr><td>Isochronic</td><td>Anything</td><td>The most overt pulse. Often described as the most "engaging" for focus.</td></tr>
+        </table>
+        <div class="hint" style="margin-top:14px">
+          <b>Honest caveat:</b> this is the popular/traditional lore, the framing the
+          communities around these tools use. The audio phenomena are real, but the
+          claimed mental <i>effects</i> (focus, sleep, relaxation) have mixed and modest
+          scientific support. Treat the "what it's for" column as folklore to explore,
+          not medical fact. The bonus is the bonus; the distraction is the point.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint" style="text-align:center;margin-top:18px;">
+    Everything runs locally in your browser. Uploaded sounds are not sent anywhere.
+  </p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ===================================================================
+  // SHARED AUDIO CORE
+  // ===================================================================
+  var audioCtx = null;
+  function ctx(){
+    if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    return audioCtx;
+  }
+  function resume(){ var ac=ctx(); if(ac.state==="suspended") ac.resume(); }
+
+  var noiseBuffer = null;      // 1s white buffer reused by the crunch
+  function getNoise(){
+    var ac = ctx();
+    if(!noiseBuffer){
+      var len = Math.floor(ac.sampleRate * 1.0);
+      noiseBuffer = ac.createBuffer(1, len, ac.sampleRate);
+      var data = noiseBuffer.getChannelData(0);
+      for(var i=0;i<len;i++) data[i] = Math.random()*2 - 1;
+    }
+    return noiseBuffer;
+  }
+
+  // ---- crunch food profiles ----
+  var CRUNCH = {
+    chip:    { bodyHz:150, bodyDrop:80,  bodyGain:0.26, bodyDecay:0.26, grains:[30,20], spread:0.30, dur:[0.004,0.020], hp:[300,500],  lp:[1200,2000], punchy:1.0 },
+    deep:    { bodyHz:90,  bodyDrop:45,  bodyGain:0.55, bodyDecay:0.42, grains:[26,16], spread:0.42, dur:[0.006,0.028], hp:[180,350],  lp:[900,1500],  punchy:1.25 },
+    apple:   { bodyHz:170, bodyDrop:95,  bodyGain:0.30, bodyDecay:0.30, grains:[22,14], spread:0.34, dur:[0.006,0.030], hp:[260,420],  lp:[1500,2400], punchy:0.8, wet:true },
+    cracker: { bodyHz:200, bodyDrop:120, bodyGain:0.12, bodyDecay:0.14, grains:[34,22], spread:0.22, dur:[0.003,0.013], hp:[500,800],  lp:[2200,3500], punchy:1.0 },
+    ice:     { bodyHz:130, bodyDrop:70,  bodyGain:0.34, bodyDecay:0.22, grains:[10,8],  spread:0.20, dur:[0.005,0.022], hp:[700,1200], lp:[3000,5500], punchy:1.4, glassy:true }
+  };
+
+  // Crunch heard inside your own head, parameterized by an instance state `st`.
+  function genCrunch(st, time, isAccent){
+    var ac = ctx();
+    var P = CRUNCH[st.crunchProfile] || CRUNCH.chip;
+    var master = ac.createGain();
+    var comp = ac.createDynamicsCompressor();
+    comp.threshold.setValueAtTime(-20, time);
+    comp.ratio.setValueAtTime(4, time);
+    comp.attack.setValueAtTime(0.001, time);
+    comp.release.setValueAtTime(0.08, time);
+    master.connect(comp); comp.connect(ac.destination);
+    master.gain.setValueAtTime(st.volume * (isAccent ? 1.0 : 0.85), time);
+
+    var body = ac.createOscillator(), bg = ac.createGain();
+    body.type = "sine";
+    body.frequency.setValueAtTime(P.bodyHz, time);
+    body.frequency.exponentialRampToValueAtTime(P.bodyDrop, time + P.bodyDecay*0.7);
+    bg.gain.setValueAtTime(0.0001, time);
+    bg.gain.exponentialRampToValueAtTime(P.bodyGain * (isAccent?1.15:1.0), time+0.006);
+    bg.gain.exponentialRampToValueAtTime(0.0006, time + P.bodyDecay);
+    body.connect(bg); bg.connect(master);
+    body.start(time); body.stop(time + P.bodyDecay + 0.02);
+
+    if(st.crunchProfile === "deep"){
+      var sub = ac.createOscillator(), sg = ac.createGain();
+      sub.type = "sine";
+      sub.frequency.setValueAtTime(P.bodyHz*0.5, time);
+      sub.frequency.exponentialRampToValueAtTime(P.bodyDrop*0.5, time+0.18);
+      sg.gain.setValueAtTime(0.0001, time);
+      sg.gain.exponentialRampToValueAtTime(0.4*(isAccent?1.15:1.0), time+0.01);
+      sg.gain.exponentialRampToValueAtTime(0.0006, time+0.36);
+      sub.connect(sg); sg.connect(master);
+      sub.start(time); sub.stop(time+0.4);
+    }
+
+    var nb = getNoise();
+    var maxOff = nb.duration - 0.06;
+    var grains = P.grains[0] + Math.floor(Math.random()*P.grains[1]);
+    var spread = P.spread * (isAccent ? 1.25 : 1.0);
+    for(var g=0; g<grains; g++){
+      var frac = Math.pow(Math.random(), 0.7);
+      var gt = time + frac * spread;
+      var off = Math.random() * maxOff;
+      var dur = P.dur[0] + Math.random()*P.dur[1];
+
+      var hp = ac.createBiquadFilter();
+      hp.type = "highpass";
+      hp.frequency.setValueAtTime(P.hp[0] + Math.random()*P.hp[1], gt);
+      var lp = ac.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.setValueAtTime(P.lp[0] + Math.random()*P.lp[1], gt);
+      lp.Q.setValueAtTime(P.glassy ? (4 + Math.random()*6) : 0.5, gt);
+
+      var gg = ac.createGain();
+      var amp = (0.10 + Math.random()*0.38) * P.punchy * (g < 5 ? 1.0 : 0.62);
+      gg.gain.setValueAtTime(0.0001, gt);
+      gg.gain.exponentialRampToValueAtTime(amp, gt+0.0014);
+      gg.gain.exponentialRampToValueAtTime(0.0005, gt + dur*(P.wet?1.6:1.0));
+
+      var src = ac.createBufferSource();
+      src.buffer = nb;
+      src.connect(hp); hp.connect(lp); lp.connect(gg); gg.connect(master);
+      src.start(gt, off, dur*(P.wet?1.6:1.0)+0.01);
+    }
+  }
+
+  // Generated metronome voice, parameterized by instance state `st`.
+  function genSound(st, time, isAccent){
+    var ac = ctx();
+    var type = st.soundType;
+    var freq = st.pitch * (isAccent ? 1.5 : 1);
+    var dur = 0.05, osc, gain = ac.createGain();
+    gain.connect(ac.destination);
+
+    var oType = "sine";
+    if(type === "woodblock"){ oType = "triangle"; dur = 0.045; }
+    else if(type === "beep"){ oType = "square"; dur = 0.08; }
+    else if(type === "tick"){ oType = "sine"; dur = 0.03; freq = (isAccent?1400:900); }
+    else if(type === "cowbell"){ oType = "square"; dur = 0.18; }
+    else if(type === "rim"){ oType = "sawtooth"; dur = 0.035; }
+    else { oType = "sine"; dur = 0.05; }
+
+    if(type === "crunch"){ genCrunch(st, time, isAccent); return; }
+
+    if(type === "heartbeat"){
+      var lub = st.volume * (isAccent ? 1.0 : 0.9);
+      var dub = lub * 0.7;
+      var thump = function(t, amp, f0){
+        var o = ac.createOscillator(), g = ac.createGain();
+        o.type = "sine";
+        o.frequency.setValueAtTime(f0, t);
+        o.frequency.exponentialRampToValueAtTime(f0*0.5, t+0.18);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(amp, t+0.012);
+        g.gain.exponentialRampToValueAtTime(0.0008, t+0.2);
+        o.connect(g); g.connect(ac.destination);
+        o.start(t); o.stop(t+0.24);
+      };
+      thump(time, lub, 78);
+      thump(time+0.14, dub, 64);
+      return;
+    }
+
+    if(type === "cowbell"){
+      var o1 = ac.createOscillator(), o2 = ac.createOscillator();
+      o1.type = o2.type = "square";
+      o1.frequency.value = freq*0.8; o2.frequency.value = freq*1.18;
+      o1.connect(gain); o2.connect(gain);
+      gain.gain.setValueAtTime(st.volume*0.9, time);
+      gain.gain.exponentialRampToValueAtTime(0.0008, time+dur);
+      o1.start(time); o2.start(time); o1.stop(time+dur); o2.stop(time+dur);
+      return;
+    }
+
+    osc = ac.createOscillator();
+    osc.type = oType;
+    osc.frequency.setValueAtTime(freq, time);
+    if(type === "click" || type === "woodblock" || type === "rim"){
+      osc.frequency.exponentialRampToValueAtTime(Math.max(60,freq*0.4), time+dur);
+    }
+    osc.connect(gain);
+    var peak = st.volume * (isAccent ? 1.0 : 0.82);
+    gain.gain.setValueAtTime(peak, time);
+    gain.gain.exponentialRampToValueAtTime(0.0008, time+dur);
+    osc.start(time);
+    osc.stop(time+dur);
+  }
+
+  function playCustom(st, time, isAccent){
+    var ac = ctx();
+    var src = ac.createBufferSource();
+    src.buffer = st.customBuffer;
+    var gain = ac.createGain();
+    gain.gain.setValueAtTime(st.volume * (isAccent ? 1.0 : 0.78), time);
+    src.connect(gain); gain.connect(ac.destination);
+    src.start(time);
+  }
+
+  function markingFor(b){
+    if(b<40) return "Grave";
+    if(b<60) return "Largo";
+    if(b<66) return "Larghetto";
+    if(b<76) return "Adagio";
+    if(b<108) return "Andante";
+    if(b<120) return "Moderato";
+    if(b<156) return "Allegro";
+    if(b<176) return "Vivace";
+    if(b<200) return "Presto";
+    return "Prestissimo";
+  }
+
+  // ===================================================================
+  // METRONOME INSTANCE FACTORY  (each fully independent)
+  // ===================================================================
+  function metronomeTemplate(label, startOpen, dfltBpm, dfltSound){
+    var soundOpts =
+      '<optgroup label="Built-in (generated)">' +
+      '<option value="click">Click</option>' +
+      '<option value="woodblock">Woodblock</option>' +
+      '<option value="beep">Beep</option>' +
+      '<option value="tick">Soft tick</option>' +
+      '<option value="cowbell">Cowbell</option>' +
+      '<option value="rim">Rim</option>' +
+      '<option value="heartbeat">Heartbeat (lub-dub)</option>' +
+      '<option value="crunch">Crunch (heard from inside your head)</option>' +
+      '</optgroup>' +
+      '<optgroup label="Crunch profiles">' +
+      '<option value="crunch:chip">Crunch · Potato chip</option>' +
+      '<option value="crunch:deep">Crunch · Deep &amp; meaty (big oomph)</option>' +
+      '<option value="crunch:apple">Crunch · Apple (juicy)</option>' +
+      '<option value="crunch:cracker">Crunch · Cracker (dry &amp; light)</option>' +
+      '<option value="crunch:ice">Crunch · Ice (hard &amp; glassy)</option>' +
+      '</optgroup>' +
+      '<optgroup label="Custom" class="customGroup" style="display:none">' +
+      '<option value="custom">Uploaded sound</option>' +
+      '</optgroup>';
+    return '' +
+    '<div class="panel collap'+(startOpen?' open':'')+'">' +
+      '<div class="phead"><h2>'+label+'</h2></div>' +
+      '<div class="pbody">' +
+        '<div class="beats m-beats"></div>' +
+        '<div class="bpm-row"><span class="bpm-num m-bpmNum">'+dfltBpm+'</span><span class="bpm-lab">BPM</span></div>' +
+        '<div class="marking m-marking"></div>' +
+        '<input type="range" class="m-bpmSlider" min="20" max="300" value="'+dfltBpm+'" step="1" aria-label="Tempo">' +
+        '<div class="nudge">' +
+          '<button class="m-nudge" data-d="-5">−5</button>' +
+          '<button class="m-nudge" data-d="-1">−1</button>' +
+          '<button class="m-nudge" data-d="1">+1</button>' +
+          '<button class="m-nudge" data-d="5">+5</button>' +
+          '<button class="m-tap">Tap tempo</button>' +
+        '</div>' +
+        '<div class="start"><button class="primary m-startStop">Start</button></div>' +
+        '<div class="subsec">Pattern</div>' +
+        '<div class="field"><label>Beats per measure</label><div class="stepper">' +
+          '<button class="m-beatsDown">−</button><span class="val m-beatsVal">4</span><button class="m-beatsUp">+</button>' +
+        '</div></div>' +
+        '<div class="field"><label>Accent beat 1</label><div class="stepper"><button class="m-accentToggle">On</button></div></div>' +
+        '<div class="field"><label>Volume</label><input type="range" class="m-volSlider" min="0" max="100" value="80" style="flex:1;max-width:200px;"></div>' +
+        '<div class="subsec">Beat sound</div>' +
+        '<div class="sound-grid">' +
+          '<div class="row"><select class="grow m-soundSelect" aria-label="Beat sound">'+soundOpts+'</select><button class="m-preview">Test</button></div>' +
+          '<div class="pitch-wrap show m-pitchWrap"><div class="field" style="margin-bottom:0"><label>Pitch</label>' +
+            '<input type="range" class="m-pitch" min="200" max="2000" value="1000" step="10" style="flex:1;max-width:220px;"></div></div>' +
+          '<div class="pitch-wrap m-crunchWrap"><div class="field" style="margin-bottom:0"><label>Food</label>' +
+            '<select class="m-crunchProfile" style="flex:1;max-width:220px;">' +
+              '<option value="chip">Potato chip</option>' +
+              '<option value="deep">Deep &amp; meaty (big oomph)</option>' +
+              '<option value="apple">Apple (juicy)</option>' +
+              '<option value="cracker">Cracker (dry &amp; light)</option>' +
+              '<option value="ice">Ice (hard &amp; glassy)</option>' +
+            '</select></div></div>' +
+          '<div><label class="filelabel m-fileLabel">⬆ Upload your own sound (wav, mp3, m4a, ogg)' +
+            '<input type="file" class="m-fileInput" accept="audio/*"></label><div class="status m-fileStatus"></div></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function makeMetronome(panel, opts){
+    var st = {
+      bpm:opts.bpm, beatsPerMeasure:4, accentOn:true, volume:0.8,
+      running:false, soundType:opts.sound||"click", pitch:1000, crunchProfile:"chip",
+      customBuffer:null,
+      currentBeat:0, nextNoteTime:0, timerID:null, beatQueue:[]
+    };
+    var lookahead = 25, scheduleAhead = 0.12;
+    function q(sel){ return panel.querySelector(sel); }
+
+    function buildBeats(){
+      var c = q(".m-beats"); c.innerHTML = "";
+      for(var i=0;i<st.beatsPerMeasure;i++){
+        var d = document.createElement("div");
+        d.className = "dot" + (st.accentOn && i===0 ? " accent" : "");
+        c.appendChild(d);
+      }
+    }
+    function setBpm(v){
+      st.bpm = Math.max(20, Math.min(300, Math.round(v)));
+      q(".m-bpmNum").textContent = st.bpm;
+      q(".m-bpmSlider").value = st.bpm;
+      q(".m-marking").textContent = markingFor(st.bpm);
+    }
+    function nextNote(){
+      st.nextNoteTime += 60.0 / st.bpm;
+      st.currentBeat = (st.currentBeat + 1) % st.beatsPerMeasure;
+    }
+    function scheduleBeat(beat, time){
+      var isAccent = st.accentOn && beat === 0;
+      if(st.soundType === "custom" && st.customBuffer) playCustom(st, time, isAccent);
+      else genSound(st, time, isAccent);
+      st.beatQueue.push({beat:beat, time:time});
+    }
+    function scheduler(){
+      var ac = ctx();
+      while(st.nextNoteTime < ac.currentTime + scheduleAhead){
+        scheduleBeat(st.currentBeat, st.nextNoteTime);
+        nextNote();
+      }
+      st.timerID = setTimeout(scheduler, lookahead);
+    }
+    function drawLoop(){
+      if(!st.running) return;
+      var now = ctx().currentTime;
+      while(st.beatQueue.length && st.beatQueue[0].time <= now){
+        lightBeat(st.beatQueue[0].beat);
+        st.beatQueue.shift();
+      }
+      requestAnimationFrame(drawLoop);
+    }
+    function lightBeat(beat){
+      var dots = panel.querySelectorAll(".dot");
+      dots.forEach(function(d,i){ d.classList.toggle("on", i === beat); });
+    }
+    function start(){
+      resume();
+      st.running = true;
+      st.currentBeat = 0;
+      st.nextNoteTime = ctx().currentTime + 0.06;
+      st.beatQueue = [];
+      scheduler();
+      requestAnimationFrame(drawLoop);
+      var b = q(".m-startStop"); b.textContent = "Stop"; b.classList.add("running");
+    }
+    function stop(){
+      st.running = false;
+      if(st.timerID){ clearTimeout(st.timerID); st.timerID = null; }
+      var b = q(".m-startStop"); b.textContent = "Start"; b.classList.remove("running");
+      panel.querySelectorAll(".dot").forEach(function(d){ d.classList.remove("on"); });
+    }
+    function toggle(){ st.running ? stop() : start(); }
+    function preview(){
+      resume();
+      var t = ctx().currentTime + 0.02;
+      if(st.soundType === "custom" && st.customBuffer) playCustom(st, t, false);
+      else genSound(st, t, false);
+    }
+
+    // ---- wire instance controls ----
+    buildBeats();
+    setBpm(st.bpm);
+
+    q(".m-bpmSlider").addEventListener("input", function(e){ setBpm(parseInt(e.target.value,10)); });
+    panel.querySelectorAll(".m-nudge").forEach(function(btn){
+      btn.addEventListener("click", function(){ setBpm(st.bpm + parseInt(btn.dataset.d,10)); });
+    });
+    q(".m-startStop").addEventListener("click", toggle);
+
+    q(".m-beatsUp").addEventListener("click", function(){
+      st.beatsPerMeasure = Math.min(16, st.beatsPerMeasure+1);
+      q(".m-beatsVal").textContent = st.beatsPerMeasure; buildBeats();
+    });
+    q(".m-beatsDown").addEventListener("click", function(){
+      st.beatsPerMeasure = Math.max(1, st.beatsPerMeasure-1);
+      q(".m-beatsVal").textContent = st.beatsPerMeasure;
+      if(st.currentBeat >= st.beatsPerMeasure) st.currentBeat = 0;
+      buildBeats();
+    });
+    q(".m-accentToggle").addEventListener("click", function(){
+      st.accentOn = !st.accentOn;
+      this.textContent = st.accentOn ? "On" : "Off";
+      buildBeats();
+    });
+    q(".m-volSlider").addEventListener("input", function(e){ st.volume = parseInt(e.target.value,10)/100; });
+
+    var pitchWrap = q(".m-pitchWrap"), crunchWrap = q(".m-crunchWrap");
+    function applySoundSelection(val){
+      if(val.indexOf("crunch") === 0){
+        st.soundType = "crunch";
+        if(val.indexOf(":") > -1){ st.crunchProfile = val.split(":")[1]; q(".m-crunchProfile").value = st.crunchProfile; }
+        pitchWrap.classList.remove("show"); crunchWrap.classList.add("show");
+      } else {
+        st.soundType = val;
+        crunchWrap.classList.remove("show");
+        pitchWrap.classList.toggle("show", val !== "custom");
+      }
+    }
+    var ss = q(".m-soundSelect");
+    ss.value = st.soundType;
+    ss.addEventListener("change", function(e){ applySoundSelection(e.target.value); });
+    q(".m-crunchProfile").addEventListener("change", function(e){
+      st.crunchProfile = e.target.value;
+      st.soundType = "crunch";
+      q(".m-soundSelect").value = "crunch:" + st.crunchProfile;
+    });
+    q(".m-pitch").addEventListener("input", function(e){ st.pitch = parseInt(e.target.value,10); });
+    q(".m-preview").addEventListener("click", preview);
+
+    q(".m-fileInput").addEventListener("change", function(e){
+      var file = e.target.files[0]; if(!file) return;
+      var status = q(".m-fileStatus");
+      status.textContent = "Loading " + file.name + " …";
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        ctx().decodeAudioData(ev.target.result.slice(0))
+          .then(function(buf){
+            st.customBuffer = buf;
+            panel.querySelector(".customGroup").style.display = "";
+            q(".m-soundSelect").value = "custom";
+            st.soundType = "custom";
+            pitchWrap.classList.remove("show"); crunchWrap.classList.remove("show");
+            status.textContent = "✓ " + file.name + " ready (" + buf.duration.toFixed(2) + "s).";
+          })
+          .catch(function(){ status.textContent = "Could not decode that file. Try a wav or mp3."; });
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // apply default sound (may be a crunch:xxx token)
+    applySoundSelection(st.soundType);
+    ss.value = st.soundType.indexOf("crunch")===0 ? st.soundType : st.soundType;
+
+    // tap tempo (per instance)
+    var taps = [];
+    function tap(){
+      var now = performance.now();
+      taps = taps.filter(function(t){ return now - t < 2500; });
+      taps.push(now);
+      if(taps.length >= 2){
+        var iv = [];
+        for(var i=1;i<taps.length;i++) iv.push(taps[i]-taps[i-1]);
+        var avg = iv.reduce(function(a,b){return a+b;},0)/iv.length;
+        setBpm(60000/avg);
+      }
+    }
+    q(".m-tap").addEventListener("click", tap);
+
+    return { toggle:toggle, tap:tap, state:st };
+  }
+
+  // ===================================================================
+  // BEAT TONE LAYERS  (unchanged: four independent layers)
+  // ===================================================================
+  var tones = {
+    binaural:   { on:false, carrier:200, beatHz:7,  vol:0.35, swap:false, nodes:null },
+    monaural:   { on:false, carrier:200, beatHz:7,  vol:0.35,             nodes:null },
+    isochronic: { on:false, carrier:200, beatHz:10, vol:0.35, depth:1.0,  nodes:null },
+    pure:       { on:false, carrier:200,            vol:0.30,             nodes:null }
+  };
+  function startTone(mode){
+    var ac = ctx();
+    stopTone(mode);
+    var t = tones[mode];
+    var n = {};
+    n.master = ac.createGain();
+    n.master.gain.value = t.vol;
+    n.master.connect(ac.destination);
+    if(mode === "binaural"){
+      var hi = t.carrier + t.beatHz/2, lo = t.carrier - t.beatHz/2;
+      var hiSide = t.swap ? -1 : 1;
+      n.oscA = ac.createOscillator(); n.oscA.type="sine"; n.oscA.frequency.value=hi;
+      n.oscB = ac.createOscillator(); n.oscB.type="sine"; n.oscB.frequency.value=lo;
+      n.panA = ac.createStereoPanner(); n.panA.pan.value=hiSide;
+      n.panB = ac.createStereoPanner(); n.panB.pan.value=-hiSide;
+      n.oscA.connect(n.panA); n.panA.connect(n.master);
+      n.oscB.connect(n.panB); n.panB.connect(n.master);
+      n.oscA.start(); n.oscB.start();
+    } else if(mode === "monaural"){
+      var h2 = t.carrier + t.beatHz/2, l2 = t.carrier - t.beatHz/2;
+      n.oscA = ac.createOscillator(); n.oscA.type="sine"; n.oscA.frequency.value=h2;
+      n.oscB = ac.createOscillator(); n.oscB.type="sine"; n.oscB.frequency.value=l2;
+      n.oscA.connect(n.master); n.oscB.connect(n.master);
+      n.oscA.start(); n.oscB.start();
+    } else if(mode === "isochronic"){
+      n.osc = ac.createOscillator(); n.osc.type="sine"; n.osc.frequency.value=t.carrier;
+      n.gate = ac.createGain();
+      var floor = 1 - t.depth;
+      n.gate.gain.value = floor;
+      n.lfo = ac.createOscillator(); n.lfo.type="square"; n.lfo.frequency.value=t.beatHz;
+      n.lfoGain = ac.createGain(); n.lfoGain.gain.value = t.depth/2;
+      n.lfoOff = ac.createConstantSource(); n.lfoOff.offset.value = floor + t.depth/2;
+      n.lfo.connect(n.lfoGain); n.lfoGain.connect(n.gate.gain);
+      n.lfoOff.connect(n.gate.gain);
+      n.osc.connect(n.gate); n.gate.connect(n.master);
+      n.osc.start(); n.lfo.start(); n.lfoOff.start();
+    } else {
+      n.osc = ac.createOscillator(); n.osc.type="sine"; n.osc.frequency.value=t.carrier;
+      n.osc.connect(n.master); n.osc.start();
+    }
+    t.nodes = n;
+  }
+  function stopTone(mode){
+    var t = tones[mode];
+    if(!t.nodes) return;
+    var n = t.nodes;
+    ["oscA","oscB","osc","lfo","lfoOff"].forEach(function(k){
+      if(n[k]){ try{ n[k].stop(); }catch(e){} try{ n[k].disconnect(); }catch(e){} }
+    });
+    if(n.master){ try{ n.master.disconnect(); }catch(e){} }
+    t.nodes = null;
+  }
+  function refreshTone(mode){ if(tones[mode].on){ startTone(mode); } }
+
+  // ===================================================================
+  // NOISE LAYER  (unchanged)
+  // ===================================================================
+  var noise = { on:false, color:"pink", tone:50, vol:0.40, src:null, filt:null, gain:null };
+  var noiseBuffers = {};
+  function getColoredNoise(color){
+    if(noiseBuffers[color]) return noiseBuffers[color];
+    var ac = ctx();
+    var len = Math.floor(ac.sampleRate * 4.0);
+    var buf = ac.createBuffer(1, len, ac.sampleRate);
+    var d = buf.getChannelData(0);
+    if(color === "white"){
+      for(var i=0;i<len;i++) d[i] = Math.random()*2 - 1;
+    } else if(color === "pink"){
+      var b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+      for(var i2=0;i2<len;i2++){
+        var w = Math.random()*2 - 1;
+        b0 = 0.99886*b0 + w*0.0555179;
+        b1 = 0.99332*b1 + w*0.0750759;
+        b2 = 0.96900*b2 + w*0.1538520;
+        b3 = 0.86650*b3 + w*0.3104856;
+        b4 = 0.55000*b4 + w*0.5329522;
+        b5 = -0.7616*b5 - w*0.0168980;
+        d[i2] = (b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11;
+        b6 = w*0.115926;
+      }
+    } else {
+      var last=0;
+      for(var i3=0;i3<len;i3++){
+        var w3 = Math.random()*2 - 1;
+        last = (last + 0.02*w3)/1.02;
+        d[i3] = last*3.5;
+      }
+    }
+    noiseBuffers[color] = buf;
+    return buf;
+  }
+  function startNoise(){
+    var ac = ctx();
+    stopNoise();
+    var src = ac.createBufferSource();
+    src.buffer = getColoredNoise(noise.color);
+    src.loop = true;
+    var filt = ac.createBiquadFilter();
+    filt.type = "lowpass";
+    filt.frequency.value = noiseCutoff();
+    filt.Q.value = 0.4;
+    var gain = ac.createGain();
+    gain.gain.value = noise.vol;
+    src.connect(filt); filt.connect(gain); gain.connect(ac.destination);
+    src.start();
+    noise.src = src; noise.filt = filt; noise.gain = gain;
+  }
+  function stopNoise(){
+    if(noise.src){ try{ noise.src.stop(); }catch(e){} try{ noise.src.disconnect(); }catch(e){} }
+    if(noise.filt){ try{ noise.filt.disconnect(); }catch(e){} }
+    if(noise.gain){ try{ noise.gain.disconnect(); }catch(e){} }
+    noise.src = noise.filt = noise.gain = null;
+  }
+  function refreshNoise(){ if(noise.on){ startNoise(); } }
+  function noiseCutoff(){
+    var t = noise.tone/100;
+    var top = noise.color === "white" ? 18000 : (noise.color === "pink" ? 12000 : 6000);
+    var bot = noise.color === "brown" ? 120 : 250;
+    return Math.round(bot * Math.pow(top/bot, t));
+  }
+
+  // ===================================================================
+  // WIRE UP
+  // ===================================================================
+  document.addEventListener("DOMContentLoaded", function(){
+    // build the two metronomes
+    var metros = document.getElementById("metros");
+    metros.insertAdjacentHTML("beforeend", metronomeTemplate("Metronome A", true, 120, "click"));
+    metros.insertAdjacentHTML("beforeend", metronomeTemplate("Metronome B", false, 90, "woodblock"));
+    var panels = metros.querySelectorAll(".panel");
+    var metroA = makeMetronome(panels[0], { bpm:120, sound:"click" });
+    var metroB = makeMetronome(panels[1], { bpm:90,  sound:"woodblock" });
+
+    // collapsible panels (covers metronomes + all layer panels)
+    document.querySelectorAll(".panel.collap > .phead").forEach(function(h){
+      h.addEventListener("click", function(){ h.parentElement.classList.toggle("open"); });
+    });
+
+    // ---- beat tones ----
+    function bandFor(hz){
+      if(hz < 4) return "Delta";
+      if(hz < 8) return "Theta";
+      if(hz < 13) return "Alpha";
+      if(hz < 30) return "Beta";
+      return "Gamma";
+    }
+    function showVal(mode, what, text){
+      var el = document.querySelector('[data-tone="'+mode+'"][data-show="'+what+'"]');
+      if(el) el.textContent = text;
+    }
+    document.querySelectorAll('button[data-tone][data-act]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var mode = btn.dataset.tone, act = btn.dataset.act, t = tones[mode];
+        if(act === "toggle"){
+          t.on = !t.on;
+          btn.textContent = t.on ? "On" : "Off";
+          btn.classList.toggle("on", t.on);
+          if(t.on){ resume(); startTone(mode); } else stopTone(mode);
+        } else if(act === "swap"){
+          t.swap = !t.swap;
+          btn.textContent = t.swap ? "Left ear" : "Right ear";
+          refreshTone(mode);
+        }
+      });
+    });
+    document.querySelectorAll('input[data-tone][data-p]').forEach(function(sl){
+      sl.addEventListener("input", function(){
+        var mode = sl.dataset.tone, p = sl.dataset.p, t = tones[mode];
+        if(p === "vol"){
+          t.vol = parseInt(sl.value,10)/100;
+          if(t.nodes && t.nodes.master) t.nodes.master.gain.value = t.vol;
+          return;
+        }
+        if(p === "depth"){ t.depth = parseInt(sl.value,10)/100; refreshTone(mode); return; }
+        if(p === "carrier"){ t.carrier = parseInt(sl.value,10); showVal(mode,"carrier",t.carrier); refreshTone(mode); return; }
+        if(p === "beatHz"){
+          t.beatHz = parseFloat(sl.value);
+          showVal(mode,"beatHz",t.beatHz.toFixed(1));
+          showVal(mode,"band",bandFor(t.beatHz));
+          syncBandChips(mode);
+          refreshTone(mode);
+        }
+      });
+    });
+    function syncBandChips(mode){
+      document.querySelectorAll('[data-bandchips="'+mode+'"] .chip').forEach(function(c){
+        c.classList.toggle("on", bandFor(parseFloat(c.dataset.band)) === bandFor(tones[mode].beatHz));
+      });
+    }
+    document.querySelectorAll('[data-bandchips] .chip').forEach(function(c){
+      c.addEventListener("click", function(){
+        var mode = c.parentElement.dataset.bandchips, t = tones[mode];
+        t.beatHz = parseFloat(c.dataset.band);
+        var sl = document.querySelector('input[data-tone="'+mode+'"][data-p="beatHz"]');
+        if(sl) sl.value = t.beatHz;
+        showVal(mode,"beatHz",t.beatHz.toFixed(1));
+        showVal(mode,"band",bandFor(t.beatHz));
+        syncBandChips(mode);
+        refreshTone(mode);
+      });
+    });
+    ["binaural","monaural","isochronic"].forEach(syncBandChips);
+
+    // ---- noise ----
+    document.getElementById("noiseToggle").addEventListener("click", function(){
+      noise.on = !noise.on;
+      this.textContent = noise.on ? "On" : "Off";
+      this.classList.toggle("on", noise.on);
+      if(noise.on){ resume(); startNoise(); } else stopNoise();
+    });
+    function syncColorChips(){
+      document.querySelectorAll('#noiseChips .chip').forEach(function(c){
+        c.classList.toggle("on", c.dataset.color === noise.color);
+      });
+    }
+    document.querySelectorAll('#noiseChips .chip').forEach(function(c){
+      c.addEventListener("click", function(){
+        noise.color = c.dataset.color;
+        syncColorChips();
+        refreshNoise();
+      });
+    });
+    syncColorChips();
+    document.getElementById("noiseTone").addEventListener("input", function(e){
+      noise.tone = parseInt(e.target.value,10);
+      if(noise.filt) noise.filt.frequency.value = noiseCutoff();
+    });
+    document.getElementById("noiseVol").addEventListener("input", function(e){
+      noise.vol = parseInt(e.target.value,10)/100;
+      if(noise.gain) noise.gain.gain.value = noise.vol;
+    });
+
+    // keyboard: Space / T act on Metronome A
+    document.addEventListener("keydown", function(e){
+      if(e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+      if(e.code === "Space"){ e.preventDefault(); metroA.toggle(); }
+      else if(e.key === "t" || e.key === "T"){ metroA.tap(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
