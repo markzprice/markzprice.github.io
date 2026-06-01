@@ -109,6 +109,28 @@ label { font-size: 11px; cursor: pointer; }
   color: #1a7a3c;
 }
 .btn--quick-study:hover { background: #1a7a3c; color: #f2ece0; }
+.btn--quick-speed {
+  font-size: 14px;
+  font-weight: bold;
+  padding: 14px 22px;
+  border-width: 2.5px;
+  letter-spacing: 0.08em;
+  border-color: #c42a00;
+  color: #c42a00;
+  background: #faf7f0;
+  text-transform: uppercase;
+  box-shadow: 0 0 0 0 rgba(196, 42, 0, 0.4);
+  animation: speed-pulse 2.4s ease-in-out infinite;
+}
+.btn--quick-speed:hover {
+  background: #c42a00;
+  color: #f2ece0;
+  animation: none;
+}
+@keyframes speed-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(196, 42, 0, 0.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(196, 42, 0, 0); }
+}
 
 /* ===== CARDS ===== */
 .card {
@@ -291,6 +313,7 @@ label { font-size: 11px; cursor: pointer; }
   .btn--go      { min-height: 54px; font-size: 17px; padding: 14px 32px; }
   .btn--quick   { min-height: 52px; font-size: 14px; padding: 12px 14px; }
   .btn--quick-study { min-height: 52px; }
+  .btn--quick-speed { min-height: 52px; }
 
   /* 16px minimum on inputs so iOS does not auto-zoom */
   input[type="text"],
@@ -454,6 +477,7 @@ label { font-size: 11px; cursor: pointer; }
         <a href="timer-guide.html" style="font-size:10px; text-transform:uppercase; letter-spacing:0.15em; color:#7a6a52; text-decoration:none; white-space:nowrap; border-bottom:1px solid #c4baaa;">guide</a>
       </div>
       <button class="btn btn--quick-study" onclick="startQuickStudy()">12 study · 10 break · 8 clean</button>
+      <button class="btn btn--quick-speed" onclick="startSpeedRound()">⚡ Speed Round! · 10 × 30s</button>
       <button class="btn btn--quick" onclick="startQuick(10,10)">10 × 10</button>
       <button class="btn btn--quick" onclick="startQuick(12,10)">12 × 10</button>
       <button class="btn btn--quick" onclick="startQuick(12,8)">12 × 8</button>
@@ -495,6 +519,7 @@ const POOL_DEFS = [
   { id: 'stretch',     label: 'Stretch',      defaultTTS: 'stretch break' },
   { id: 'rest',        label: 'Rest',         defaultTTS: 'rest time' },
   { id: 'alert',       label: 'Alert',        defaultTTS: 'attention' },
+  { id: 'speedRound',  label: 'Speed Round!', defaultTTS: 'speed round, go!' },
   { id: 'blockEnd',    label: 'Block End',    defaultTTS: 'block complete' },
   { id: 'celebration', label: 'Celebration',  defaultTTS: 'great work, you did it' },
   { id: 'alarm',       label: 'Alarm',        defaultTTS: 'timer' },
@@ -676,6 +701,21 @@ function removeBlock(blockId) {
   renderBlocks();
 }
 
+function cloneBlock(blockId) {
+  const src = blocks.find(b => b.id === blockId);
+  if (!src) return;
+  const newBlock = {
+    id: ++blockIdCounter,
+    label: src.label + ' (copy)',
+    repeatCount: src.repeatCount,
+    completionPool: src.completionPool,
+    timers: src.timers.map(t => ({ ...t, id: ++timerIdCounter })),
+  };
+  const srcIdx = blocks.findIndex(b => b.id === blockId);
+  blocks.splice(srcIdx + 1, 0, newBlock);
+  renderBlocks();
+}
+
 function addTimer(block) {
   block.timers.push({
     id: ++timerIdCounter,
@@ -723,6 +763,7 @@ function renderBlocks() {
       </div>
       <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
         <button class="btn btn--small" onclick="addTimerToBlock(${block.id})">+ Add Timer</button>
+        <button class="btn btn--small" onclick="cloneBlock(${block.id})" title="Duplicate this block, including all timers, into a new block right after this one">⎘ Clone Block</button>
         <span class="spacer"></span>
         <label style="display:flex; align-items:center; gap:6px; font-size:11px;">
           Block done:
@@ -1031,6 +1072,44 @@ async function runStudyTimer(event) {
     'Timer ' + done + ' of ' + total + ' · Rep ' + (event.repIdx + 1) + ' of ' + event.totalReps;
 
   runState.idx++;
+  await runStudyStep();
+}
+
+async function startSpeedRound() {
+  getAudioCtx().resume();
+
+  const totalReps = 10;
+  const schedule = [];
+
+  for (let rep = 0; rep < totalReps; rep++) {
+    schedule.push({
+      type: 'studyTimer',
+      durationMin: 0.5,
+      poolId: 'speedRound',
+      label: 'speed round',
+      repIdx: rep,
+      totalReps,
+    });
+  }
+  schedule.push({ type: 'sessionEnd', pool: 'celebration' });
+
+  runState = {
+    schedule, idx: 0,
+    paused: false, stopped: false,
+    stepOut: false, stepOutStart: null, stepOutInterval: null,
+    timerEnd: null, pauseRemaining: null,
+    clockInterval: null,
+    isQuick: true,
+    quickEndMessage: 'Speed round done. Ten thirty-second blasts. You crushed it.',
+  };
+
+  document.getElementById('runPanel').classList.add('active');
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  document.getElementById('stepOutClock').classList.remove('visible');
+  document.getElementById('runClock').classList.remove('counting-up');
+  requestWakeLock();
+  resetSkipBtn();
+  logRun('Speed Round! · 10 × 30s');
   await runStudyStep();
 }
 
