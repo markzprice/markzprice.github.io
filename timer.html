@@ -109,6 +109,16 @@ label { font-size: 11px; cursor: pointer; }
   color: #1a7a3c;
 }
 .btn--quick-study:hover { background: #1a7a3c; color: #f2ece0; }
+.btn--quick-work {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 12px 18px;
+  border-width: 2px;
+  letter-spacing: 0.04em;
+  border-color: #b87a00;
+  color: #b87a00;
+}
+.btn--quick-work:hover { background: #b87a00; color: #f2ece0; }
 .btn--quick-speed {
   font-size: 14px;
   font-weight: bold;
@@ -313,6 +323,7 @@ label { font-size: 11px; cursor: pointer; }
   .btn--go      { min-height: 54px; font-size: 17px; padding: 14px 32px; }
   .btn--quick   { min-height: 52px; font-size: 14px; padding: 12px 14px; }
   .btn--quick-study { min-height: 52px; }
+  .btn--quick-work { min-height: 52px; }
   .btn--quick-speed { min-height: 52px; }
 
   /* 16px minimum on inputs so iOS does not auto-zoom */
@@ -477,6 +488,7 @@ label { font-size: 11px; cursor: pointer; }
         <a href="timer-guide.html" style="font-size:10px; text-transform:uppercase; letter-spacing:0.15em; color:#7a6a52; text-decoration:none; white-space:nowrap; border-bottom:1px solid #c4baaa;">guide</a>
       </div>
       <button class="btn btn--quick-study" onclick="startQuickStudy()">12 study · 10 break · 8 clean</button>
+      <button class="btn btn--quick-work" onclick="startWorkRotate()">12 work · rotate 3·6·9 · 9 rest · ×3</button>
       <button class="btn btn--quick-speed" onclick="startSpeedRound()">⚡ Speed Round! · 10 × 30s</button>
       <button class="btn btn--quick" onclick="startQuick(10,10)">10 × 10</button>
       <button class="btn btn--quick" onclick="startQuick(12,10)">12 × 10</button>
@@ -1111,6 +1123,92 @@ async function startSpeedRound() {
   resetSkipBtn();
   logRun('Speed Round! · 10 × 30s');
   await runStudyStep();
+}
+
+// ============================================================
+// WORK / ROTATE / REST  (single-button specialty timer)
+//   Work 12 min with a "rotate" cue at the 3 / 6 / 9 min marks, then Rest 9 min.
+// ============================================================
+async function startWorkRotate() {
+  getAudioCtx().resume();
+
+  runState = {
+    schedule: [], idx: 0,
+    paused: false, stopped: false,
+    stepOut: false, stepOutStart: null, stepOutInterval: null,
+    timerEnd: null, pauseRemaining: null,
+    clockInterval: null,
+    isQuick: true,
+    quickEndMessage: 'Three rounds done. Work and rest, all the way through. Nicely done.',
+  };
+
+  document.getElementById('runPanel').classList.add('active');
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  document.getElementById('stepOutClock').classList.remove('visible');
+  document.getElementById('runClock').classList.remove('counting-up');
+  requestWakeLock();
+  resetSkipBtn();
+  logRun('Work / Rotate / Rest · 3 rounds');
+
+  const totalRounds = 3;
+  for (let rep = 0; rep < totalRounds; rep++) {
+    if (runState.stopped) return;
+    const roundLabel = 'round ' + (rep + 1) + ' of ' + totalRounds;
+
+    // ----- WORK: 12 min, rotate cue at 3 / 6 / 9 min in (remaining 9 / 6 / 3) -----
+    setRunLabel('Work · 12 min · ' + roundLabel);
+    document.getElementById('runProgress').textContent = 'Work · rotate at 3 · 6 · 9 min · ' + roundLabel;
+    showAlert('start · work');
+    await speak('start, work, twelve minutes');
+    if (runState.stopped) return;
+
+    await countdownWithMarks(12 * 60 * 1000, [9 * 60 * 1000, 6 * 60 * 1000, 3 * 60 * 1000], () => {
+      showAlert('ROTATE');
+      logRun('Rotate');
+      speak('rotate');
+    });
+    if (runState.stopped) return;
+
+    showAlert('work complete');
+    logRun('Work complete · ' + roundLabel);
+    await speak('work complete');
+    if (runState.stopped) return;
+
+    // ----- REST: 9 min -----
+    setRunLabel('Rest · 9 min · ' + roundLabel);
+    document.getElementById('runProgress').textContent = 'Rest · 9 min · ' + roundLabel;
+    showAlert('rest');
+    await speak('rest, nine minutes');
+    if (runState.stopped) return;
+
+    await countdown(9 * 60 * 1000);
+    if (runState.stopped) return;
+  }
+
+  endSession();
+}
+
+// Countdown that fires onMark() once for each remaining-time mark (ms) as it is crossed.
+// Respects pause / step-out / stop exactly like countdown().
+function countdownWithMarks(totalMs, markRemainingList, onMark) {
+  return new Promise(resolve => {
+    const marks = markRemainingList.map(ms => ({ ms, fired: false }));
+    runState.timerEnd = Date.now() + totalMs;
+    clearInterval(runState.clockInterval);
+    runState.clockInterval = setInterval(() => {
+      if (runState.stopped) { clearInterval(runState.clockInterval); resolve(); return; }
+      if (runState.paused) return;
+      const remaining = Math.max(0, runState.timerEnd - Date.now());
+      setRunClock(remaining);
+      for (const mk of marks) {
+        if (!mk.fired && remaining <= mk.ms && remaining > 0) {
+          mk.fired = true;
+          try { onMark(); } catch (e) { console.warn(e); }
+        }
+      }
+      if (remaining <= 0) { clearInterval(runState.clockInterval); resolve(); }
+    }, 250);
+  });
 }
 
 // ============================================================
