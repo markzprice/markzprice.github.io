@@ -62,6 +62,14 @@ collections:
     editor:
       preview: true
     fields:
+      # Queue toggle. Default ON, so a normal post publishes on Save just like
+      # before. Switch it OFF to hold a post: it's still saved to the repo, but
+      # Jekyll skips anything with `published: false`, so it stays off the
+      # homepage river, out of the RSS feed, and gets no permalink until you
+      # flip it back on and Save. This is the batch-write-then-drip workflow
+      # (Mark, 2026-07-18) — no scheduling, you release each one by hand.
+      - { label: "Published?  (switch OFF to hold as a hidden draft you release later)",
+          name: published, widget: boolean, default: true }
       - { label: "Title",       name: title,       widget: string }
       - { label: "Date",        name: date,        widget: datetime, format: "YYYY-MM-DD HH:mm:ss ZZ" }
       - { label: "Description (optional — feeds preview cards & RSS)",
