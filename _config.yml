@@ -21,6 +21,16 @@ permalink: /notes/:title/
 # /assets/images/, ideally ~1200x630, then uncomment the line below.
 # og_default_image: /assets/images/og-default.jpg
 
+# Homepage feed pagination: show 5 full posts per page with newer/older
+# arrows. Uses jekyll-paginate v1 (on GitHub Pages' allowed-plugins list).
+# Page 1 is /, page 2 is /page2/, and so on. The loop in index.html reads
+# paginator.posts — it will NOT work if this plugin is disabled.
+paginate: 5
+paginate_path: "/page:num/"
+
+plugins:
+  - jekyll-paginate
+
 # Everything in _posts/ gets the "post" layout automatically.
 # Mark should never need to type a layout name in front matter.
 defaults:

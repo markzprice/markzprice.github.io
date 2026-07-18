@@ -13,24 +13,88 @@ description: mark price — the things I keep trying to write in the book of lif
   </div>
 
   {%- comment -%}
-    Post loop. If _posts/ is empty, the {% else %} branch renders the
-    original empty-state div so the page still looks deliberate.
+    Homepage "river": full posts inline, 5 per page (paginate: 5 in _config.yml),
+    with newer/older arrows. Pagination is jekyll-paginate v1 (GitHub Pages
+    supported) — page 1 is /, page 2 is /page2/, etc. Every page is static HTML
+    with its own shareable URL; no JavaScript is involved.
 
-    excerpt is stripped of HTML and truncated because Jekyll's automatic
-    excerpt is raw HTML from the first paragraph — good enough for a card
-    but never appropriate to render verbatim.
+    Each post renders its image and/or YouTube embed exactly the way the
+    permalink page (_layouts/post.html) does, then the full body (post.content),
+    so a video post plays right here with no click-through. The title still
+    links to the permalink for direct sharing.
+
+    style.css is NOT touched — layout styles are inlined here, matching the
+    pattern already used in _layouts/post.html and _includes/youtube.html.
+
+    The loop reads paginator.posts. If _posts/ is empty, the {% else %} branch
+    renders the deliberate empty-state so the page never looks broken.
   {%- endcomment -%}
-  <div class="post-list" id="post-list">
-    {% for post in site.posts %}
-      <div class="post-item">
-        <h2 class="post-title"><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
-        <div class="post-meta">{{ post.date | date: "%B %-d, %Y" }}</div>
-        <p class="post-excerpt">{% if post.description %}{{ post.description }}{% else %}{{ post.excerpt | strip_html | normalize_whitespace | truncate: 220 }}{% endif %}</p>
-        <a href="{{ post.url | relative_url }}" class="post-read-more">Read →</a>
-      </div>
+
+  <div class="post-river" id="post-list">
+    {% for post in paginator.posts %}
+      <article class="post-river-item" style="padding-bottom: 48px; margin-bottom: 48px; border-bottom: 1px solid var(--ink-rule);">
+
+        <header>
+          <h2 class="post-title" style="font-size: clamp(26px, 4vw, 40px); margin-bottom: 10px;">
+            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+          </h2>
+          <div class="post-meta">{{ post.date | date: "%B %-d, %Y" }}</div>
+        </header>
+
+        {%- if post.image -%}
+        <div class="post-single-image" style="margin: 28px 0;">
+          <img src="{{ post.image | relative_url }}" alt="{{ post.image_alt | default: post.title | xml_escape }}">
+        </div>
+        {%- endif -%}
+
+        {%- if post.youtube -%}
+        {% include youtube.html url=post.youtube %}
+        {%- endif -%}
+
+        <div class="post-body" style="font-size: 17px; line-height: 1.8; color: var(--ink); margin-top: 28px;">
+          {{ post.content }}
+        </div>
+
+        <div style="margin-top: 24px;">
+          <a href="{{ post.url | relative_url }}" class="post-read-more">permalink →</a>
+        </div>
+
+      </article>
     {% else %}
       <div class="empty-state">No posts yet. Check back soon.</div>
     {% endfor %}
   </div>
+
+  {%- comment -%}
+    Newer/older arrows. jekyll-paginate lists newest posts on page 1, so
+    previous_page moves toward the newer set and next_page toward the older set.
+    Shown only when there is more than one page; the inactive side stays visible
+    but dimmed so the control never shifts position.
+  {%- endcomment -%}
+  {% if paginator.total_pages > 1 %}
+  <nav class="post-pagination" aria-label="Post pages" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 8px; padding-top: 24px; border-top: 1px solid var(--ink-rule);">
+
+    <div style="flex: 1; text-align: left;">
+      {% if paginator.previous_page %}
+        <a href="{{ paginator.previous_page_path | relative_url }}" class="post-read-more">← newer</a>
+      {% else %}
+        <span class="post-read-more" style="opacity: 0.3; pointer-events: none;">← newer</span>
+      {% endif %}
+    </div>
+
+    <div class="post-meta" style="flex: 0 0 auto; text-align: center;">
+      page {{ paginator.page }} of {{ paginator.total_pages }}
+    </div>
+
+    <div style="flex: 1; text-align: right;">
+      {% if paginator.next_page %}
+        <a href="{{ paginator.next_page_path | relative_url }}" class="post-read-more">older →</a>
+      {% else %}
+        <span class="post-read-more" style="opacity: 0.3; pointer-events: none;">older →</span>
+      {% endif %}
+    </div>
+
+  </nav>
+  {% endif %}
 
 </main>
