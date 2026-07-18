@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://unpkg.com/@sveltia/cms@0.170.5/schema/sveltia-cms.json
+#
+# Sveltia CMS configuration for markrprice.com.
+# Serves the "Margin Notes" blog at /admin/ using the GitHub backend.
+#
+# Only ONE collection here (posts). This is deliberate. WEB2 will add the
+# other pages in a later pass. Do NOT add app pages (timer, metronome,
+# instruments, engines, recipes, search, actor, timer-guide, writing, news,
+# tv, films, projects, zines, about, artist, workshop) as collections —
+# instruments.html is 2.27 MB of generated output and none of these should
+# ever be edited through the CMS.
+
+backend:
+  name: github
+  repo: markzprice/markzprice.github.io
+  branch: master              # repo default branch is master, NOT main
+  # Uses GitHub's device-flow auth via Sveltia's built-in OAuth proxy.
+  # No Netlify / GitHub App setup required.
+
+# Where uploaded images live in the repo, and the public URL prefix
+# used inside post front matter. Absolute path from repo root; leading
+# slash is included for clarity.
+media_folder: /assets/images
+public_folder: /assets/images
+
+# --- Image optimization (client-side, before commit) --------------------
+# Files are transformed IN THE BROWSER before anything reaches git.
+# A 5 MB phone photo becomes ~200–500 KB.
+#
+# Sveltia currently only supports `webp` as an output format.
+# See KNOWN ISSUE at bottom of file about Bluesky and WebP og:images.
+media_libraries:
+  default:
+    config:
+      max_file_size: 10485760       # 10 MB hard cap on the upload itself
+      slugify_filename: true         # rename messy phone filenames on upload
+      transformations:
+        raster_image:                # applies to JPEG, PNG, HEIC, etc.
+          format: webp               # only 'webp' is supported at present
+          quality: 85
+          width: 2400                # cap width; height scales proportionally
+        svg:
+          optimize: true
+
+collections:
+  - name: posts
+    label: Notes
+    label_singular: Note
+    folder: _posts
+    create: true
+    slug: '{{year}}-{{month}}-{{day}}-{{slug}}'
+    # Jekyll picks up date from the filename; front matter `date:` overrides.
+    # File extension is .md — Jekyll processes markdown natively.
+    extension: md
+    format: yaml-frontmatter
+    # Preview panel disabled — the layout renders the post better than the
+    # generic Sveltia preview would.
+    editor:
+      preview: false
+    fields:
+      - { label: "Title",       name: title,       widget: string }
+      - { label: "Date",        name: date,        widget: datetime, format: "YYYY-MM-DD HH:mm:ss ZZ" }
+      - { label: "Description (optional — feeds preview cards & RSS)",
+          name: description, widget: text, required: false }
+      - { label: "Header image (optional — becomes the social preview image)",
+          name: image, widget: image, required: false }
+      - { label: "YouTube URL (optional — paste any watch or share URL)",
+          name: youtube, widget: string, required: false }
+      - { label: "Body", name: body, widget: markdown }
+
+# --- KNOWN ISSUE: Bluesky + WebP ---------------------------------------
+# Bluesky's OG-image scraper does not reliably render WebP images
+# (github.com/bluesky-social/social-app/issues/7407 and #7629). Facebook,
+# LinkedIn, iMessage and X all handle WebP fine.
+#
+# Because Sveltia only supports WebP as the transformation output, uploaded
+# images become .webp. If a Bluesky share loses the card, drop a manually
+# exported JPEG at /assets/images/og-default.jpg — head.html falls back to
+# that file when a post has no `image:` field. In that case, leave the post's
+# `image:` blank and the site default carries the card.

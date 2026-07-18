@@ -1,0 +1,33 @@
+# Jekyll configuration for markrprice.com
+# This activates the Jekyll build that GitHub Pages was already running idle.
+# Every other HTML file in this repo has no front matter, so Jekyll copies it
+# byte-for-byte to _site. Only files with front matter get processed.
+
+title: Margin Notes
+description: mark price — the things I keep trying to write in the book of life
+url: https://markrprice.com
+author: Mark Price
+lang: en
+
+# Post URLs are /notes/whatever/ — decided and permanent.
+# These get cross-posted; changing this shape breaks every previously shared link.
+permalink: /notes/:title/
+
+# Everything in _posts/ gets the "post" layout automatically.
+# Mark should never need to type a layout name in front matter.
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+
+# Make sure /admin/ (Sveltia CMS) is copied to _site.
+# Jekyll ignores nothing here by default, but being explicit is safer.
+include:
+  - admin
+
+# Keep _site tidy — don't ship dev-time noise.
+exclude:
+  - Workers
+  - README.md

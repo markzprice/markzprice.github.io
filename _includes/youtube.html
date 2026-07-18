@@ -1,0 +1,39 @@
+{%- comment -%}
+  youtube.html — turn a pasted YouTube URL into a responsive privacy-friendly
+  embed. Mark must never type markup: he pastes the URL as page.youtube in
+  front matter and this include builds the player.
+
+  Accepts either form:
+    https://www.youtube.com/watch?v=VIDEO_ID
+    https://www.youtube.com/watch?v=VIDEO_ID&t=30s
+    https://youtu.be/VIDEO_ID
+    https://youtu.be/VIDEO_ID?t=30
+
+  Uses youtube-nocookie.com to avoid setting cookies until the user plays.
+  Responsive 16:9 wrapper is inlined here because style.css is not to be
+  touched.
+{%- endcomment -%}
+
+{%- assign yt_url = include.url -%}
+{%- if yt_url contains "youtu.be/" -%}
+  {%- assign yt_after   = yt_url  | split: "youtu.be/" | last -%}
+  {%- assign yt_id_part = yt_after | split: "?" | first -%}
+  {%- assign yt_id      = yt_id_part | split: "&" | first -%}
+{%- elsif yt_url contains "v=" -%}
+  {%- assign yt_after   = yt_url  | split: "v=" | last -%}
+  {%- assign yt_id      = yt_after | split: "&" | first -%}
+{%- else -%}
+  {%- assign yt_id      = yt_url -%}
+{%- endif -%}
+
+{%- if yt_id and yt_id != "" -%}
+<div class="youtube-embed" style="position: relative; width: 100%; padding-top: 56.25%; margin: 32px 0; background: var(--ink); overflow: hidden;">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/{{ yt_id }}"
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+    title="YouTube video"
+    loading="lazy"
+    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen></iframe>
+</div>
+{%- endif -%}

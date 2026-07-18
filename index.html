@@ -1,25 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Margin Notes | Mark Price</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<header class="site-header">
-  <div class="site-header-inner">
-    <a href="/" class="site-name">Mark Price</a>
-    <nav class="site-nav">
-      <a href="/" class="active">notes</a>
-      <a href="writing.html">video</a>
-      <a href="projects.html">projects</a>
-      <a href="zines.html">zines</a>
-      <a href="about.html">about</a>
-    </nav>
-  </div>
-</header>
+---
+layout: default
+nav_active: notes
+title: Margin Notes
+description: mark price — the things I keep trying to write in the book of life
+---
 
 <main class="page page--notes">
 
@@ -28,20 +12,25 @@
     <p>the things I keep trying to write in the book of life</p>
   </div>
 
+  {%- comment -%}
+    Post loop. If _posts/ is empty, the {% else %} branch renders the
+    original empty-state div so the page still looks deliberate.
+
+    excerpt is stripped of HTML and truncated because Jekyll's automatic
+    excerpt is raw HTML from the first paragraph — good enough for a card
+    but never appropriate to render verbatim.
+  {%- endcomment -%}
   <div class="post-list" id="post-list">
-    <div class="empty-state">No posts yet. Check back soon.</div>
+    {% for post in site.posts %}
+      <div class="post-item">
+        <h2 class="post-title"><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+        <div class="post-meta">{{ post.date | date: "%B %-d, %Y" }}</div>
+        <p class="post-excerpt">{% if post.description %}{{ post.description }}{% else %}{{ post.excerpt | strip_html | normalize_whitespace | truncate: 220 }}{% endif %}</p>
+        <a href="{{ post.url | relative_url }}" class="post-read-more">Read →</a>
+      </div>
+    {% else %}
+      <div class="empty-state">No posts yet. Check back soon.</div>
+    {% endfor %}
   </div>
 
 </main>
-
-<footer class="site-footer">
-  <span class="footer-left">mark price · 2026</span>
-  <div class="footer-social">
-    <a href="https://www.youtube.com/@markpricecentral" target="_blank" rel="noopener">youtube</a>
-    <a href="https://www.tumblr.com/markpricecentral" target="_blank" rel="noopener">tumblr</a>
-    <a href="https://www.tiktok.com/@flifnflufn" target="_blank" rel="noopener">tiktok</a>
-  </div>
-</footer>
-
-</body>
-</html>

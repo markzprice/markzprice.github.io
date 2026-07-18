@@ -1,0 +1,49 @@
+{%- comment -%}
+  head.html — all <head> content, driven by page front matter.
+
+  The main job here is emitting a COMPLETE set of Open Graph and Twitter Card
+  tags so a link pasted into Bluesky, Facebook, iMessage, etc. renders a real
+  preview card with an image, title, and description.
+
+  Fallback chain for each field:
+    - page.title       -> site.title
+    - page.description -> site.description
+    - page.image       -> /assets/images/og-default.jpg  (site-wide default)
+  Social scrapers reject relative image URLs, so we run everything through
+  absolute_url.
+{%- endcomment -%}
+
+{%- assign page_title       = page.title       | default: site.title       -%}
+{%- assign page_description = page.description | default: site.description -%}
+{%- assign page_image_path  = page.image       | default: "/assets/images/og-default.jpg" -%}
+{%- assign page_image_abs   = page_image_path  | absolute_url -%}
+{%- assign page_url_abs     = page.url         | absolute_url -%}
+{%- if page.layout == "post" -%}
+  {%- assign og_type = "article" -%}
+{%- else -%}
+  {%- assign og_type = "website" -%}
+{%- endif -%}
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>{% if page.title %}{{ page.title }} | {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
+<meta name="description" content="{{ page_description | strip_html | normalize_whitespace | truncate: 200 | xml_escape }}">
+
+<link rel="stylesheet" href="{{ '/style.css' | relative_url }}">
+<link rel="alternate" type="application/rss+xml" href="{{ '/feed.xml' | absolute_url }}" title="{{ site.title | xml_escape }}">
+<link rel="canonical" href="{{ page_url_abs }}">
+
+<!-- Open Graph — Facebook, LinkedIn, iMessage, etc. -->
+<meta property="og:type"        content="{{ og_type }}">
+<meta property="og:site_name"   content="{{ site.title | xml_escape }}">
+<meta property="og:title"       content="{{ page_title | xml_escape }}">
+<meta property="og:description" content="{{ page_description | strip_html | normalize_whitespace | truncate: 200 | xml_escape }}">
+<meta property="og:url"         content="{{ page_url_abs }}">
+<meta property="og:image"       content="{{ page_image_abs }}">
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:title"       content="{{ page_title | xml_escape }}">
+<meta name="twitter:description" content="{{ page_description | strip_html | normalize_whitespace | truncate: 200 | xml_escape }}">
+<meta name="twitter:image"       content="{{ page_image_abs }}">

@@ -1,0 +1,43 @@
+---
+layout: default
+nav_active: notes
+---
+{%- comment -%}
+  post.html — the individual post page. This is what /notes/:title/ points at,
+  and what social scrapers hit when a permalink gets cross-posted.
+
+  Reuses classes from style.css: page, page--notes, post-title, post-meta,
+  post-excerpt, page-hero. Do not add new CSS here — style.css is not to be
+  touched.
+{%- endcomment -%}
+
+<main class="page page--notes page--post">
+
+  <article class="post-single">
+
+    <header class="post-single-header">
+      <h1 class="post-title" style="font-size: clamp(32px, 5vw, 52px); margin-bottom: 12px;">{{ page.title }}</h1>
+      <div class="post-meta">{{ page.date | date: "%B %-d, %Y" }}</div>
+    </header>
+
+    {%- if page.image -%}
+    <div class="post-single-image" style="margin: 32px 0;">
+      <img src="{{ page.image | relative_url }}" alt="{{ page.image_alt | default: page.title | xml_escape }}">
+    </div>
+    {%- endif -%}
+
+    {%- if page.youtube -%}
+    {% include youtube.html url=page.youtube %}
+    {%- endif -%}
+
+    <div class="post-body" style="font-size: 17px; line-height: 1.8; color: var(--ink); margin-top: 32px;">
+      {{ content }}
+    </div>
+
+    <div class="post-back" style="margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--ink-rule);">
+      <a href="{{ '/' | relative_url }}" class="post-read-more">← back to notes</a>
+    </div>
+
+  </article>
+
+</main>
