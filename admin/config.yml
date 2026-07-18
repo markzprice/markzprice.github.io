@@ -53,10 +53,14 @@ collections:
     # File extension is .md — Jekyll processes markdown natively.
     extension: md
     format: yaml-frontmatter
-    # Preview panel disabled — the layout renders the post better than the
-    # generic Sveltia preview would.
+    # Preview panel ON. Do not turn this off.
+    # WEB1 disabled it, reasoning that the real layout renders better than
+    # Sveltia's generic preview. True, and beside the point: "I'm blind to how
+    # it is formatted until it has been done" is the reason this whole system
+    # exists (Mark, 2026-07-17). A rough live preview beats an accurate one you
+    # only see after publishing. Restored by Prime the same day.
     editor:
-      preview: false
+      preview: true
     fields:
       - { label: "Title",       name: title,       widget: string }
       - { label: "Date",        name: date,        widget: datetime, format: "YYYY-MM-DD HH:mm:ss ZZ" }

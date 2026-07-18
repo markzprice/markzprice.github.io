@@ -8,15 +8,28 @@
   Fallback chain for each field:
     - page.title       -> site.title
     - page.description -> site.description
-    - page.image       -> /assets/images/og-default.jpg  (site-wide default)
+    - page.image       -> site.og_default_image -> omitted entirely
   Social scrapers reject relative image URLs, so we run everything through
   absolute_url.
+
+  IMPORTANT (fixed 2026-07-17): og:image must NEVER point at a file that does
+  not exist. This previously hard-defaulted to /assets/images/og-default.jpg,
+  which was never created — so every page advertised a 404 as its preview
+  image, which is worse than having no image at all. The default now comes
+  from site.og_default_image in _config.yml, and if that is unset the image
+  tags are omitted cleanly and the card degrades to a text card.
+
+  To set a site-wide default: drop a JPEG (NOT a WebP — see the Bluesky note
+  in admin/config.yml) into /assets/images/ and uncomment og_default_image
+  in _config.yml. ~1200x630 is the ideal shape.
 {%- endcomment -%}
 
 {%- assign page_title       = page.title       | default: site.title       -%}
 {%- assign page_description = page.description | default: site.description -%}
-{%- assign page_image_path  = page.image       | default: "/assets/images/og-default.jpg" -%}
-{%- assign page_image_abs   = page_image_path  | absolute_url -%}
+{%- assign page_image_path  = page.image       | default: site.og_default_image -%}
+{%- if page_image_path and page_image_path != "" -%}
+  {%- assign page_image_abs = page_image_path | absolute_url -%}
+{%- endif -%}
 {%- assign page_url_abs     = page.url         | absolute_url -%}
 {%- if page.layout == "post" -%}
   {%- assign og_type = "article" -%}
@@ -40,10 +53,14 @@
 <meta property="og:title"       content="{{ page_title | xml_escape }}">
 <meta property="og:description" content="{{ page_description | strip_html | normalize_whitespace | truncate: 200 | xml_escape }}">
 <meta property="og:url"         content="{{ page_url_abs }}">
+{%- if page_image_abs %}
 <meta property="og:image"       content="{{ page_image_abs }}">
+{%- endif %}
 
 <!-- Twitter / X Card -->
-<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:card"        content="{% if page_image_abs %}summary_large_image{% else %}summary{% endif %}">
 <meta name="twitter:title"       content="{{ page_title | xml_escape }}">
 <meta name="twitter:description" content="{{ page_description | strip_html | normalize_whitespace | truncate: 200 | xml_escape }}">
+{%- if page_image_abs %}
 <meta name="twitter:image"       content="{{ page_image_abs }}">
+{%- endif %}

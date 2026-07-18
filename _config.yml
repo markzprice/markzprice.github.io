@@ -13,6 +13,14 @@ lang: en
 # These get cross-posted; changing this shape breaks every previously shared link.
 permalink: /notes/:title/
 
+# Site-wide fallback preview-card image, used when a post has no `image:`.
+# UNSET on purpose. While unset, imageless posts emit no og:image at all and
+# degrade to a clean text card — which is correct. Do NOT point this at a file
+# that doesn't exist: a 404 og:image is worse than none.
+# To turn it on: drop a JPEG (NOT WebP — Bluesky can't render WebP cards) into
+# /assets/images/, ideally ~1200x630, then uncomment the line below.
+# og_default_image: /assets/images/og-default.jpg
+
 # Everything in _posts/ gets the "post" layout automatically.
 # Mark should never need to type a layout name in front matter.
 defaults:
