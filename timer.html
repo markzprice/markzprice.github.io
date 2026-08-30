@@ -119,6 +119,16 @@ label { font-size: 11px; cursor: pointer; }
   color: #b87a00;
 }
 .btn--quick-work:hover { background: #b87a00; color: #f2ece0; }
+.btn--quick-task {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 12px 18px;
+  border-width: 2px;
+  letter-spacing: 0.04em;
+  border-color: #6b3fa0;
+  color: #6b3fa0;
+}
+.btn--quick-task:hover { background: #6b3fa0; color: #f2ece0; }
 .btn--quick-speed {
   font-size: 14px;
   font-weight: bold;
@@ -324,6 +334,7 @@ label { font-size: 11px; cursor: pointer; }
   .btn--quick   { min-height: 52px; font-size: 14px; padding: 12px 14px; }
   .btn--quick-study { min-height: 52px; }
   .btn--quick-work { min-height: 52px; }
+  .btn--quick-task { min-height: 52px; }
   .btn--quick-speed { min-height: 52px; }
 
   /* 16px minimum on inputs so iOS does not auto-zoom */
@@ -484,11 +495,12 @@ label { font-size: 11px; cursor: pointer; }
     <!-- QUICK START BAR -->
     <div class="quick-bar">
       <div class="quick-bar-label" style="display:flex; justify-content:space-between; align-items:center;">
-        <span>Quick Start · 3 rounds · uses alarm + celebration</span>
+        <span>Quick Start · rounds shown on each button · ends with Celebration</span>
         <a href="timer-guide.html" style="font-size:10px; text-transform:uppercase; letter-spacing:0.15em; color:#7a6a52; text-decoration:none; white-space:nowrap; border-bottom:1px solid #c4baaa;">guide</a>
       </div>
       <button class="btn btn--quick-study" onclick="startQuickStudy()">12 study · 10 break · 8 clean</button>
       <button class="btn btn--quick-work" onclick="startWorkRotate()">12 work · rotate 3·6·9 · 9 rest · ×3</button>
+      <button class="btn btn--quick-task" onclick="startTaskRotation()">task 1 · 2 · 3 · 5 min each · ×16 · 4 hrs</button>
       <button class="btn btn--quick-speed" onclick="startSpeedRound()">⚡ Speed Round! · 10 × 30s</button>
       <button class="btn btn--quick" onclick="startQuick(10,10)">10 × 10</button>
       <button class="btn btn--quick" onclick="startQuick(12,10)">12 × 10</button>
@@ -530,6 +542,10 @@ const POOL_DEFS = [
   { id: 'exercise',    label: 'Exercise',     defaultTTS: 'exercise time' },
   { id: 'stretch',     label: 'Stretch',      defaultTTS: 'stretch break' },
   { id: 'rest',        label: 'Rest',         defaultTTS: 'rest time' },
+  { id: 'task1',       label: 'Task 1',       defaultTTS: 'task one' },
+  { id: 'task2',       label: 'Task 2',       defaultTTS: 'task two' },
+  { id: 'task3',       label: 'Task 3',       defaultTTS: 'task three' },
+  { id: 'task4',       label: 'Task 4',       defaultTTS: 'task four' },
   { id: 'alert',       label: 'Alert',        defaultTTS: 'attention' },
   { id: 'speedRound',  label: 'Speed Round!', defaultTTS: 'speed round, go!' },
   { id: 'blockEnd',    label: 'Block End',    defaultTTS: 'block complete' },
@@ -1059,8 +1075,14 @@ async function runStudyTimer(event) {
   const pool = pools[event.poolId];
   const poolPhrase = pool ? pool.tts : event.label;
 
-  const startAnnounce = 'start, ' + poolPhrase + ', ' + durStr;
-  const endAnnounce   = 'end, ' + poolPhrase + ', ' + durStr;
+  // 'poolFirst' puts the pool phrase before the word, and drops the duration:
+  // "task one, start" / "task one, end". Default order is unchanged.
+  const startAnnounce = event.announceStyle === 'poolFirst'
+    ? poolPhrase + ', start'
+    : 'start, ' + poolPhrase + ', ' + durStr;
+  const endAnnounce   = event.announceStyle === 'poolFirst'
+    ? poolPhrase + ', end'
+    : 'end, ' + poolPhrase + ', ' + durStr;
 
   setRunLabel(event.label + ' · ' + durStr + ' · rep ' + (event.repIdx + 1) + ' of ' + event.totalReps);
   logRun(startAnnounce);
@@ -1084,6 +1106,50 @@ async function runStudyTimer(event) {
     'Timer ' + done + ' of ' + total + ' · Rep ' + (event.repIdx + 1) + ' of ' + event.totalReps;
 
   runState.idx++;
+  await runStudyStep();
+}
+
+// ============================================================
+// TASK ROTATION  (single-button specialty timer)
+//   Task 1 / Task 2 / Task 3, 5 minutes each, 16 rounds.
+//   3 timers x 5 min x 16 rounds = 240 min = 4 hours exactly.
+//   Announces "task one, start" and "task one, end" on every interval.
+// ============================================================
+async function startTaskRotation() {
+  getAudioCtx().resume();
+
+  const timers = [
+    { durationMin: 5, poolId: 'task1', label: 'task 1', announceStyle: 'poolFirst' },
+    { durationMin: 5, poolId: 'task2', label: 'task 2', announceStyle: 'poolFirst' },
+    { durationMin: 5, poolId: 'task3', label: 'task 3', announceStyle: 'poolFirst' },
+  ];
+  const totalReps = 16;
+  const schedule = [];
+
+  for (let rep = 0; rep < totalReps; rep++) {
+    timers.forEach(t => {
+      schedule.push({ type: 'studyTimer', ...t, repIdx: rep, totalReps });
+    });
+  }
+  schedule.push({ type: 'sessionEnd', pool: 'celebration' });
+
+  runState = {
+    schedule, idx: 0,
+    paused: false, stopped: false,
+    stepOut: false, stepOutStart: null, stepOutInterval: null,
+    timerEnd: null, pauseRemaining: null,
+    clockInterval: null,
+    isQuick: true,
+    quickEndMessage: 'Four hours done. Sixteen rounds through all three tasks. That is a full workshop day.',
+  };
+
+  document.getElementById('runPanel').classList.add('active');
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  document.getElementById('stepOutClock').classList.remove('visible');
+  document.getElementById('runClock').classList.remove('counting-up');
+  requestWakeLock();
+  resetSkipBtn();
+  logRun('Task 1 / 2 / 3 · 5 min each · 16 rounds · 4 hours');
   await runStudyStep();
 }
 
