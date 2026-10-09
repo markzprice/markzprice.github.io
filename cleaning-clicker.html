@@ -12,7 +12,7 @@
    Colours: orange (player 1), purple (player 2), yellow, red, white on near-black. Never blue with green. */
 :root{
   --bg:#07040c; --cab:#120a1c; --ink:#fff6e8; --dim:#6e5f80; --rule:#2c1d3d;
-  --p1:#ff8a1f; --p1-hot:#ffd08a; --p2:#c070ff; --p2-hot:#ecc8ff;
+  --p1:#ff8a1f; --p1-hot:#ffd08a; --p2:#dc9bff; --p2-hot:#f3dcff;
   --yel:#ffd23f; --red:#ff3b3b; --pink:#ff5fa8;
   --pix:'Press Start 2P', 'Courier New', monospace;
   --art:Menlo, 'DejaVu Sans Mono', Consolas, 'Courier New', monospace;
@@ -22,12 +22,36 @@ html,body{margin:0;height:100%;}
 body{background:var(--bg);color:var(--ink);font-family:var(--pix);overflow:hidden;
   touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
 /* cabinet frame */
-#cab{position:fixed;inset:0;display:flex;flex-direction:column;border:10px solid #1e1230;
-  box-shadow:inset 0 0 0 3px #3a2350, inset 0 0 60px rgba(192,112,255,.18);background:radial-gradient(ellipse at 50% 40%, #150c22 0%, var(--bg) 75%);}
-#cab::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:50;
-  background:repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 4px);}
+/* ---- CRT cabinet: bevelled bezel, curved glass screen, faint grid, glare, twinkling stars ---- */
+#cab{position:fixed;inset:0;padding:clamp(14px,3.2vmin,44px);
+  background:
+    linear-gradient(to bottom right, transparent calc(50% - 1px), rgba(255,255,255,.10) 50%, transparent calc(50% + 1px)) top left / clamp(14px,3.2vmin,44px) clamp(14px,3.2vmin,44px) no-repeat,
+    linear-gradient(to bottom left,  transparent calc(50% - 1px), rgba(255,255,255,.10) 50%, transparent calc(50% + 1px)) top right / clamp(14px,3.2vmin,44px) clamp(14px,3.2vmin,44px) no-repeat,
+    linear-gradient(to top right,    transparent calc(50% - 1px), rgba(0,0,0,.45) 50%, transparent calc(50% + 1px)) bottom left / clamp(14px,3.2vmin,44px) clamp(14px,3.2vmin,44px) no-repeat,
+    linear-gradient(to top left,     transparent calc(50% - 1px), rgba(0,0,0,.45) 50%, transparent calc(50% + 1px)) bottom right / clamp(14px,3.2vmin,44px) clamp(14px,3.2vmin,44px) no-repeat,
+    linear-gradient(160deg, #2e2148 0%, #1b1430 45%, #0f0b1c 100%);}
+#crt{position:relative;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;
+  border-radius:4% / 6%;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(120,60,170,.0) 0%, rgba(10,4,20,.0) 55%, rgba(5,2,10,.75) 100%),
+    radial-gradient(ellipse at 50% 42%, #2a1544 0%, #1a0d2c 55%, #0c0616 100%);
+  box-shadow:0 0 0 2px #05030a, 0 0 0 5px #3b2a5c, inset 0 0 70px rgba(0,0,0,.85), inset 0 0 18px rgba(220,155,255,.20);}
+#crt::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:
+    repeating-linear-gradient(0deg,  rgba(255,95,168,.22) 0 1px, transparent 1px 5.5%),
+    repeating-linear-gradient(90deg, rgba(255,95,168,.22) 0 1px, transparent 1px 4.2%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.18) 0%, rgba(0,0,0,.35) 45%, #000 85%);
+          mask-image:radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.18) 0%, rgba(0,0,0,.35) 45%, #000 85%);}
+#crt::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:50;
+  background:
+    linear-gradient(200deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 18%, transparent 30%),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 2px, transparent 2px 4px);}
+#crt > *{position:relative;z-index:2;}
+.star{position:absolute;z-index:1;width:3px;height:3px;background:#f3dcff;border-radius:50%;pointer-events:none;
+  box-shadow:0 0 6px 2px rgba(243,220,255,.7);animation:twinkle 3s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:.15;transform:scale(.6);}50%{opacity:1;transform:scale(1.2);}}
 #marquee{text-align:center;padding:12px 8px 10px;font-size:clamp(16px,3.2vw,34px);letter-spacing:.12em;
-  color:var(--yel);text-shadow:0 0 8px rgba(255,210,63,.7), 3px 3px 0 var(--red);border-bottom:3px solid var(--rule);flex:none;}
+  color:var(--yel);text-shadow:0 0 10px rgba(255,210,63,.8), 3px 3px 0 var(--red);border-bottom:2px solid rgba(255,95,168,.25);flex:none;}
 #marquee small{display:block;font-size:.38em;color:var(--dim);letter-spacing:.2em;margin-top:8px;text-shadow:none;}
 .screen{flex:1;min-height:0;display:none;}
 .screen.on{display:flex;}
@@ -83,8 +107,8 @@ input:focus{outline:none;border-color:var(--yel);}
   font-size:clamp(10px,2.3vh,28px);text-align:left;}
 .solo .sq .art{font-size:clamp(12px,3.1vh,38px);}
 .sq .keycap{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:10px;color:var(--dim);letter-spacing:.15em;}
-.sq.p1 .who,.sq.p1 .num{color:var(--p1);text-shadow:0 0 14px rgba(255,138,31,.55);}
-.sq.p2 .who,.sq.p2 .num{color:var(--p2);text-shadow:0 0 14px rgba(192,112,255,.55);}
+.sq.p1 .who,.sq.p1 .num{color:var(--p1);text-shadow:0 0 16px rgba(255,138,31,.7);}
+.sq.p2 .who,.sq.p2 .num{color:var(--p2);text-shadow:0 0 16px rgba(220,155,255,.7);}
 .sq.p1 .bar i{background:var(--p1);} .sq.p2 .bar i{background:var(--p2);}
 .sq.flash.p1{background:rgba(255,138,31,.32);transition:none;}
 .sq.flash.p2{background:rgba(192,112,255,.32);transition:none;}
@@ -99,7 +123,7 @@ input:focus{outline:none;border-color:var(--yel);}
 #reset{position:absolute;top:8px;right:10px;z-index:30;font-size:9px;padding:8px 10px;background:transparent;color:var(--dim);border:2px solid var(--rule);}
 #reset.arm{color:var(--red);border-color:var(--red);}
 /* ---------- finish ---------- */
-#finish{position:fixed;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;justify-content:center;
+#finish{position:fixed;inset:clamp(14px,3.2vmin,44px);border-radius:4% / 6%;overflow:hidden;z-index:40;display:none;flex-direction:column;align-items:center;justify-content:center;
   background:rgba(7,4,12,.94);text-align:center;padding:20px;}
 #finish.on{display:flex;}
 #finish .f1{font-size:clamp(30px,7vw,96px);color:var(--yel);text-shadow:5px 5px 0 var(--red);animation:blink .5s steps(2) infinite;}
@@ -116,7 +140,7 @@ input:focus{outline:none;border-color:var(--yel);}
 </style>
 </head>
 <body>
-<div id="cab">
+<div id="cab"><div id="crt">
   <div id="marquee">CLEANING CLICKER<small id="msub">INSERT EFFORT TO CONTINUE</small></div>
 
   <!-- SETUP -->
@@ -141,7 +165,7 @@ input:focus{outline:none;border-color:var(--yel);}
     <div id="squares"></div>
     <div id="toast"></div>
   </div>
-</div>
+</div></div>
 <div id="finish"><div class="f0" id="fgoal"></div><div class="f1" id="ftitle">YOU DID IT!</div><div class="f2" id="fline"></div><div class="f3" id="fdetail"></div>
   <div class="again">PLAY AGAIN?</div><div class="yn"><button data-yn="yes" class="sel">YES</button><button data-yn="no">NO</button></div></div>
 <canvas id="fx"></canvas>
@@ -509,6 +533,11 @@ $("#reset").addEventListener("click", e=>{
   clearTimeout(armT); b.classList.remove("arm"); b.textContent="RESET"; choose("no");
 });
 
+/* ================= STARS ================= */
+(function(){ const crt=document.getElementById("crt"), r=rng(42);
+  for(let i=0;i<14;i++){ const s=document.createElement("i"); s.className="star";
+    s.style.left=(4+r()*92)+"%"; s.style.top=(6+r()*88)+"%"; s.style.animationDelay=(r()*3).toFixed(2)+"s"; s.style.animationDuration=(2.2+r()*2.5).toFixed(2)+"s";
+    crt.appendChild(s); } })();
 /* ================= BOOT ================= */
 drawSetup();
 if(S.phase==="play"){ buildPlay(); show("play"); if(S.goalName) $("#msub").textContent=`NOW CLEANING: ${S.goalName}`; }
