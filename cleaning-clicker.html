@@ -114,7 +114,7 @@ input:focus{outline:none;border-color:var(--yel);}
 .sq.flash.p2{background:rgba(192,112,255,.32);transition:none;}
 .sq.big.p1{background:rgba(255,210,63,.35);transition:none;} .sq.big.p2{background:rgba(255,95,168,.35);transition:none;}
 .sq .won{display:none;position:absolute;top:12px;left:0;right:0;text-align:center;font-size:clamp(12px,2vw,22px);color:var(--yel);animation:blink .6s steps(2) infinite;}
-.sq.done .won{display:block;}
+.sq.done .won{display:block;position:static;margin-bottom:6px;}
 .sq.done{opacity:.85;}
 #toast{position:absolute;left:0;width:100%;top:38%;text-align:center;font-size:clamp(22px,5vw,64px);color:var(--yel);
   text-shadow:4px 4px 0 var(--red);pointer-events:none;opacity:0;z-index:20;}
@@ -183,7 +183,7 @@ input:focus{outline:none;border-color:var(--yel);}
   </div>
 </div></div>
 <div id="finish"><div class="f0" id="fgoal"></div><div class="f1" id="ftitle">YOU DID IT!</div><div class="f2" id="fline"></div><div class="f3" id="fdetail"></div>
-  <div class="again">PLAY AGAIN?</div><div class="yn"><button data-yn="yes" class="sel">YES</button><button data-yn="no">NO</button></div></div>
+  <div class="again">PLAY AGAIN?</div><div class="yn"><button data-yn="yes" class="sel">YES</button><button data-yn="no">NO</button><button data-yn="view">VIEW IT</button></div></div>
 <canvas id="fx"></canvas>
 
 <script>
@@ -1012,12 +1012,18 @@ function press(i){
 
 /* ================= FINISH ================= */
 let ynSel = "yes";
+let finT=0, finReadyAt=0, finOpenAt=0;
+const finOn = () => $("#finish").classList.contains("on");
 function finishAll(){
   S.phase="done"; save(); draw();
   sndFinish(); let k=0; const burst=()=>{ confetti(120); if(++k<7) setTimeout(burst, 550); }; burst();
-  showFinish();
+  // let them see what they made before the menu comes up
+  finReadyAt=performance.now()+2000; $("#msub").textContent="★ LOOK WHAT YOU DID! ★";
+  clearTimeout(finT); finT=setTimeout(showFinish, 5500);
 }
+function viewScene(){ clearTimeout(finT); $("#finish").classList.remove("on"); finReadyAt=performance.now()+400; $("#msub").textContent="PRESS ANY KEY FOR THE MENU"; }
 function showFinish(){
+  clearTimeout(finT); finOpenAt=performance.now(); $("#msub").textContent = S.goalName ? `NOW CLEANING: ${S.goalName}` : "INSERT EFFORT TO CONTINUE";
   const items = total();
   $("#fgoal").textContent = S.goalName ? `— ${S.goalName} —` : "";
   $("#ftitle").textContent = (S.winner!=null) ? `${S.p[S.winner].name} WINS!` : "YOU DID IT!";
@@ -1028,6 +1034,7 @@ function showFinish(){
 }
 function drawYN(){ document.querySelectorAll("#finish .yn button").forEach(b=>b.classList.toggle("sel", b.dataset.yn===ynSel)); }
 function choose(v){
+  if(v==="view"){ viewScene(); return; }
   $("#finish").classList.remove("on");
   if(v==="yes"){ startGame(); }
   else { S.phase="setup"; S.p.forEach(p=>{p.count=0;p.done=false;}); S.winner=null; save(); drawSetup(); show("setup"); $("#msub").textContent="INSERT EFFORT TO CONTINUE"; }
@@ -1037,19 +1044,25 @@ document.querySelectorAll("#finish .yn button").forEach(b=>b.addEventListener("c
 /* ================= INPUT ================= */
 addEventListener("keydown", e=>{
   if(e.target.tagName==="INPUT") { if(e.key==="Enter"){ e.target.blur(); } return; }
-  if($("#finish").classList.contains("on")){
-    if(["ArrowLeft","ArrowRight","Tab"].includes(e.key)){ ynSel = ynSel==="yes"?"no":"yes"; drawYN(); e.preventDefault(); }
-    else if(e.key==="y"||e.key==="Y"){ choose("yes"); }
+  if(finOn()){
+    const ORD=["yes","no","view"];
+    if(["ArrowLeft","ArrowRight","Tab"].includes(e.key)){ ynSel = ORD[(ORD.indexOf(ynSel)+(e.key==="ArrowLeft"?2:1))%3]; drawYN(); e.preventDefault(); return; }
+    if(performance.now()-finOpenAt<1200 || e.repeat){ e.preventDefault(); return; }   // a last mashed press can't pick an option by accident
+    if(e.key==="y"||e.key==="Y"){ choose("yes"); }
     else if(e.key==="n"||e.key==="N"){ choose("no"); }
-    else if(e.key===" "||e.key==="Enter"){ if(!e.repeat) choose(ynSel); e.preventDefault(); }
+    else if(e.key==="v"||e.key==="V"){ choose("view"); }
+    else if(e.key===" "||e.key==="Enter"){ choose(ynSel); e.preventDefault(); }
     return;
   }
+  if(S.phase==="done"){ e.preventDefault(); if(!e.repeat && performance.now()>finReadyAt) showFinish(); return; }
   if(S.phase==="setup"){ if(e.key==="Enter"){ startGame(); e.preventDefault(); } return; }
   if(S.phase!=="play" || e.repeat) return;   // one press = one count; holding a key does not repeat
   if(nP()===1 && e.code==="Space"){ press(0); e.preventDefault(); }
   else if(nP()===2 && e.code==="KeyZ"){ press(0); e.preventDefault(); }
   else if(nP()===2 && e.code==="KeyM"){ press(1); e.preventDefault(); }
 });
+// while looking at the finished scene, any tap or click brings the menu back
+addEventListener("pointerdown", e=>{ if(S.phase==="done" && !finOn() && !e.target.closest("#reset") && performance.now()>finReadyAt) showFinish(); });
 // touch / pen taps only (an iPad); mouse clicks on the Mac deliberately do NOT count
 $("#squares").addEventListener("pointerdown", e=>{
   if(e.pointerType==="mouse") return;
