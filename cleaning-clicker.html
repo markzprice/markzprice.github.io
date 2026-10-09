@@ -49,7 +49,9 @@ input:focus{outline:none;border-color:var(--yel);}
 .pcard.p1{border-color:var(--p1);} .pcard.p2{border-color:var(--p2);}
 .pcard h3{margin:0 0 12px;font-size:13px;letter-spacing:.1em;}
 .pcard.p1 h3{color:var(--p1);} .pcard.p2 h3{color:var(--p2);}
-.mini{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.mini{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;}
+.mini > div{min-width:150px;}
+.mshint{font-size:9px;color:var(--dim);letter-spacing:.1em;margin-top:10px;line-height:1.8;}
 .mini label{font-size:9px;color:var(--dim);display:block;margin-bottom:6px;letter-spacing:.1em;}
 .mini input{width:110px;}
 .games{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
@@ -159,6 +161,7 @@ function fresh(){ return {phase:"setup", players:1, mode:"team", dir:"up", goalN
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch(e){ S = fresh(); }
 if (!S.p || S.p.length < 2) S = fresh();
+S.p.forEach(p=>{ if(!PRESETS[p.goal]){ const ks=Object.keys(PRESETS).map(Number); p.goal=ks.reduce((a,b)=>Math.abs(b-p.goal)<Math.abs(a-p.goal)?b:a); } [p.small,p.big]=PRESETS[p.goal]; });
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 
 /* ================= AUDIO (all synthesized) ================= */
@@ -338,11 +341,9 @@ function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.t
 function goalBlock(i, label){
   const g = S.p[i];
   const presets = Object.keys(PRESETS).map(v=>`<button class="opt${+v===g.goal?" sel":""}" data-goal="${v}" data-pi="${i}">${v}</button>`).join("");
+  const [sm,bg] = PRESETS[g.goal];
   return `<div class="lab">${label}</div><div class="opts">${presets}</div>
-    <div class="mini" style="margin-top:10px">
-      <div><label>OR TYPE A GOAL</label><input type="number" min="1" max="99999" data-f="goal" data-pi="${i}" value="${g.goal}"></div>
-      <div><label>SMALL CHEER EVERY</label><input type="number" min="1" data-f="small" data-pi="${i}" value="${g.small}"></div>
-      <div><label>BIG CHEER EVERY</label><input type="number" min="1" data-f="big" data-pi="${i}" value="${g.big}"></div></div>`;
+    <div class="mshint">SMALL CHEER EVERY ${sm} · BIG CHEER EVERY ${bg}</div>`;
 }
 function drawSetup(){
   document.querySelectorAll("#setup .opts[data-k]").forEach(box=>{
