@@ -479,14 +479,21 @@ skyline:{
   draw(g){ if(!g.mem.b){ const r=rng(9), b=[]; let x=0; while(x<g.W){ const w=10+((r()*14)|0), h=Math.floor(g.H*(0.3+r()*0.55)); b.push({x,w,h}); x+=w+1; }
       const wins=[]; b.forEach(bd=>{ for(let yy=g.H-bd.h+3; yy<g.H-3; yy+=4) for(let xx=bd.x+2; xx<bd.x+bd.w-2; xx+=3) wins.push([xx,yy]); });
       g.mem.b=b; g.mem.wins=wins; g.mem.rank=new Map(order(wins.length,4).map((v,i)=>[v,i])); }
-    if(g.done){ disc(g,g.W-20,14,7,"#fff2b0"); disc(g,g.W-17,12,6,"#1a0d2c");
+    const down = S.dir==="down";   // counting down: the city starts lit and each press switches a window off
+    if(g.done && down){ disc(g,g.W-20,14,7,"#fff2b0"); disc(g,g.W-17,12,6,"#1a0d2c");
+      if(!g.mem.stars){ const r=rng(31); g.mem.stars=[...Array(28)].map(()=>[r()*g.W, r()*g.H*0.5, r()*6]); }
+      g.mem.stars.forEach(([x,y,o])=>{ if(Math.sin(g.t*2+o)>-0.2) box(g,x,y,1,1, Math.sin(g.t*3+o)>0.6?PAL.W:"#bfb3cc"); }); }
+    if(g.done && !down){ disc(g,g.W-20,14,7,"#fff2b0"); disc(g,g.W-17,12,6,"#1a0d2c");
       const a=Math.sin((g.t-g.doneAt)*0.9)*0.6; [[g.W*0.25,a],[g.W*0.7,-a]].forEach(([bx,an])=>{ const c=g.cx; c.fillStyle="rgba(255,240,180,.12)"; c.beginPath(); c.moveTo(bx,g.H); c.lineTo(bx+Math.sin(an)*g.H*1.4-14,0); c.lineTo(bx+Math.sin(an)*g.H*1.4+14,0); c.closePath(); c.fill(); }); }
     g.mem.b.forEach(bd=>{ box(g,bd.x,g.H-bd.h,bd.w,bd.h,"#221838"); box(g,bd.x,g.H-bd.h,1,bd.h,"#33264d"); });
-    const lit=units(g,g.mem.wins.length);
+    const NW=g.mem.wins.length, k=units(g,NW), lit = down ? NW-k : k;
     g.mem.wins.forEach((w,i)=>{ const rk=g.mem.rank.get(i); let c="#140e22";
-      if(rk<lit){ c = rk===lit-1 && g.fx.length ? PAL.W : (rk%5===0?PAL.O:PAL.Y); if(g.done && Math.random()<.01) c=PAL.W; } box(g,w[0],w[1],2,2,c); });
-    g.fx=g.fx.filter(f=>--f.life>0); if(g.done){ finale(g,0.5); label(g,"CITY LIGHTS!",8); } },
-  event(g,tier){ g.fx.push({life:10}); if(tier>=1 && g.mem.wins){ const lit=units(g,g.mem.wins.length); const idx=[...g.mem.rank].find(([i,r])=>r===lit-1); if(idx){ const w=g.mem.wins[idx[0]]; burst(g,w[0],w[1], tier===2?24:10, [PAL.Y,PAL.W,PAL.O], 1, .01, 30); } } } },
+      if(rk<lit){ c = (!down && rk===lit-1 && g.fx.length) ? PAL.W : (rk%5===0?PAL.O:PAL.Y); if(g.done && !down && Math.random()<.01) c=PAL.W; }
+      else if(down && rk===lit && g.fx.length) c="#6a4a24";   // the window that just went dark glows out
+      box(g,w[0],w[1],2,2,c); });
+    g.fx=g.fx.filter(f=>--f.life>0);
+    if(g.done){ if(down){ label(g,"LIGHTS OUT!",8); if(Math.random()<.08) burst(g,Math.random()*g.W,Math.random()*g.H*.4,3,[PAL.W,"#bfb3cc"],.3,0,30); } else { finale(g,0.5); label(g,"CITY LIGHTS!",8); } } },
+  event(g,tier){ g.fx.push({life:10}); if(tier>=1 && g.mem.wins){ const NW=g.mem.wins.length, k=units(g,NW), down=S.dir==="down", target = down ? NW-k : k-1; const idx=[...g.mem.rank].find(([i,r])=>r===target); if(idx){ const w=g.mem.wins[idx[0]]; burst(g,w[0],w[1], tier===2?24:10, [PAL.Y,PAL.W,PAL.O], 1, .01, 30); } } } },
 /* 5 — Aquarium: fish and coral fill the tank; bubbles on every press; the chest opens at the finish */
 aquarium:{
   draw(g){ box(g,0,0,g.W,g.H,"#1c0f30"); box(g,0,g.H-6,g.W,6,"#c9a26b"); for(let x=0;x<g.W;x+=7) box(g,x,g.H-6,2,1,"#a8854f");
