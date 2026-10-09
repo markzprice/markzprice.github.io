@@ -798,6 +798,63 @@ seesaw:{
   event(g,tier,pi){ if(tier>=1){ (g.mem.hop||(g.mem.hop={}))[1-pi]=g.t+0.8; } burst(g,pi===0?g.W*0.1:g.W*0.9,g.H-6,tier?10:3,[pi===0?PAL.O:PAL.P],.6,.03,14); } }
 });
 
+/* ---- Tower Fire: a burning high-rise; every press sprays the hose and puts out a window ---- */
+ANIMS.push(["tower","TOWER FIRE"]);
+const FIREMAN = [".hh.","hhhh",".ff.","bbbb","b..b"];
+const WATER = ["#d6f0ff","#ffffff","#a8dcff"];
+AN.tower = {
+  geo(g){ if(g.mem.geo && g.mem.geo.H===g.H) return g.mem.geo;
+    const cols=4, cw=8, ch=7, rows=Math.max(4, Math.floor((g.H-16)/ch)), bw=cols*cw+3, bx=Math.round(g.W*0.40-bw/2), by=g.H-3-rows*ch-3, N=cols*rows;
+    const rank=new Map(), byRank=[]; let n=0;
+    for(let r=0;r<rows;r++) order(cols, 300+r).forEach(c=>{ const i=r*cols+c; rank.set(i,n); byRank[n++]=i; });   // bottom floor first, the ladder climbs
+    const pos=i=>{ const r=Math.floor(i/cols), c=i%cols; return [bx+3+c*cw, g.H-3-ch-r*ch+1]; };
+    return g.mem.geo={H:g.H, cols, rows, cw, ch, bw, bx, by, N, rank, byRank, pos}; },
+  draw(g){ const G=this.geo(g), {N,bx,by,bw,pos,rank,byRank}=G, k=units(g,N), left=N-k, c=g.cx;
+    // orange glow behind the fire, fading as it goes out
+    if(left>0){ const top=pos(byRank[N-1])[1], gy=(top+g.H)/2, gr=c.createRadialGradient(bx+bw/2,gy,4,bx+bw/2,gy,g.H*0.95);
+      gr.addColorStop(0,`rgba(255,110,40,${(0.10+0.38*left/N).toFixed(3)})`); gr.addColorStop(1,"rgba(255,80,30,0)"); c.fillStyle=gr; c.fillRect(0,0,g.W,g.H); }
+    if(g.done){ if(!g.mem.stars){ const r=rng(41); g.mem.stars=[...Array(26)].map(()=>[r()*g.W, r()*g.H*0.55, r()*6]); }
+      g.mem.stars.forEach(([x,y,o])=>{ if(Math.sin(g.t*2+o)>-0.3) box(g,x,y,1,1,PAL.W); }); }
+    // the neighbours
+    [[3,0.30,16],[21,0.20,14],[g.W-22,0.34,18]].forEach(([x,h,w])=>{ const hh=Math.round(g.H*h)+8; box(g,x,g.H-3-hh,w,hh,"#1d1530");
+      for(let yy=g.H-hh;yy<g.H-6;yy+=5) for(let xx=x+2;xx<x+w-2;xx+=4) box(g,xx,yy,2,2,"#2a2040"); });
+    // the tower
+    box(g,bx,by,bw,g.H-3-by,"#3a2c4e"); box(g,bx,by,1,g.H-3-by,"#4c3c64"); box(g,bx-1,by-1,bw+2,2,"#5a4570");
+    box(g,bx+bw/2,by-8,1,7,"#5a4570"); box(g,bx+bw/2,by-9,1,1, Math.sin(g.t*4)>0?PAL.R:"#401018");
+    if(!g.mem.wet) g.mem.wet={};
+    for(let i=0;i<N;i++){ const [x,y]=pos(i), rk=rank.get(i);
+      if(rk>=k){ const f=Math.sin(g.t*9+i*1.7); box(g,x,y,5,4,f>0.2?PAL.Y:PAL.O); box(g,x+1,y+2,3,2,f>0.2?PAL.O:PAL.R);
+        for(let j=0;j<3;j++){ const h=Math.max(1,Math.round(2+Math.sin(g.t*11+i*2.3+j*1.9)*1.8)); box(g,x+1+j,y-h,1,h,j===1?PAL.Y:(j?PAL.R:PAL.O)); } }
+      else { const wet=g.mem.wet[i]>g.t; box(g,x,y,5,4,wet?"#7a7488":"#120c1c"); box(g,x+2,y,1,4,"#2a2040"); box(g,x,y+3,5,1,"#241a34"); } }
+    // smoke drifting from whatever is still burning
+    if(left>0 && Math.random()<0.2+0.5*left/N){ const [x,y]=pos(byRank[k+Math.floor(Math.random()*left)]);
+      g.parts.push({x:x+2, y:y-3, vx:(Math.random()-0.3)*0.25, vy:-0.25-Math.random()*0.3, gr:0, life:45+Math.random()*30|0, c:Math.random()<.5?"#4a4058":"#625874", s:2}); }
+    // fire engine
+    const tx=bx+bw+14, ty=g.H-11;
+    box(g,tx,ty,32,6,PAL.R); box(g,tx+24,ty-5,8,5,PAL.R); box(g,tx+26,ty-4,4,2,"#ffe8d0"); box(g,tx,ty+3,32,1,PAL.W);
+    const sir=Math.sin(g.t*(g.done?6:10))>0; box(g,tx+24,ty-6,3,1,sir?PAL.Y:PAL.W); box(g,tx+28,ty-6,3,1,sir?PAL.W:PAL.Y);
+    disc(g,tx+7,g.H-4,2.5,"#1a1420"); disc(g,tx+25,g.H-4,2.5,"#1a1420"); box(g,0,g.H-3,g.W,3,"#2a2036");
+    // ladder: swings up to the lowest window still burning, then to the roof
+    const aim = k<N ? pos(byRank[k]) : null, tipY = aim ? aim[1]+3 : by-1, tipX = aim ? bx+bw+2 : bx+bw-1;
+    g.mem.ly = g.mem.ly==null ? ty-6 : g.mem.ly + (tipY-g.mem.ly)*0.12;
+    const px=tx+6, py=ty-1, ex=tipX, ey=g.mem.ly, len=Math.hypot(ex-px,ey-py), ux=(ex-px)/len, uy=(ey-py)/len, nx=-uy, ny=ux;
+    for(let s=0;s<=len;s++){ box(g,px+ux*s,py+uy*s,1,1,"#c8c4d4"); box(g,px+ux*s+nx*3,py+uy*s+ny*3,1,1,"#c8c4d4");
+      if(s%3===0) for(let q=1;q<3;q++) box(g,px+ux*s+nx*q,py+uy*s+ny*q,1,1,"#8a8498"); }
+    box(g,px-1,py-1,4,3,"#8a8498");
+    // firefighter on the ladder (player colour), hose aimed at the window
+    const fx=ex+1, fy=ey-6; spr(g,FIREMAN,fx,fy,{h:PAL.Y,f:"#ffd8b0",b:g.col});
+    if(aim && g.mem.spray>g.t){ const wx=aim[0]+2, wy=aim[1]+1, sx=fx, sy=fy+2;
+      for(let s=0;s<=1;s+=0.04){ const x=sx+(wx-sx)*s, y=sy+(wy-sy)*s-Math.sin(s*Math.PI)*5, ph=((s*25-g.t*30)%3+3)%3;
+        box(g,x,y,1,1,WATER[ph|0]); if(ph<1) box(g,x,y+1,1,1,WATER[2]); } }
+    if(g.done){ if(Math.random()<.6){ const d=Math.random()<.5?-1:1; g.parts.push({x:tx+6, y:ty-2, vx:d*(0.6+Math.random()*0.5), vy:-2-Math.random()*0.5, gr:0.06, life:70, c:WATER[(Math.random()*3)|0], s:1}); }
+      finale(g,0.6); label(g,"FIRE'S OUT!",8); } },
+  event(g,tier){ const G=g.mem.geo; if(!G) return; g.mem.spray=g.t+(tier?0.9:0.35);
+    const k=units(g,G.N), k0=prevUnits(g,G.N); if(!g.mem.wet) g.mem.wet={};
+    for(let r=k0;r<k;r++){ const i=G.byRank[r], [x,y]=G.pos(i); g.mem.wet[i]=g.t+1.4;
+      burst(g,x+2,y, tier?16:8, ["#d8d0e0","#9a90a8",PAL.W], tier?0.9:0.6, -0.02, 32); }
+    if(tier>=1 && k<G.N){ const [x,y]=G.pos(G.byRank[Math.min(k,G.N-1)]); burst(g,x+2,y+1, tier===2?30:14, WATER, tier===2?1.6:1, 0.04, 30); }
+    if(tier===2){ const row=Math.floor(G.byRank[Math.max(0,k-1)]/G.cols); for(let c=0;c<G.cols;c++){ const [x,y]=G.pos(row*G.cols+c); burst(g,x+2,y+1,6,WATER,0.8,0.05,26); } } } };
+
 function launch(g,big){ const cs=[[PAL.R,PAL.O,PAL.Y],[PAL.P,PAL.K,PAL.W],[PAL.Y,PAL.W,PAL.O],[PAL.K,PAL.R,PAL.Y],[PAL.P,PAL.W,PAL.Y]][(Math.random()*5)|0];
   g.fx.push({x:20+Math.random()*(g.W-40), y:g.H-8, vy:-(2.0+Math.random()*1.0)*Math.sqrt(g.H/96), cols:cs, big}); }
 function drop(g,col){ const path=[0]; for(let r=0;r<7;r++) path.push(path[r]+(Math.random()<.5?0:1)); g.fx.push({t0:g.t, path, bin:path[7], c:col}); }
