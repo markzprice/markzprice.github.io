@@ -75,6 +75,9 @@ input:focus{outline:none;border-color:var(--yel);}
 .pcard.p1 h3{color:var(--p1);} .pcard.p2 h3{color:var(--p2);}
 .mini{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;}
 .mini > div{min-width:150px;}
+.kidsbtn{align-self:center;margin-left:6px;background:transparent;color:var(--dim);border:2px dashed #3a2350;padding:5px 9px;font-size:9px;letter-spacing:.1em;cursor:pointer;}
+.kidsbtn.on{color:var(--pink);border:2px solid var(--pink);box-shadow:0 0 8px rgba(255,95,168,.45);}
+.kidsbtn:focus-visible{outline:2px dashed var(--pink);}
 .mshint{font-size:9px;color:var(--dim);letter-spacing:.1em;margin-top:10px;line-height:1.8;}
 .mini label{font-size:9px;color:var(--dim);display:block;margin-bottom:6px;letter-spacing:.1em;}
 .mini input{width:110px;}
@@ -161,7 +164,7 @@ input:focus{outline:none;border-color:var(--yel);}
   <!-- SETUP -->
   <div class="screen" id="setup"><div class="col">
     <div class="row"><div class="lab">PLAYERS</div><div class="opts" data-k="players">
-      <button class="opt" data-v="1">1 PLAYER</button><button class="opt" data-v="2">2 PLAYERS</button></div></div>
+      <button class="opt" data-v="1">1 PLAYER</button><button class="opt" data-v="2">2 PLAYERS</button><button type="button" class="kidsbtn" id="kids" aria-pressed="false">KIDS MODE</button></div></div>
     <div class="row" id="moderow"><div class="lab">2-PLAYER MODE</div><div class="opts" data-k="mode">
       <button class="opt" data-v="team">TEAM · ONE TOTAL</button><button class="opt" data-v="separate">SEPARATE · OWN GOALS</button><button class="opt" data-v="race">RACE · FIRST TO FINISH</button></div></div>
     <div class="row"><div class="lab">COUNT</div><div class="opts" data-k="dir">
@@ -190,7 +193,10 @@ input:focus{outline:none;border-color:var(--yel);}
 "use strict";
 /* ================= STATE ================= */
 const KEY = "cleaningClicker.v1";
-const PRESETS = {100:[5,25], 250:[10,50], 500:[25,100], 750:[25,150], 1000:[25,100]};
+/* goal presets: goal -> [small cheer every, big cheer every]. Kids mode swaps in shorter goals with cheers close together. */
+const PRESETS_ADULT = {100:[5,25], 250:[10,50], 500:[25,100], 750:[25,150], 1000:[25,100]};
+const PRESETS_KIDS  = {25:[5,10], 50:[5,25], 75:[5,25], 100:[10,25], 150:[10,25]};
+let PRESETS = PRESETS_ADULT;
 const GAMES = [
   ["dots","DOT-EATER"],["flower","GROW A FLOWER"],["clear","CLEAR A SQUARE"],["race","RACE"],["bubble","BUBBLE WRAP"],
   ["tower","BUILD A TOWER"],["mountain","CLIMB A MOUNTAIN"],["jar","FILL THE JAR"],["rocket","ROCKET"],
@@ -201,6 +207,7 @@ function fresh(){ return {phase:"setup", players:1, mode:"team", dir:"up", goalN
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch(e){ S = fresh(); }
 if (!S.p || S.p.length < 2) S = fresh();
+S.kids = !!S.kids; PRESETS = S.kids ? PRESETS_KIDS : PRESETS_ADULT;
 S.p.forEach(p=>{ if(!PRESETS[p.goal]){ const ks=Object.keys(PRESETS).map(Number); p.goal=ks.reduce((a,b)=>Math.abs(b-p.goal)<Math.abs(a-p.goal)?b:a); } [p.small,p.big]=PRESETS[p.goal]; });
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 
@@ -876,7 +883,16 @@ function goalBlock(i, label){
   return `<div class="lab">${label}</div><div class="opts">${presets}</div>
     <div class="mshint">SMALL CHEER EVERY ${sm} · BIG CHEER EVERY ${bg}</div>`;
 }
+function setKids(on){
+  const from = Object.keys(PRESETS).map(Number), to = Object.keys(on ? PRESETS_KIDS : PRESETS_ADULT).map(Number);
+  S.kids = on; PRESETS = on ? PRESETS_KIDS : PRESETS_ADULT;
+  // same slot in the other list: 100→25, 250→50, 500→75, 750→100, 1000→150 (and back)
+  S.p.forEach(p=>{ const k = from.indexOf(p.goal); p.goal = to[k < 0 ? to.length-1 : k]; [p.small,p.big] = PRESETS[p.goal]; });
+  save(); drawSetup();
+}
 function drawSetup(){
+  const kb = $("#kids"); kb.classList.toggle("on", S.kids); kb.setAttribute("aria-pressed", S.kids ? "true" : "false");
+  kb.textContent = S.kids ? "KIDS MODE · ON" : "KIDS MODE";
   document.querySelectorAll("#setup .opts[data-k]").forEach(box=>{
     const k=box.dataset.k; box.querySelectorAll(".opt").forEach(b=>b.classList.toggle("sel", String(S[k])===b.dataset.v)); });
   $("#moderow").style.display = S.players===2 ? "" : "none";
@@ -916,6 +932,7 @@ $("#pcards").addEventListener("input", e=>{
   if(f==="goal") document.querySelectorAll(`[data-goal][data-pi="${i}"]`).forEach(b=>b.classList.toggle("sel", +b.dataset.goal===S.p[i].goal));
 });
 $("#goalName").addEventListener("input", e=>{ S.goalName = e.target.value.toUpperCase().slice(0,24); save(); });
+$("#kids").addEventListener("click", e=>{ e.stopPropagation(); setKids(!S.kids); });
 $("#start").addEventListener("click", startGame);
 function startGame(){
   ac();   // unlock audio on this gesture
