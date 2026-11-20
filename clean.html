@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Clean">
+<meta name="theme-color" content="#f2ece0">
+<title>Clean</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --bg:#f2ece0; --panel:#e8e0d0; --ink:#0e0800; --soft:#5c5040; --work:#c4511a; --rest:#6b3fa0; --pix:'Press Start 2P','Courier New',monospace; }
+body { font-family:'Courier New',Courier,monospace; background:var(--bg); color:var(--ink); font-size:16px; line-height:1.45; min-height:100vh;
+  -webkit-tap-highlight-color:transparent; padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+.wrap { max-width:520px; margin:0 auto; padding:14px 14px 40px; }
+.screen { display:none; } .screen.on { display:block; }
+h1 { font-family:var(--pix); font-size:14px; letter-spacing:1px; margin:6px 0 14px; }
+.card { background:#fffaf0; border:2px solid var(--ink); border-radius:10px; padding:12px 14px; margin-bottom:14px; }
+.lab { font-size:13px; color:var(--soft); }
+.big { font-size:19px; font-weight:bold; margin-top:2px; }
+button { font-family:inherit; color:var(--ink); background:#fffaf0; border:2px solid var(--ink); border-radius:10px; cursor:pointer; touch-action:manipulation; }
+button:active { transform:scale(0.97); }
+button:disabled { opacity:.35; }
+.grid { display:grid; grid-template-columns:76px repeat(3, minmax(0,1fr)); gap:8px; align-items:stretch; }
+.grid .hd { font-size:13px; color:var(--soft); text-align:center; align-self:end; }
+.grid .rw { font-size:13px; color:var(--soft); align-self:center; }
+.grid button { min-height:74px; font-size:15px; font-weight:bold; padding:6px 2px; line-height:1.2; }
+.grid button.usual { border-width:3px; border-color:var(--work); }
+.counts { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0; text-align:center; }
+.counts div { background:var(--panel); border-radius:10px; padding:8px 0; font-size:13px; }
+.counts b { display:block; font-size:22px; }
+.links { display:flex; justify-content:space-between; margin-top:10px; }
+.linkbtn { border:none; background:none; text-decoration:underline; font-size:14px; color:var(--soft); padding:8px 4px; }
+#phase { font-family:var(--pix); font-size:20px; text-align:center; margin:8px 0 12px; color:var(--work); }
+body[data-phase="rest"] #phase { color:var(--rest); }
+body[data-phase="break"] #phase { color:var(--rest); }
+.now { display:flex; gap:10px; align-items:center; }
+.now .txt { flex:1; }
+#zoneB { font-size:15px; font-weight:bold; padding:14px 12px; background:#ffe9cf; }
+.adj { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:12px 0 8px; }
+.adj button { padding:14px 2px; font-size:15px; font-weight:bold; line-height:1.15; }
+.adj small { display:block; font-size:12px; font-weight:normal; color:var(--soft); margin-top:3px; }
+.adj button.hit { background:#ffd23f; }
+#goB { width:100%; padding:14px; font-size:17px; font-weight:bold; background:#efe2fb; margin-bottom:8px; }
+.towerbox { background:#120c1c; border:2px solid var(--ink); border-radius:10px; overflow:hidden; margin:12px 0 8px; }
+#tower { display:block; width:100%; aspect-ratio:2/1; image-rendering:pixelated; }
+#bagB { width:100%; padding:16px; font-size:18px; font-weight:bold; background:#ffe9cf; }
+.breaks { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+.breaks button { padding:12px 4px; font-size:15px; }
+#hourB { border:none; background:none; text-decoration:underline; font-size:13px; color:var(--soft); padding:10px 4px; }
+.ov { display:none; position:fixed; inset:0; background:rgba(14,8,0,.55); z-index:20; align-items:center; justify-content:center; padding:16px; }
+.ov.on { display:flex; }
+.ov .box { background:var(--bg); border:3px solid var(--ink); border-radius:14px; padding:18px; max-width:460px; width:100%; }
+.ov h2 { font-size:20px; margin-bottom:6px; }
+.pickrow { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:6px 0 12px; }
+.pick { padding:14px 2px; font-size:15px; font-weight:bold; }
+.pick.sel { background:#ffd23f; border-width:3px; }
+.note { font-size:14px; color:var(--soft); margin:6px 0 10px; }
+.hold { position:relative; width:100%; padding:18px; font-size:17px; font-weight:bold; overflow:hidden; user-select:none; -webkit-user-select:none; }
+.hold .fill { position:absolute; left:0; top:0; bottom:0; width:0%; background:#ffd23f; }
+.hold .lab { position:relative; color:var(--ink); font-size:17px; }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.row2 button { padding:14px; font-size:16px; font-weight:bold; }
+#cel .box { text-align:center; border-color:var(--work); }
+#celBanner { font-family:var(--pix); font-size:20px; line-height:1.5; margin:6px 0 12px; text-shadow:2px 2px 0 var(--ink); }
+#celDone { font-size:18px; font-weight:bold; }
+#celNext { margin-top:10px; color:var(--soft); }
+#fx { position:fixed; inset:0; pointer-events:none; z-index:30; }
+label.f { display:block; font-size:14px; margin:12px 0 4px; }
+input, select, textarea { font-family:inherit; font-size:16px; width:100%; padding:8px; border:2px solid var(--ink); border-radius:8px; background:#fffaf0; color:var(--ink); }
+textarea { min-height:260px; font-size:14px; line-height:1.4; }
+#setErr { color:#a32d2d; font-size:14px; margin-top:8px; min-height:1em; }
+.sum b { font-size:28px; }
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="wrap">
+
+<section class="screen" id="start">
+  <h1>CLEAN</h1>
+  <div class="card"><div class="lab" id="nextArea"></div><div class="big" id="nextUp"></div></div>
+  <div class="grid">
+    <span></span><span class="hd">Head clear</span><span class="hd">Foggy</span><span class="hd">Fried</span>
+    <span class="rw">Body fresh</span>
+    <button class="usual" onclick="begin('fresh','clear')">Fresh<br>clear</button>
+    <button onclick="begin('fresh','foggy')">Fresh<br>foggy</button>
+    <button onclick="begin('fresh','fried')">Fresh<br>fried</button>
+    <span class="rw">Tired</span>
+    <button onclick="begin('tired','clear')">Tired<br>clear</button>
+    <button onclick="begin('tired','foggy')">Tired<br>foggy</button>
+    <button onclick="begin('tired','fried')">Tired<br>fried</button>
+    <span class="rw">Very tired</span>
+    <button onclick="begin('very','clear')">Very tired<br>clear</button>
+    <button onclick="begin('very','foggy')">Very tired<br>foggy</button>
+    <button onclick="begin('very','fried')">Very tired<br>fried</button>
+  </div>
+  <div class="counts"><div><b class="cBags">0</b>bags today</div><div><b class="cZones">0</b>zones done</div><div><b class="cBlocks">0</b>blocks</div></div>
+  <div class="links"><span></span><button class="linkbtn" onclick="openSettings()">Settings</button></div>
+</section>
+
+<section class="screen" id="run">
+  <div id="phase">Work</div>
+  <div class="card now"><div class="txt"><div class="lab" id="nowLabel">Now</div><div class="big" id="nowTask"></div></div>
+    <button id="zoneB" onclick="zoneDone()">Zone<br>done</button></div>
+  <div class="adj">
+    <button id="bodyB" onclick="bodyBtn()">Body<small>longer rests</small></button>
+    <button id="headB" onclick="headBtn()">Head<small>shorter blocks</small></button>
+    <button id="frusB" onclick="frustratedBtn()">Frustrated<small>easy task</small></button>
+  </div>
+  <button id="goB" onclick="goBtn()">Go: start the next block now</button>
+  <div class="towerbox"><canvas id="tower"></canvas></div>
+  <button id="bagB" onclick="bag()">+ Bag</button>
+  <div class="counts"><div><b class="cBags">0</b>bags today</div><div><b class="cZones">0</b>zones done</div><div><b class="cBlocks">0</b>blocks</div></div>
+  <div class="breaks"><button id="sandB" onclick="startBreak('sandwich')">Sandwich</button><button id="mealB" onclick="startBreak('meal')">Real meal</button></div>
+  <div class="links"><button id="hourB" onclick="startBreak('hour')">one long break</button><button class="linkbtn" onclick="doneToday()">Done for today</button></div>
+</section>
+
+<section class="screen" id="summary">
+  <h1>THAT'S THE DAY</h1>
+  <div class="counts sum"><div><b id="sumZones">0</b>zones</div><div><b id="sumBags">0</b>bags</div><div><b id="sumBlocks">0</b>blocks</div></div>
+  <button style="width:100%;padding:16px;font-size:17px;font-weight:bold" onclick="render();show('start')">Back to start</button>
+</section>
+
+<section class="screen" id="settings">
+  <h1>SETTINGS</h1>
+  <label class="f" for="setC1">First ceiling (hours of work)</label><input id="setC1" type="number" step="0.25" min="0.5">
+  <label class="f" for="setC2">Hard ceiling (hours of work)</label><input id="setC2" type="number" step="0.25" min="0.75">
+  <label class="f" for="setPB">Bags per building</label><input id="setPB" type="number" step="1" min="2" max="40">
+  <label class="f" for="voiceSel">Voice</label><select id="voiceSel"></select>
+  <label class="f" for="setTasks">The list (one zone per line; a line starting with # names the area)</label><textarea id="setTasks"></textarea>
+  <div id="setErr"></div>
+  <div class="row2"><button onclick="saveSettings()">Save</button><button onclick="show(S.run?'run':'start')">Back</button></div>
+  <div class="row2"><button onclick="resetList()">Reset the list</button><button onclick="resetToday()">Clear today</button></div>
+</section>
+
+</div>
+
+<div class="ov" id="ceil"><div class="box">
+  <h2 id="ceilTitle">That's today's ceiling</h2><p class="note" id="ceilText"></p>
+  <div class="lab">Body</div>
+  <div class="pickrow"><button class="pick" onclick="ceilPick('body','fresh',this)">Fresh</button><button class="pick" onclick="ceilPick('body','tired',this)">Tired</button><button class="pick" onclick="ceilPick('body','very',this)">Very tired</button></div>
+  <div class="lab">Head</div>
+  <div class="pickrow"><button class="pick" onclick="ceilPick('head','clear',this)">Clear</button><button class="pick" onclick="ceilPick('head','foggy',this)">Foggy</button><button class="pick" onclick="ceilPick('head','fried',this)">Fried</button></div>
+  <div id="ceilAction"></div>
+  <button style="width:100%;padding:14px;font-size:16px;margin-top:10px" onclick="doneToday()">Done for today</button>
+</div></div>
+
+<div class="ov" id="conf"><div class="box">
+  <h2 id="confText"></h2>
+  <div class="row2"><button id="confYes" onclick="confirmAnswer(true)">Yes</button><button onclick="confirmAnswer(false)">Not now</button></div>
+</div></div>
+
+<div class="ov" id="cel" onclick="overlay('cel',false)"><div class="box">
+  <div id="celBanner">ZONE DONE!</div><div id="celDone"></div><div class="note">Snap your after photo.</div><div id="celNext"></div>
+</div></div>
+
+<script>
+/* From cleaning-clicker.html (Tower Fire, audio, helpers), reused as is. */
+let AC = null, BUS = null;
+function ac(){
+  if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)();
+    const comp = AC.createDynamicsCompressor(); comp.threshold.value = -18; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.2;
+    BUS = AC.createGain(); BUS.gain.value = 1.6; BUS.connect(comp).connect(AC.destination);
+  }catch(e){} }
+  if(AC && AC.state === "suspended") AC.resume();
+  return AC;
+}
+const VOICE = [ {wave:"square", base:523.25, chord:[0,4,7]},      // P1: bright, C major
+                {wave:"sawtooth", base:349.23, chord:[0,4,7]} ];  // P2: buzzier, F major, lower
+const semi = (base, n) => base * Math.pow(2, n/12);
+function tone(freq, t0, dur, wave, vol, opts){
+  const a = ac(); if(!a) return;
+  const o = a.createOscillator(), g = a.createGain(); let out = g;
+  o.type = wave; o.frequency.setValueAtTime(freq, t0);
+  if(opts && opts.slideTo) o.frequency.exponentialRampToValueAtTime(opts.slideTo, t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g);
+  if(opts && opts.lp){ const f = a.createBiquadFilter(); f.type = "lowpass"; f.Q.value = 6;
+    f.frequency.setValueAtTime(opts.lp[0], t0); f.frequency.exponentialRampToValueAtTime(opts.lp[1], t0 + dur*0.6); g.connect(f); out = f; }
+  out.connect(BUS); o.start(t0); o.stop(t0 + dur + 0.03);
+}
+function noise(t0, dur, vol, type, freq){
+  const a = ac(); if(!a) return;
+  const b = a.createBuffer(1, Math.max(1, a.sampleRate*dur|0), a.sampleRate), d = b.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  const s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+  s.buffer = b; f.type = type || "highpass"; f.frequency.value = freq || 5000;
+  g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  s.connect(f).connect(g).connect(BUS); s.start(t0);
+}
+// Mark 2026-10-09: "beep beep boop boop level noises are fine, they just need to be louder" — the original simple
+// sounds, roughly 3x louder, through the compressor bus (loud without distorting).
+function sndPress(pi){ const a=ac(); if(!a) return; const v=VOICE[pi]; tone(semi(v.base,12), a.currentTime, 0.08, v.wave, 0.18); }
+function sndSmall(pi){ const a=ac(); if(!a) return; const v=VOICE[pi], t=a.currentTime;
+  [0,4,7,12].forEach((n,i)=>tone(semi(v.base,n+12), t+i*0.07, 0.16, v.wave, 0.3)); }
+function sndBig(pi){ const a=ac(); if(!a) return; const v=VOICE[pi], t=a.currentTime;
+  const seq=[0,4,7,12,7,12,16,19,24];
+  seq.forEach((n,i)=>tone(semi(v.base,n), t+i*0.11, 0.24, v.wave, 0.32));
+  seq.forEach((n,i)=>tone(semi(v.base,n-12), t+i*0.11, 0.24, "triangle", 0.25));
+  noise(t+seq.length*0.11, 0.4, 0.35, "highpass", 3000); }
+function sndFinish(){ const a=ac(); if(!a) return; const t=a.currentTime; const B=392;
+  const mel=[[0,.18],[4,.18],[7,.18],[12,.36],[7,.18],[12,.54],[14,.18],[16,.18],[19,.18],[24,.72],[19,.18],[24,.18],[28,.18],[31,1.2]];
+  let x=t; mel.forEach(([n,d])=>{ tone(semi(B,n),x,d*.95,"square",.32); tone(semi(B,n-12),x,d*.95,"triangle",.26); x+=d; });
+  [0,0.6,1.2,1.9,2.6,3.2,3.6].forEach(o=>noise(t+o,0.45,0.38,"highpass",3000));
+  [[0,7,12],[5,9,12],[7,11,14],[12,16,19]].forEach((ch,i)=>ch.forEach(n=>tone(semi(B/2,n), t+i*1.0, 0.95, "sawtooth", 0.1))); }
+// iPad/iPhone: audio only unlocks inside a touch gesture, so wake it on the first touch anywhere
+addEventListener("touchend", function unlock(){ const a=ac(); if(a){ const b=a.createBuffer(1,1,22050), s=a.createBufferSource(); s.buffer=b; s.connect(a.destination); s.start(0); } removeEventListener("touchend", unlock); }, {passive:true});
+function rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function order(n, seed){ const r=rng(seed), a=[...Array(n).keys()]; for(let i=n-1;i>0;i--){ const j=(r()*(i+1))|0; [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const PAL = {Y:"#ffd23f", R:"#ff3b3b", O:"#ff8a1f", P:"#dc9bff", K:"#ff5fa8", W:"#fff6e8", D:"#07040c"};
+const FIRE = [PAL.Y,PAL.R,PAL.O,PAL.P,PAL.K,PAL.W];
+function box(g,x,y,w,h,c){ g.cx.fillStyle=c; g.cx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); }
+function spr(g, rows, x, y, pal, flip, sc){ sc=sc||1; const c=g.cx; for(let r=0;r<rows.length;r++){ const row=rows[r]; for(let k=0;k<row.length;k++){ const ch=row[flip?row.length-1-k:k]; if(ch==="."||ch===" ") continue; c.fillStyle=pal[ch]||PAL[ch]||"#fff"; c.fillRect(Math.round(x)+k*sc, Math.round(y)+r*sc, sc, sc); } } }
+function disc(g,x,y,r,c){ g.cx.fillStyle=c; g.cx.beginPath(); g.cx.arc(x,y,r,0,Math.PI*2); g.cx.fill(); }
+function burst(g,x,y,n,cols,sp,grav,life){ for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, v=(Math.random()*.7+.3)*(sp||1.4);
+  g.parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-(grav?0.6:0),life:(life||36)*(0.6+Math.random()*.6),c:cols[(Math.random()*cols.length)|0],gr:grav||0,s:1}); } }
+function stepParts(g){ const c=g.cx; g.parts=g.parts.filter(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=p.gr; p.life--; if(p.life<=0||p.y>g.H+4) return false; c.fillStyle=p.c; c.fillRect(Math.round(p.x),Math.round(p.y),p.s,p.s); return true; });
+  if(g.parts.length>900) g.parts.splice(0, g.parts.length-900); }
+function label(g, s, y, col){ const c=g.cx; c.font='8px "Press Start 2P", monospace'; c.textAlign="center"; c.textBaseline="middle";
+  const w=c.measureText(s).width; c.fillStyle="rgba(7,4,12,.78)"; c.fillRect(Math.round(g.W/2-w/2-3), Math.round(y-6), Math.ceil(w+6), 12);
+  c.fillStyle=PAL.R; c.fillText(s, g.W/2+1, y+1); c.fillStyle=col||PAL.Y; c.fillText(s, g.W/2, y); }
+const units = (g,N) => Math.min(N, Math.floor(g.p*N));
+const prevUnits = (g,N) => Math.min(N, Math.floor(Math.max(0,g.n-1)/Math.max(1,g.goal)*N));
+function finale(g, rate){ if(!g.mem.fin || g.t>g.mem.fin){ g.mem.fin=g.t+(rate||0.28); burst(g, 16+Math.random()*(g.W-32), 8+Math.random()*(g.H*.5), 22, FIRE, 1.5, 0.02, 44); } }
+const AN = {};
+const ANIMS = [];
+/* ---- Tower Fire: a burning high-rise; every press sprays the hose and puts out a window ---- */
+ANIMS.push(["tower","TOWER FIRE"]);
+const FIREMAN = [".hh.","hhhh",".ff.","bbbb","b..b"];
+const WATER = ["#d6f0ff","#ffffff","#a8dcff"];
+AN.tower = {
+  geo(g){ if(g.mem.geo && g.mem.geo.H===g.H) return g.mem.geo;
+    const cols=4, cw=8, ch=7, rows=Math.max(4, Math.floor((g.H-16)/ch)), bw=cols*cw+3, bx=Math.round(g.W*0.40-bw/2), by=g.H-3-rows*ch-3, N=cols*rows;
+    const rank=new Map(), byRank=[]; let n=0;
+    for(let r=0;r<rows;r++) order(cols, 300+r).forEach(c=>{ const i=r*cols+c; rank.set(i,n); byRank[n++]=i; });   // bottom floor first, the ladder climbs
+    const pos=i=>{ const r=Math.floor(i/cols), c=i%cols; return [bx+3+c*cw, g.H-3-ch-r*ch+1]; };
+    return g.mem.geo={H:g.H, cols, rows, cw, ch, bw, bx, by, N, rank, byRank, pos}; },
+  draw(g){ const G=this.geo(g), {N,bx,by,bw,pos,rank,byRank}=G, k=units(g,N), left=N-k, c=g.cx;
+    // orange glow behind the fire, fading as it goes out
+    if(left>0){ const top=pos(byRank[N-1])[1], gy=(top+g.H)/2, gr=c.createRadialGradient(bx+bw/2,gy,4,bx+bw/2,gy,g.H*0.95);
+      gr.addColorStop(0,`rgba(255,110,40,${(0.10+0.38*left/N).toFixed(3)})`); gr.addColorStop(1,"rgba(255,80,30,0)"); c.fillStyle=gr; c.fillRect(0,0,g.W,g.H); }
+    if(g.done){ if(!g.mem.stars){ const r=rng(41); g.mem.stars=[...Array(26)].map(()=>[r()*g.W, r()*g.H*0.55, r()*6]); }
+      g.mem.stars.forEach(([x,y,o])=>{ if(Math.sin(g.t*2+o)>-0.3) box(g,x,y,1,1,PAL.W); }); }
+    // the neighbours
+    [[3,0.30,16],[21,0.20,14],[g.W-22,0.34,18]].forEach(([x,h,w])=>{ const hh=Math.round(g.H*h)+8; box(g,x,g.H-3-hh,w,hh,"#1d1530");
+      for(let yy=g.H-hh;yy<g.H-6;yy+=5) for(let xx=x+2;xx<x+w-2;xx+=4) box(g,xx,yy,2,2,"#2a2040"); });
+    // the tower
+    box(g,bx,by,bw,g.H-3-by,"#3a2c4e"); box(g,bx,by,1,g.H-3-by,"#4c3c64"); box(g,bx-1,by-1,bw+2,2,"#5a4570");
+    box(g,bx+bw/2,by-8,1,7,"#5a4570"); box(g,bx+bw/2,by-9,1,1, Math.sin(g.t*4)>0?PAL.R:"#401018");
+    if(!g.mem.wet) g.mem.wet={};
+    for(let i=0;i<N;i++){ const [x,y]=pos(i), rk=rank.get(i);
+      if(rk>=k){ const f=Math.sin(g.t*9+i*1.7); box(g,x,y,5,4,f>0.2?PAL.Y:PAL.O); box(g,x+1,y+2,3,2,f>0.2?PAL.O:PAL.R);
+        for(let j=0;j<3;j++){ const h=Math.max(1,Math.round(2+Math.sin(g.t*11+i*2.3+j*1.9)*1.8)); box(g,x+1+j,y-h,1,h,j===1?PAL.Y:(j?PAL.R:PAL.O)); } }
+      else { const wet=g.mem.wet[i]>g.t; box(g,x,y,5,4,wet?"#7a7488":"#120c1c"); box(g,x+2,y,1,4,"#2a2040"); box(g,x,y+3,5,1,"#241a34"); } }
+    // smoke drifting from whatever is still burning
+    if(left>0 && Math.random()<0.2+0.5*left/N){ const [x,y]=pos(byRank[k+Math.floor(Math.random()*left)]);
+      g.parts.push({x:x+2, y:y-3, vx:(Math.random()-0.3)*0.25, vy:-0.25-Math.random()*0.3, gr:0, life:45+Math.random()*30|0, c:Math.random()<.5?"#4a4058":"#625874", s:2}); }
+    // fire engine
+    const tx=bx+bw+14, ty=g.H-11;
+    box(g,tx,ty,32,6,PAL.R); box(g,tx+24,ty-5,8,5,PAL.R); box(g,tx+26,ty-4,4,2,"#ffe8d0"); box(g,tx,ty+3,32,1,PAL.W);
+    const sir=Math.sin(g.t*(g.done?6:10))>0; box(g,tx+24,ty-6,3,1,sir?PAL.Y:PAL.W); box(g,tx+28,ty-6,3,1,sir?PAL.W:PAL.Y);
+    disc(g,tx+7,g.H-4,2.5,"#1a1420"); disc(g,tx+25,g.H-4,2.5,"#1a1420"); box(g,0,g.H-3,g.W,3,"#2a2036");
+    // ladder: swings up to the lowest window still burning, then to the roof
+    const aim = k<N ? pos(byRank[k]) : null, tipY = aim ? aim[1]+3 : by-1, tipX = aim ? bx+bw+2 : bx+bw-1;
+    g.mem.ly = g.mem.ly==null ? ty-6 : g.mem.ly + (tipY-g.mem.ly)*0.12;
+    const px=tx+6, py=ty-1, ex=tipX, ey=g.mem.ly, len=Math.hypot(ex-px,ey-py), ux=(ex-px)/len, uy=(ey-py)/len, nx=-uy, ny=ux;
+    for(let s=0;s<=len;s++){ box(g,px+ux*s,py+uy*s,1,1,"#c8c4d4"); box(g,px+ux*s+nx*3,py+uy*s+ny*3,1,1,"#c8c4d4");
+      if(s%3===0) for(let q=1;q<3;q++) box(g,px+ux*s+nx*q,py+uy*s+ny*q,1,1,"#8a8498"); }
+    box(g,px-1,py-1,4,3,"#8a8498");
+    // firefighter on the ladder (player colour), hose aimed at the window
+    const fx=ex+1, fy=ey-6; spr(g,FIREMAN,fx,fy,{h:PAL.Y,f:"#ffd8b0",b:g.col});
+    if(aim && g.mem.spray>g.t){ const wx=aim[0]+2, wy=aim[1]+1, sx=fx, sy=fy+2;
+      for(let s=0;s<=1;s+=0.04){ const x=sx+(wx-sx)*s, y=sy+(wy-sy)*s-Math.sin(s*Math.PI)*5, ph=((s*25-g.t*30)%3+3)%3;
+        box(g,x,y,1,1,WATER[ph|0]); if(ph<1) box(g,x,y+1,1,1,WATER[2]); } }
+    if(g.done){ if(Math.random()<.6){ const d=Math.random()<.5?-1:1; g.parts.push({x:tx+6, y:ty-2, vx:d*(0.6+Math.random()*0.5), vy:-2-Math.random()*0.5, gr:0.06, life:70, c:WATER[(Math.random()*3)|0], s:1}); }
+      finale(g,0.6); label(g,"FIRE'S OUT!",8); } },
+  event(g,tier){ const G=g.mem.geo; if(!G) return; g.mem.spray=g.t+(tier?0.9:0.35);
+    const k=units(g,G.N), k0=prevUnits(g,G.N); if(!g.mem.wet) g.mem.wet={};
+    for(let r=k0;r<k;r++){ const i=G.byRank[r], [x,y]=G.pos(i); g.mem.wet[i]=g.t+1.4;
+      burst(g,x+2,y, tier?16:8, ["#d8d0e0","#9a90a8",PAL.W], tier?0.9:0.6, -0.02, 32); }
+    if(tier>=1 && k<G.N){ const [x,y]=G.pos(G.byRank[Math.min(k,G.N-1)]); burst(g,x+2,y+1, tier===2?30:14, WATER, tier===2?1.6:1, 0.04, 30); }
+    if(tier===2){ const row=Math.floor(G.byRank[Math.max(0,k-1)]/G.cols); for(let c=0;c<G.cols;c++){ const [x,y]=G.pos(row*G.cols+c); burst(g,x+2,y+1,6,WATER,0.8,0.05,26); } } } };
+/* ================= CLEAN: the cleaning timer (Mark, 2026-11-20) =================
+   Design rulings live in Claude/Projects/House Cleaning/STATE - House Cleaning.md.
+   No times on screen. Start = one tap on the 3x3 Body/Head grid. Body and Head step
+   hidden ladders. Frustrated = easy task for that block only. The task list moves only
+   on "Zone done". Spoken at every change: what you did, then what's next.
+   Add ?speed=60 to the address to run time 60x faster (for testing). */
+
+const SPEED = Math.max(1, Number(new URLSearchParams(location.search).get("speed")) || 1);
+const WORK = [12, 10, 8, 6, 5, 3];          // Head ladder (minutes of work); 3 is the end-of-day signal
+const REST = [8, 10, 12, 14, 15];           // Body ladder (minutes of rest)
+const START_W = { clear: 0, foggy: 2, fried: 4 };
+const START_R = { fresh: 0, tired: 2, very: 4 };
+const BREAKS = { sandwich: [22, "Sandwich break"], meal: [30, "Real meal break"], hour: [60, "Long break"] };
+const EASY = ["Trash: fill a bag from the room you're in", "Dishes: carry every dish you can see to the sink", "Laundry: gather loose clothes into a basket"];
+const CHEERS = ["Zone done. That's real progress.", "Another one off the list.", "Look at that. Done.", "That spot is finished.",
+  "Progress you can see.", "Checked off. On to the next.", "Nailed it.", "That's how it's done.", "One more down. Nice work."];
+const BANNERS = ["ZONE DONE!", "CLEARED!", "FINISHED!", "ONE MORE DOWN!", "LOOK AT THAT!", "CHECK!", "DONE AND DUSTED!"];
+
+const DEFAULT_TASKS = `# Open-plan sweeps
+Sweep 1: trash, whole open-plan room
+Sweep 2: dishes to the sink, run the dishwasher
+Sweep 3: loose clothes and towels to the laundry
+Sweep 4: a clear path, long hall to kitchen to living room
+# Kitchen
+Sink counter and dishwasher
+Stove counter
+Island top
+Island shelves and the floor by the fridge
+Floor by the pantry door
+# Dining
+Dining floor: bags of cans and juice jugs to the pantry
+Dining table top
+Cart and boxes by the thermostat wall
+Stereo and amp stack by the arch
+# Living room
+Coffee table
+Black couch
+Loveseat by the bookshelves
+TV wall and the floor in front
+Center floor: boxes, bubble wrap, baskets
+Window wall shelves
+Back corner: bookshelf, clothes rack, boxes
+Small table and desk by the kitchen bar`;
+
+/* ---------- state ---------- */
+const LS = "cleanTimer.v1";
+const today = () => new Date().toLocaleDateString("en-CA");
+function freshDay() { return { date: today(), workMs: 0, blocks: 0, bags: 0, zones: 0, buildingBags: 0, longUsed: false, c1: false, c2: false }; }
+function parseTasks(text, old) {
+  const doneSet = new Set((old || []).filter(t => t.done).map(t => t.area + "|" + t.t));
+  let area = ""; const out = [];
+  text.split("\n").forEach(l => { l = l.trim(); if (!l) return; if (l.startsWith("#")) { area = l.replace(/^#+\s*/, ""); return; }
+    out.push({ t: l, area, done: doneSet.has(area + "|" + l) }); });
+  return out;
+}
+function load() {
+  let s = null; try { s = JSON.parse(localStorage.getItem(LS)); } catch (e) {}
+  if (!s) s = { settings: { c1: 150, c2: 210, perBuilding: 10, voice: "" }, tasksText: DEFAULT_TASKS, tasks: parseTasks(DEFAULT_TASKS), day: freshDay(), run: null, easyRot: 0 };
+  if (!s.day || s.day.date !== today()) { s.day = freshDay(); s.run = null; }
+  return s;
+}
+let S = load();
+function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const vms = min => min * 60000 / SPEED;                  // minutes -> real ms
+const current = () => S.tasks.find(t => !t.done) || null;
+const zoneName = () => { const c = current(); return c ? c.t : "free choice, the list is finished"; };
+function show(id) { document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id)); }
+function overlay(id, on) { $(id).classList.toggle("on", !!on); }
+
+/* ---------- voice (same voices as the main timer: Ava first) ---------- */
+let voices = [];
+function loadVoices() {
+  const pop = () => {
+    const all = speechSynthesis.getVoices(), pref = ["Ava", "Zoe", "Moira", "Tessa"];
+    voices = all.filter(v => pref.some(n => v.name.includes(n))).sort((a, b) => {
+      const rk = v => v.name.includes("Premium") ? 0 : v.name.includes("Enhanced") ? 1 : 2; return rk(a) - rk(b); });
+    if (!voices.length) voices = all.filter(v => /^en/i.test(v.lang)).length ? all.filter(v => /^en/i.test(v.lang)) : all;
+    const sel = $("voiceSel"); sel.innerHTML = "";
+    voices.forEach((v, i) => { const o = document.createElement("option"); o.value = v.name; o.textContent = v.name; sel.appendChild(o); });
+    if (S.settings.voice && voices.some(v => v.name === S.settings.voice)) sel.value = S.settings.voice;
+    else { const a = voices.find(v => v.name.includes("Ava")); if (a) sel.value = a.name; }
+  };
+  if ("speechSynthesis" in window) { speechSynthesis.onvoiceschanged = pop; pop(); }
+}
+function speak(text) {
+  if (!("speechSynthesis" in window) || !text) return;
+  const u = new SpeechSynthesisUtterance(text), name = $("voiceSel").value, v = voices.find(x => x.name === name);
+  if (v) u.voice = v; u.rate = 0.95; speechSynthesis.speak(u);
+}
+function chime(kind) { const a = ac(); if (!a) return; const t = a.currentTime;
+  const seq = kind === "work" ? [0, 4, 7] : kind === "rest" ? [7, 4, 0] : [0, 7, 12];
+  seq.forEach((n, i) => tone(semi(392, n), t + i * 0.12, 0.22, "triangle", 0.28)); }
+
+/* ---------- wake lock (keeps the phone screen on while it runs) ---------- */
+let wakeLock = null;
+async function lockOn() { try { if ("wakeLock" in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => wakeLock = null); } } catch (e) {} }
+function lockOff() { try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null; }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.run) lockOn(); });
+
+/* ---------- the cycle ---------- */
+function begin(body, head) {
+  ac(); // unlock audio inside the tap
+  S.run = { wi: START_W[head], ri: START_R[body], phase: "work", startAt: 0, endAt: 0, easy: null, forced: false, breakKind: null, paused: null };
+  startWork(); speak(`Starting. Now: ${zoneName()}.`); chime("work"); lockOn(); render(); show("run");
+}
+function startWork() { const r = S.run, now = Date.now(); r.phase = "work"; r.startAt = now; r.endAt = now + vms(WORK[r.wi]); r.forced = false; save(); }
+function startRest(forced) { const r = S.run, now = Date.now(); r.phase = "rest"; r.startAt = now; r.endAt = now + vms(REST[r.ri]); r.forced = !!forced; save(); }
+function endPhase(early) {
+  const r = S.run; if (!r) return;
+  if (r.phase === "work") {
+    S.day.blocks++; const did = r.easy || zoneName(); r.easy = null;
+    startRest(false); chime("rest"); speak(`Work done: ${did}. Now: rest.`);
+  } else if (r.phase === "rest") {
+    startWork(); chime("work"); speak(`${early ? "Rest done early" : "Rest done"}. Now: ${zoneName()}.`);
+  } else if (r.phase === "break") {
+    const label = BREAKS[r.breakKind][1]; r.breakKind = null;
+    startWork(); chime("work"); speak(`${label} done. Now: ${zoneName()}.`);
+  }
+  save(); render();
+}
+let lastTick = Date.now();
+function tick() {
+  const now = Date.now(), dt = now - lastTick; lastTick = now;
+  if (S.day.date !== today()) { S.day = freshDay(); }
+  const r = S.run;
+  if (r && !r.paused) {
+    if (r.phase === "work") {
+      S.day.workMs += Math.min(dt, 5000) * SPEED;       // effective (work-block) time only
+      const workMin = S.day.workMs / 60000;
+      if (!S.day.c1 && workMin >= S.settings.c1) return ceiling(1);
+      if (S.day.c1 && !S.day.c2 && workMin >= S.settings.c2) return ceiling(2);
+    }
+    if (now >= r.endAt) endPhase(false);
+  }
+}
+setInterval(() => { tick(); }, 250);
+setInterval(save, 5000);
+
+/* ---------- buttons while running ---------- */
+function bodyBtn() { const r = S.run; if (!r) return;
+  if (r.ri >= REST.length - 1) { speak("Rests are already as long as they go."); return; }
+  const old = REST[r.ri]; r.ri++;
+  if (r.phase === "rest") r.endAt += vms(REST[r.ri] - old);
+  speak("Longer rests."); save(); flash("bodyB"); }
+function headBtn() { const r = S.run; if (!r) return;
+  if (r.wi >= WORK.length - 1) { speak("These are the shortest blocks. If they're a struggle, today might be done."); return; }
+  r.wi++;
+  if (r.phase === "work") { r.endAt = r.startAt + vms(WORK[r.wi]); }
+  speak(r.wi === WORK.length - 1 ? "Shortest blocks now. If these are a struggle, today might be done." : "Shorter blocks.");
+  save(); flash("headB"); if (r.phase === "work" && Date.now() >= r.endAt) endPhase(false); }
+function frustratedBtn() { const r = S.run; if (!r || r.phase !== "work") return;
+  r.easy = EASY[S.easyRot++ % EASY.length]; speak(`Easy one for this block. ${r.easy}.`); save(); render(); }
+function goBtn() { const r = S.run; if (!r || r.phase !== "rest" || r.forced) return; endPhase(true); }
+function zoneDone() {
+  const c = current(); if (!c) return; c.done = true; S.day.zones++; save();
+  const nxt = current(); celebrate(c.t, nxt ? nxt.t : null); render();
+}
+function startBreak(kind) {
+  const r = S.run; if (!r) return;
+  if (kind === "hour") { if (S.day.longUsed) return; confirmBox("Take your one long break? It can be used once today.", "Take it", () => { S.day.longUsed = true; goBreak("hour"); }); return; }
+  goBreak(kind);
+}
+function goBreak(kind) {
+  const r = S.run, now = Date.now(), was = r.phase === "work" ? (r.easy || zoneName()) : null;
+  if (r.phase === "work") S.day.blocks++;
+  r.easy = null; r.phase = "break"; r.breakKind = kind; r.startAt = now; r.endAt = now + vms(BREAKS[kind][0]);
+  chime("rest"); speak(`${was ? "Work done: " + was + ". " : ""}Now: ${BREAKS[kind][1].toLowerCase()}. I'll call you back.`);
+  save(); render();
+}
+function doneToday() {
+  confirmBox("End today?", "End today", () => {
+    S.run = null; ceil = null; overlay("ceil", false); lockOff(); save();
+    const d = S.day; $("sumZones").textContent = d.zones; $("sumBags").textContent = d.bags; $("sumBlocks").textContent = d.blocks;
+    speak(`That's the day. ${d.zones} ${d.zones === 1 ? "zone" : "zones"}, ${d.bags} ${d.bags === 1 ? "bag" : "bags"}, ${d.blocks} ${d.blocks === 1 ? "block" : "blocks"}. Good work.`);
+    confetti(120); show("summary");
+  });
+}
+
+/* ---------- ceilings: friction rises with the Body/Head check-in ---------- */
+let ceil = null;
+function ceiling(level) {
+  const r = S.run; r.paused = { left: r.endAt - Date.now() };
+  ceil = { level, body: null, head: null };
+  $("ceilTitle").textContent = level === 1 ? "That's today's ceiling" : "That's the hard ceiling";
+  $("ceilText").textContent = level === 1 ? "Good work. Check in before you decide." : "This is the second ceiling. Check in first.";
+  document.querySelectorAll("#ceil .pick").forEach(b => b.classList.remove("sel"));
+  $("ceilAction").innerHTML = ""; overlay("ceil", true);
+  speak(level === 1 ? "That's today's ceiling. Good work. How are your body and your head?" : "That's the hard ceiling. How are your body and your head?");
+  save();
+}
+function ceilPick(kind, val, el) {
+  ceil[kind] = val; el.parentNode.querySelectorAll(".pick").forEach(b => b.classList.toggle("sel", b === el));
+  if (!ceil.body || !ceil.head) return;
+  const severe = ceil.body === "very" || ceil.head === "fried", slipped = ceil.body === "tired" || ceil.head === "foggy";
+  let hold = 3, rest = false, allowed = true;
+  if (ceil.level === 1) { if (severe) { hold = 10; rest = true; } else if (slipped) { hold = 3; rest = true; } }
+  else { hold = 10; rest = true; if (severe) allowed = false; }
+  const A = $("ceilAction");
+  if (!allowed) { A.innerHTML = `<p class="note">Very tired or fried at the hard ceiling: today is done.</p>`; return; }
+  A.innerHTML = `<p class="note">Hold for ${hold} seconds to keep going${rest ? ", then a full rest before work starts" : ""}.</p>
+    <button class="hold" id="holdBtn"><span class="fill"></span><span class="lab">Hold to keep going</span></button>`;
+  makeHold($("holdBtn"), hold * 1000, () => passCeiling(rest));
+}
+function passCeiling(rest) {
+  const r = S.run; S.day["c" + ceil.level] = true;
+  r.ri = START_R[ceil.body]; r.wi = START_W[ceil.head]; r.paused = null; overlay("ceil", false);
+  if (rest) { startRest(true); chime("rest"); speak("Okay. A full rest first. Then: " + zoneName() + "."); }
+  else { startWork(); chime("work"); speak("Okay. Now: " + zoneName() + "."); }
+  ceil = null; save(); render();
+}
+function makeHold(btn, ms, done) {
+  let t0 = 0, raf = 0; const fill = btn.querySelector(".fill");
+  const stop = () => { cancelAnimationFrame(raf); t0 = 0; fill.style.width = "0%"; };
+  const step = () => { const p = Math.min(1, (Date.now() - t0) / ms); fill.style.width = (p * 100) + "%"; if (p >= 1) { stop(); done(); } else raf = requestAnimationFrame(step); };
+  btn.addEventListener("pointerdown", e => { e.preventDefault(); t0 = Date.now(); raf = requestAnimationFrame(step); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => btn.addEventListener(ev, stop));
+  btn.addEventListener("contextmenu", e => e.preventDefault());
+}
+
+/* ---------- confirm box ---------- */
+let confirmFn = null;
+function confirmBox(text, yes, fn) { $("confText").textContent = text; $("confYes").textContent = yes; confirmFn = fn; overlay("conf", true); }
+function confirmAnswer(ok) { overlay("conf", false); const f = confirmFn; confirmFn = null; if (ok && f) f(); }
+
+/* ---------- celebrations: varied sound, words, colour and confetti ---------- */
+const FANFARES = [
+  t => [0, 4, 7, 12, 7, 12, 16, 19, 24].forEach((n, i) => { tone(semi(523.25, n), t + i * 0.1, 0.22, "square", 0.3); tone(semi(261.6, n), t + i * 0.1, 0.22, "triangle", 0.22); }),
+  t => [0, 5, 9, 12, 17, 21, 24].forEach((n, i) => { tone(semi(349.2, n), t + i * 0.12, 0.3, "sawtooth", 0.18); }),
+  t => [[0, 4, 7], [5, 9, 12], [7, 11, 14], [12, 16, 19]].forEach((ch, i) => ch.forEach(n => tone(semi(392, n), t + i * 0.28, 0.32, "square", 0.16))),
+  t => [12, 7, 4, 0, 4, 7, 12, 19, 24].forEach((n, i) => tone(semi(440, n), t + i * 0.08, 0.16, "triangle", 0.32)),
+  t => { [0, 0, 7, 7, 9, 9, 7].forEach((n, i) => tone(semi(523.25, n), t + i * 0.14, 0.18, "square", 0.24)); noise(t + 1.0, 0.5, 0.3, "highpass", 3000); }
+];
+const CONF_SETS = [["#ff8a1f", "#ffd23f", "#ff3b3b", "#fff6e8"], ["#c070ff", "#ff5fa8", "#ffd23f", "#fff6e8"], ["#ff3b3b", "#ff8a1f", "#c070ff", "#ffd23f"]];
+let lastCheer = -1, lastFan = -1;
+function pickNew(n, last) { let i; do { i = Math.floor(Math.random() * n); } while (n > 1 && i === last); return i; }
+function celebrate(doneName, nextName) {
+  const a = ac(); lastFan = pickNew(FANFARES.length, lastFan); if (a) FANFARES[lastFan](a.currentTime);
+  lastCheer = pickNew(CHEERS.length, lastCheer);
+  const ban = BANNERS[Math.floor(Math.random() * BANNERS.length)], set = CONF_SETS[Math.floor(Math.random() * CONF_SETS.length)];
+  $("celBanner").textContent = nextName ? ban : "LIST COMPLETE!"; $("celBanner").style.color = set[0];
+  $("celDone").textContent = doneName; $("celNext").textContent = nextName ? "Next: " + nextName : "Every zone on the list is done.";
+  overlay("cel", true); confetti(nextName ? 220 : 400, null, null, 10, set);
+  setTimeout(() => confetti(120, null, null, 12, set), 700);
+  speak(nextName ? `${CHEERS[lastCheer]} Snap your after photo. Next up: ${nextName}.` : "That's the whole list. Every zone is done. Amazing.");
+  clearTimeout(celebrate.t); celebrate.t = setTimeout(() => overlay("cel", false), 7000);
+}
+
+/* full-screen confetti */
+const fxc = $("fx"), fxx = fxc.getContext("2d"); let conf = [], confOn = false;
+function sizeFx() { fxc.width = innerWidth; fxc.height = innerHeight; } addEventListener("resize", sizeFx); sizeFx();
+function confetti(n, x, y, spread, cols) { cols = cols || CONF_SETS[0];
+  for (let i = 0; i < n; i++) conf.push({ x: x ?? Math.random() * fxc.width, y: y ?? -10 - Math.random() * 60, vx: (Math.random() - .5) * (spread || 8), vy: Math.random() * 3 + 1,
+    s: 5 + Math.random() * 8, c: cols[(Math.random() * cols.length) | 0], r: Math.random() * 6, vr: (Math.random() - .5) * .3 });
+  if (!confOn) { confOn = true; requestAnimationFrame(confTick); } }
+function confTick() { fxx.clearRect(0, 0, fxc.width, fxc.height);
+  conf.forEach(p => { p.vy += 0.12; p.x += p.vx; p.y += p.vy; p.r += p.vr; fxx.save(); fxx.translate(p.x, p.y); fxx.rotate(p.r); fxx.fillStyle = p.c; fxx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * .6); fxx.restore(); });
+  conf = conf.filter(p => p.y < fxc.height + 20);
+  if (conf.length) requestAnimationFrame(confTick); else { confOn = false; fxx.clearRect(0, 0, fxc.width, fxc.height); } }
+
+/* ---------- Tower Fire: each bag puts out part of the building ---------- */
+let tower = null, rafOn = false;
+function makeTower() {
+  const cv = $("tower"); tower = { cv, cx: cv.getContext("2d"), kind: "tower", W: 192, H: 96, p: 0, n: 0, goal: 1, done: false, doneAt: 0, col: "#ff8a1f", parts: [], fx: [], t: performance.now() / 1000, mem: {} };
+  cv.width = 192; cv.height = 96; tower.cx.imageSmoothingEnabled = false; syncTower();
+  if (!rafOn) { rafOn = true; requestAnimationFrame(towerLoop); }
+}
+function syncTower() { const g = tower; g.goal = S.settings.perBuilding; g.n = S.day.buildingBags; g.p = Math.min(1, g.n / g.goal); g.done = g.n >= g.goal; }
+function towerLoop(ts) { const g = tower; g.t = ts / 1000; g.cx.setTransform(1, 0, 0, 1, 0, 0); g.cx.clearRect(0, 0, g.W, g.H);
+  try { AN.tower.draw(g); } catch (e) { console.error(e); } g.cx.setTransform(1, 0, 0, 1, 0, 0); stepParts(g); requestAnimationFrame(towerLoop); }
+function bag() {
+  const a = ac(); if (a) tone(semi(523.25, 12), a.currentTime, 0.08, "square", 0.18);
+  S.day.bags++; S.day.buildingBags++; syncTower();
+  const g = tower, half = Math.ceil(g.goal / 2), tier = g.done ? 2 : (g.n === half ? 1 : 0);
+  AN.tower.event(g, tier); renderCounts(); save();
+  if (g.done) {
+    sndFinish(); confetti(200, null, null, 10, CONF_SETS[0]);
+    speak(`Fire's out! That building is done. ${S.day.bags} bags today.`);
+    setTimeout(() => { S.day.buildingBags = 0; tower.mem = {}; tower.parts = []; syncTower(); renderCounts(); save(); }, 5000);
+  } else if (tier === 1) { const b = ac(); if (b) [0, 4, 7, 12].forEach((n, i) => tone(semi(523.25, n + 12), b.currentTime + i * 0.07, 0.16, "square", 0.3)); }
+}
+
+/* ---------- render ---------- */
+function flash(id) { const b = $(id); b.classList.add("hit"); setTimeout(() => b.classList.remove("hit"), 400); }
+function renderCounts() { document.querySelectorAll(".cBags").forEach(e => e.textContent = S.day.bags);
+  document.querySelectorAll(".cZones").forEach(e => e.textContent = S.day.zones); document.querySelectorAll(".cBlocks").forEach(e => e.textContent = S.day.blocks); }
+function render() {
+  const c = current(); $("nextUp").textContent = c ? c.t : "The list is finished. Add more in settings.";
+  $("nextArea").textContent = c && c.area ? c.area : "";
+  renderCounts();
+  const r = S.run; if (!r) return;
+  const ph = r.phase === "work" ? "Work" : r.phase === "rest" ? (r.forced ? "Rest (full)" : "Rest") : BREAKS[r.breakKind] ? BREAKS[r.breakKind][1] : "Break";
+  $("phase").textContent = ph; document.body.dataset.phase = r.phase;
+  $("nowLabel").textContent = r.easy ? "Easy one, this block only" : (c && c.area ? c.area : "Now");
+  $("nowTask").textContent = r.easy || zoneName();
+  $("zoneB").style.visibility = c ? "visible" : "hidden";
+  $("goB").style.display = r.phase === "rest" && !r.forced ? "" : "none";
+  $("frusB").disabled = r.phase !== "work";
+  $("hourB").style.display = S.day.longUsed ? "none" : "";
+  ["sandB", "mealB", "hourB"].forEach(id => $(id).disabled = r.phase === "break");
+}
+
+/* ---------- settings ---------- */
+function openSettings() {
+  $("setC1").value = S.settings.c1 / 60; $("setC2").value = S.settings.c2 / 60; $("setPB").value = S.settings.perBuilding;
+  $("setTasks").value = S.tasksText; show("settings");
+}
+function saveSettings() {
+  const c1 = Math.round(parseFloat($("setC1").value) * 60), c2 = Math.round(parseFloat($("setC2").value) * 60), pb = parseInt($("setPB").value, 10);
+  if (!(c1 > 0) || !(c2 > c1)) { $("setErr").textContent = "The hard ceiling has to be above the first one."; return; }
+  if (!(pb >= 2 && pb <= 40)) { $("setErr").textContent = "Bags per building: 2 to 40."; return; }
+  $("setErr").textContent = "";
+  S.settings.c1 = c1; S.settings.c2 = c2; S.settings.perBuilding = pb; S.settings.voice = $("voiceSel").value;
+  S.tasksText = $("setTasks").value; S.tasks = parseTasks(S.tasksText, S.tasks); syncTower(); save(); render(); show(S.run ? "run" : "start");
+}
+function resetList() { confirmBox("Mark every zone not done?", "Reset the list", () => { S.tasks.forEach(t => t.done = false); save(); render(); }); }
+function resetToday() { confirmBox("Clear today's counts and ceilings?", "Clear today", () => { S.day = freshDay(); S.run = null; syncTower(); save(); render(); show("start"); }); }
+
+/* ---------- boot ---------- */
+loadVoices(); makeTower(); render();
+if (S.run) { if (S.run.paused) { S.run.paused = null; startWork(); } show("run"); lockOn(); } else show("start");
+addEventListener("touchend", function unlock() { const a = ac(); if (a) { const b = a.createBuffer(1, 1, 22050), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); s.start(0); } removeEventListener("touchend", unlock); }, { passive: true });
+</script>
+</body>
+</html>
