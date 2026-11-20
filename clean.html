@@ -416,18 +416,20 @@ function begin(body, head) {
   S.run = { wi: START_W[head], ri: START_R[body], phase: "work", startAt: 0, endAt: 0, easy: null, forced: false, breakKind: null, paused: null };
   startWork(); speak(`Starting. Now: ${zoneName()}.`); chime("work"); lockOn(); render(); show("run");
 }
-function startWork() { const r = S.run, now = Date.now(); r.phase = "work"; r.startAt = now; r.endAt = now + vms(WORK[r.wi]); r.forced = false; save(); }
-function startRest(forced) { const r = S.run, now = Date.now(); r.phase = "rest"; r.startAt = now; r.endAt = now + vms(REST[r.ri]); r.forced = !!forced; save(); }
+function startWork(base) { const r = S.run, now = base || Date.now(); r.phase = "work"; r.startAt = now; r.endAt = now + vms(WORK[r.wi]); r.forced = false; save(); }
+function startRest(forced, base) { const r = S.run, now = base || Date.now(); r.phase = "rest"; r.startAt = now; r.endAt = now + vms(REST[r.ri]); r.forced = !!forced; save(); }
 function endPhase(early) {
   const r = S.run; if (!r) return;
+  // a hidden browser window only ticks about once a minute: start the next phase from when this one was due, so nothing drifts
+  const late = Date.now() - r.endAt, base = (!early && late > 0 && late < 120000) ? r.endAt : 0;
   if (r.phase === "work") {
     S.day.blocks++; const did = r.easy || zoneName(); r.easy = null;
-    startRest(false); chime("rest"); speak(`Work done: ${did}. Now: rest.`);
+    startRest(false, base); chime("rest"); speak(`Work done: ${did}. Now: rest.`);
   } else if (r.phase === "rest") {
-    startWork(); chime("work"); speak(`${early ? "Rest done early" : "Rest done"}. Now: ${zoneName()}.`);
+    startWork(base); chime("work"); speak(`${early ? "Rest done early" : "Rest done"}. Now: ${zoneName()}.`);
   } else if (r.phase === "break") {
     const label = BREAKS[r.breakKind][1]; r.breakKind = null;
-    startWork(); chime("work"); speak(`${label} done. Now: ${zoneName()}.`);
+    startWork(base); chime("work"); speak(`${label} done. Now: ${zoneName()}.`);
   }
   save(); render();
 }
@@ -438,7 +440,7 @@ function tick() {
   const r = S.run;
   if (r && !r.paused) {
     if (r.phase === "work") {
-      S.day.workMs += Math.min(dt, 5000) * SPEED;       // effective (work-block) time only
+      S.day.workMs += Math.min(dt, 120000) * SPEED;     // effective (work-block) time only; a hidden window ticks once a minute, a locked phone counts at most 2 min
       const workMin = S.day.workMs / 60000;
       if (!S.day.c1 && workMin >= S.settings.c1) return ceiling(1);
       if (S.day.c1 && !S.day.c2 && workMin >= S.settings.c2) return ceiling(2);
