@@ -137,6 +137,7 @@ textarea { min-height:260px; font-size:14px; line-height:1.4; }
   <div id="setErr"></div>
   <div class="row2"><button onclick="saveSettings()">Save</button><button onclick="show(S.run?'run':'start')">Back</button></div>
   <div class="row2"><button onclick="resetList()">Reset the list</button><button onclick="resetToday()">Clear today</button></div>
+  <button style="width:100%;padding:14px;font-size:16px;margin-top:8px" onclick="startOver()">Start over</button>
 </section>
 
 </div>
@@ -625,6 +626,7 @@ function saveSettings() {
   S.tasksText = $("setTasks").value; S.tasks = parseTasks(S.tasksText, S.tasks); syncTower(); save(); render(); show(S.run ? "run" : "start");
 }
 function resetList() { confirmBox("Mark every zone not done?", "Reset the list", () => { S.tasks.forEach(t => t.done = false); save(); render(); }); }
+function startOver() { confirmBox("Start over? This clears today, the ticks and any list edits, and loads the standard list.", "Start over", () => { try { localStorage.removeItem(LS); } catch (e) {} location.reload(); }); }
 function resetToday() { confirmBox("Clear today's counts and ceilings?", "Clear today", () => { S.day = freshDay(); S.run = null; syncTower(); save(); render(); show("start"); }); }
 
 /* ---------- boot ---------- */
