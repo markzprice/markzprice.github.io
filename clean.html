@@ -305,31 +305,49 @@ const CHEERS = ["Zone done. That's real progress.", "Another one off the list.",
   "Progress you can see.", "Checked off. On to the next.", "Nailed it.", "That's how it's done.", "One more down. Nice work."];
 const BANNERS = ["ZONE DONE!", "CLEARED!", "FINISHED!", "ONE MORE DOWN!", "LOOK AT THAT!", "CHECK!", "DONE AND DUSTED!"];
 
+const LIST_VERSION = 2;   // walked with Mark 2026-11-20 14:19-14:30
 const DEFAULT_TASKS = `# Open-plan sweeps
 Sweep 1: trash, whole open-plan room
 Sweep 2: dishes to the sink, run the dishwasher
 Sweep 3: loose clothes and towels to the laundry
 Sweep 4: a clear path, long hall to kitchen to living room
+# Smallest hall
+Floor at the laundry door: the pile, hangers, mop and broom
 # Kitchen
-Sink counter and dishwasher
-Stove counter
+Stove counter (the buckets stay at its end)
 Island top
-Island shelves and the floor by the fridge
-Floor by the pantry door
+Both spice bookcases
+Floor by the garage door (garage things to the holding box)
+Sink counter and dishwasher
 # Dining
-Dining floor: bags of cans and juice jugs to the pantry
-Dining table top
-Cart and boxes by the thermostat wall
-Stereo and amp stack by the arch
+Floor: bags of cans and juice jugs, put away
+Table top
+Cart with the pans, boxes by the thermostat wall
+Stereo and amp on boxes by the hall
 # Living room
-Coffee table
-Black couch
+The spot by the black chair
 Loveseat by the bookshelves
+Coffee table
+Center floor: boxes, bubble wrap, laundry baskets
 TV wall and the floor in front
-Center floor: boxes, bubble wrap, baskets
-Window wall shelves
+Small table and desk by the kitchen bar
+Window wall: the floor in front, dust the shelves at most
 Back corner: bookshelf, clothes rack, boxes
-Small table and desk by the kitchen bar`;
+# Long hall
+Just inside the front door: shelf corner, folding chairs, rolled things
+Suits and jackets pile, boxes by the bedroom door
+Floor by the conservatory doors: clothes, red bin, basket
+Living-room end: boards, ironing board, chair with clothes
+# Short hall and bathroom
+Short-hall doorway: clothes on the frame, valet, game boxes, fan
+Short-hall floor: lamp, white garment, box, footstool
+Bathroom floor: towels, clothes, shoes, hangers
+Bathroom counter
+# Conservatory
+Boxes by the doors and the speaker
+Daybed: clear it for the Dec 1 move (bench top back to the piano)
+Piano and the bench pile
+Folding chairs, pegboard and the floor`;
 
 /* ---------- state ---------- */
 const LS = "cleanTimer.v1";
@@ -345,6 +363,8 @@ function parseTasks(text, old) {
 function load() {
   let s = null; try { s = JSON.parse(localStorage.getItem(LS)); } catch (e) {}
   if (!s) s = { settings: { c1: 150, c2: 210, perBuilding: 10, voice: "" }, tasksText: DEFAULT_TASKS, tasks: parseTasks(DEFAULT_TASKS), day: freshDay(), run: null, easyRot: 0 };
+  if (s.listVersion !== LIST_VERSION && !s.tasks.some(t => t.done)) { s.tasksText = DEFAULT_TASKS; s.tasks = parseTasks(DEFAULT_TASKS); }
+  s.listVersion = LIST_VERSION;
   if (!s.day || s.day.date !== today()) { s.day = freshDay(); s.run = null; }
   return s;
 }
