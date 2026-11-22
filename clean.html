@@ -380,6 +380,8 @@ const $ = id => document.getElementById(id);
 const vms = min => min * 60000 / SPEED;                  // minutes -> real ms
 const current = () => S.tasks.find(t => !t.done) || null;
 const zoneName = () => { const c = current(); return c ? c.t : "free choice, the list is finished"; };
+const mins = m => `${m} ${m === 1 ? "minute" : "minutes"}`;      // spoken lengths: "label, N minutes, start / stop" (Mark 2026-11-22)
+const lenOf = r => r.len || (r.phase === "work" ? WORK[r.wi] : r.phase === "rest" ? REST[r.ri] : BREAKS[r.breakKind][0]);
 function show(id) { document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id)); }
 function overlay(id, on) { $(id).classList.toggle("on", !!on); }
 
@@ -417,22 +419,22 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 function begin(body, head) {
   ac(); // unlock audio inside the tap
   S.run = { wi: START_W[head], ri: START_R[body], phase: "work", startAt: 0, endAt: 0, easy: null, forced: false, breakKind: null, paused: null };
-  startWork(); speak(`Starting. Now: ${zoneName()}.`); chime("work"); lockOn(); render(); show("run");
+  startWork(); speak(`${zoneName()}, ${mins(WORK[S.run.wi])}, start.`); chime("work"); lockOn(); render(); show("run");
 }
-function startWork(base) { const r = S.run, now = base || Date.now(); r.phase = "work"; r.startAt = now; r.endAt = now + vms(WORK[r.wi]); r.forced = false; save(); }
-function startRest(forced, base) { const r = S.run, now = base || Date.now(); r.phase = "rest"; r.startAt = now; r.endAt = now + vms(REST[r.ri]); r.forced = !!forced; save(); }
+function startWork(base) { const r = S.run, now = base || Date.now(); r.phase = "work"; r.len = WORK[r.wi]; r.zone = zoneName(); r.startAt = now; r.endAt = now + vms(WORK[r.wi]); r.forced = false; save(); }
+function startRest(forced, base) { const r = S.run, now = base || Date.now(); r.phase = "rest"; r.len = REST[r.ri]; r.startAt = now; r.endAt = now + vms(REST[r.ri]); r.forced = !!forced; save(); }
 function endPhase(early) {
   const r = S.run; if (!r) return;
   // a hidden browser window only ticks about once a minute: start the next phase from when this one was due, so nothing drifts
   const late = Date.now() - r.endAt, base = (!early && late > 0 && late < 120000) ? r.endAt : 0;
   if (r.phase === "work") {
-    S.day.blocks++; const did = r.easy || zoneName(); r.easy = null;
-    startRest(false, base); chime("rest"); speak(`Work done: ${did}. Now: rest.`);
+    S.day.blocks++; const did = r.easy || r.zone || zoneName(), was = lenOf(r); r.easy = null;
+    startRest(false, base); chime("rest"); speak(`${did}, ${mins(was)}, stop. Rest, ${mins(REST[r.ri])}, start.`);
   } else if (r.phase === "rest") {
-    startWork(base); chime("work"); speak(`${early ? "Rest done early" : "Rest done"}. Now: ${zoneName()}.`);
+    const was = lenOf(r); startWork(base); chime("work"); speak(`Rest, ${mins(was)}, stop. ${zoneName()}, ${mins(WORK[r.wi])}, start.`);
   } else if (r.phase === "break") {
-    const label = BREAKS[r.breakKind][1]; r.breakKind = null;
-    startWork(base); chime("work"); speak(`${label} done. Now: ${zoneName()}.`);
+    const label = BREAKS[r.breakKind][1], was = BREAKS[r.breakKind][0]; r.breakKind = null;
+    startWork(base); chime("work"); speak(`${label}, ${mins(was)}, stop. ${zoneName()}, ${mins(WORK[r.wi])}, start.`);
   }
   save(); render();
 }
@@ -463,7 +465,7 @@ function bodyBtn() { const r = S.run; if (!r) return;
 function headBtn() { const r = S.run; if (!r) return;
   if (r.wi >= WORK.length - 1) { speak("These are the shortest blocks. If they're a struggle, today might be done."); return; }
   r.wi++;
-  if (r.phase === "work") { r.endAt = r.startAt + vms(WORK[r.wi]); }
+  if (r.phase === "work") { r.endAt = r.startAt + vms(WORK[r.wi]); r.len = WORK[r.wi]; }
   speak(r.wi === WORK.length - 1 ? "Shortest blocks now. If these are a struggle, today might be done." : "Shorter blocks.");
   save(); flash("headB"); if (r.phase === "work" && Date.now() >= r.endAt) endPhase(false); }
 function frustratedBtn() { const r = S.run; if (!r || r.phase !== "work") return;
@@ -479,10 +481,10 @@ function startBreak(kind) {
   goBreak(kind);
 }
 function goBreak(kind) {
-  const r = S.run, now = Date.now(), was = r.phase === "work" ? (r.easy || zoneName()) : null;
+  const r = S.run, now = Date.now(), was = r.phase === "work" ? (r.easy || r.zone || zoneName()) : null, wasLen = was ? lenOf(r) : 0;
   if (r.phase === "work") S.day.blocks++;
-  r.easy = null; r.phase = "break"; r.breakKind = kind; r.startAt = now; r.endAt = now + vms(BREAKS[kind][0]);
-  chime("rest"); speak(`${was ? "Work done: " + was + ". " : ""}Now: ${BREAKS[kind][1].toLowerCase()}. I'll call you back.`);
+  r.easy = null; r.phase = "break"; r.breakKind = kind; r.len = BREAKS[kind][0]; r.startAt = now; r.endAt = now + vms(BREAKS[kind][0]);
+  chime("rest"); speak(`${was ? was + ", " + mins(wasLen) + ", stop. " : ""}${BREAKS[kind][1]}, ${mins(BREAKS[kind][0])}, start.`);
   save(); render();
 }
 function doneToday() {
@@ -522,8 +524,8 @@ function ceilPick(kind, val, el) {
 function passCeiling(rest) {
   const r = S.run; S.day["c" + ceil.level] = true;
   r.ri = START_R[ceil.body]; r.wi = START_W[ceil.head]; r.paused = null; overlay("ceil", false);
-  if (rest) { startRest(true); chime("rest"); speak("Okay. A full rest first. Then: " + zoneName() + "."); }
-  else { startWork(); chime("work"); speak("Okay. Now: " + zoneName() + "."); }
+  if (rest) { startRest(true); chime("rest"); speak(`Rest, ${mins(REST[r.ri])}, start.`); }
+  else { startWork(); chime("work"); speak(`${zoneName()}, ${mins(WORK[r.wi])}, start.`); }
   ceil = null; save(); render();
 }
 function makeHold(btn, ms, done) {
